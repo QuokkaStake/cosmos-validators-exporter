@@ -36,6 +36,7 @@ func (c *Chain) Validate() error {
 type Config struct {
 	LogConfig     LogConfig `toml:"log"`
 	ListenAddress string    `toml:"listen-address" default:":9550"`
+	Timeout       int       `toml:"timeout" default:"10"`
 	Chains        []Chain   `toml:"chains"`
 }
 

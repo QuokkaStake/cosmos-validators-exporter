@@ -10,14 +10,16 @@ import (
 )
 
 type RPC struct {
-	URL    string
-	Logger zerolog.Logger
+	URL     string
+	Timeout int
+	Logger  zerolog.Logger
 }
 
-func NewRPC(url string, logger zerolog.Logger) *RPC {
+func NewRPC(url string, timeout int, logger zerolog.Logger) *RPC {
 	return &RPC{
-		URL:    url,
-		Logger: logger.With().Str("component", "rpc").Logger(),
+		URL:     url,
+		Timeout: timeout,
+		Logger:  logger.With().Str("component", "rpc").Logger(),
 	}
 }
 
@@ -54,7 +56,9 @@ func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, QueryI
 }
 
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
-	client := &http.Client{Timeout: 10 * 1000000000}
+	client := &http.Client{
+		Timeout: time.Duration(rpc.Timeout) * time.Second,
+	}
 	start := time.Now()
 
 	info := QueryInfo{

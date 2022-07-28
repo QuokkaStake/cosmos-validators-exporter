@@ -39,7 +39,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 	index := 0
 
 	for _, chain := range m.Config.Chains {
-		rpc := NewRPC(chain.LCDEndpoint, m.Logger)
+		rpc := NewRPC(chain.LCDEndpoint, m.Config.Timeout, m.Logger)
 
 		for _, address := range chain.Validators {
 			go func(address string, chain Chain, index int) {
