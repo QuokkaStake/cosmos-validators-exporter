@@ -138,6 +138,22 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_self_delegated",
+			Help: "Validator's self delegated amount (in tokens)",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	selfDelegatedUSDGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_self_delegated_usd",
+			Help: "Validator's self delegated amount (in USD)",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -150,6 +166,8 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(delegationsUsdGauge)
 	registry.MustRegister(delegationsCountGauge)
+	registry.MustRegister(selfDelegatedTokensGauge)
+	registry.MustRegister(selfDelegatedUSDGauge)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -228,6 +246,22 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(float64(validator.Info.DelegatorsCount))
+		}
+
+		if validator.Info.SelfDelegation != 0 {
+			selfDelegatedTokensGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.SelfDelegation)
+		}
+
+		if validator.Info.SelfDelegationUSD != 0 {
+			selfDelegatedUSDGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.SelfDelegationUSD)
 		}
 	}
 

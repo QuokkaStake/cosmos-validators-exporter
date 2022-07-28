@@ -1,6 +1,8 @@
 package main
 
-import "time"
+import (
+	"time"
+)
 
 type ValidatorResponse struct {
 	Validator Validator `json:"validator"`
@@ -57,6 +59,8 @@ type ValidatorInfo struct {
 	UnbondingTime           time.Time
 	MinSelfDelegation       int64
 	DelegatorsCount         int64
+	SelfDelegation          float64
+	SelfDelegationUSD       float64
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {

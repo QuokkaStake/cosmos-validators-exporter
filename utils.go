@@ -2,6 +2,8 @@ package main
 
 import (
 	"strconv"
+
+	"github.com/btcsuite/btcutil/bech32"
 )
 
 func BoolToFloat64(b bool) float64 {
@@ -28,4 +30,14 @@ func StrToInt64(s string) int64 {
 	}
 
 	return f
+}
+
+func ChangeBech32Prefix(source, newPrefix string) (string, error) {
+	_, bytes, err := bech32.Decode(source)
+
+	if err != nil {
+		return "", err
+	}
+
+	return bech32.Encode(newPrefix, bytes)
 }

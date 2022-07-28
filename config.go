@@ -14,6 +14,7 @@ type Chain struct {
 	CoingeckoCurrency string   `toml:"coingecko-currency"`
 	BaseDenom         string   `toml:"base-denom"`
 	DenomCoefficient  int64    `toml:"denom-coefficient" default:"1000000"`
+	BechWalletPrefix  string   `toml:"bech-wallet-prefix"`
 	Validators        []string `toml:"validators"`
 }
 

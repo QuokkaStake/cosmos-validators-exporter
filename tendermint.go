@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/rs/zerolog"
 )
 
@@ -47,6 +48,23 @@ func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, QueryI
 	)
 
 	var response *PaginationResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, info, err
+	}
+
+	return response, info, nil
+}
+
+func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*stakingTypes.QueryDelegationResponse, QueryInfo, error) {
+	url := fmt.Sprintf(
+		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
+		rpc.URL,
+		validator,
+		wallet,
+	)
+
+	var response *stakingTypes.QueryDelegationResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
 		return nil, info, err
