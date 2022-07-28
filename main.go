@@ -74,6 +74,30 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		},
 	)
 
+	commissionGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_commission",
+			Help: "Validator current commission",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	commissionMaxGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_commission_max",
+			Help: "Max commission for validator",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	commissionMaxChangeGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_commission_max_change",
+			Help: "Max commission change for validator",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	delegationsGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_total_delegations",
@@ -94,6 +118,9 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(successGauge)
 	registry.MustRegister(timingsGauge)
 	registry.MustRegister(validatorInfoGauge)
+	registry.MustRegister(commissionGauge)
+	registry.MustRegister(commissionMaxGauge)
+	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(delegationsUsdGauge)
 
@@ -122,6 +149,24 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			"security_contact": validator.Info.SecurityContact,
 			"website":          validator.Info.Website,
 		}).Set(1)
+
+		commissionGauge.With(prometheus.Labels{
+			"chain":   validator.Chain,
+			"address": validator.Address,
+			"moniker": validator.Info.Moniker,
+		}).Set(validator.Info.CommissionRate)
+
+		commissionMaxGauge.With(prometheus.Labels{
+			"chain":   validator.Chain,
+			"address": validator.Address,
+			"moniker": validator.Info.Moniker,
+		}).Set(validator.Info.CommissionMaxRate)
+
+		commissionMaxChangeGauge.With(prometheus.Labels{
+			"chain":   validator.Chain,
+			"address": validator.Address,
+			"moniker": validator.Info.Moniker,
+		}).Set(validator.Info.CommissionMaxChangeRate)
 
 		delegationsGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
