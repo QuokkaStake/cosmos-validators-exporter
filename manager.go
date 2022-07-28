@@ -54,6 +54,8 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				}
 
 				info, err := rpc.GetValidator(address)
+				query.Duration = time.Since(start)
+
 				if err != nil {
 					m.Logger.Error().
 						Err(err).
@@ -61,20 +63,30 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("address", address).
 						Msg("Error querying validator")
 					query.Success = false
-				} else {
-					query.Success = true
-
-					infoConverted := NewValidatorInfo(info.Validator)
-
-					price, hasPrice := currenciesRates[chain.CoingeckoCurrency]
-					if hasPrice {
-						infoConverted.TokensUSD = m.CalculatePrice(infoConverted.Tokens, price, chain.DenomCoefficient)
-					}
-
-					query.Info = &infoConverted
+					validators[index] = query
+					return
 				}
 
-				query.Duration = time.Since(start)
+				query.Success = true
+
+				infoConverted := NewValidatorInfo(info.Validator)
+
+				price, hasPrice := currenciesRates[chain.CoingeckoCurrency]
+				if hasPrice {
+					infoConverted.TokensUSD = m.CalculatePrice(infoConverted.Tokens, price, chain.DenomCoefficient)
+				}
+
+				if delegators, err := rpc.GetDelegationsCount(address); err != nil {
+					m.Logger.Error().
+						Err(err).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying validator delegations count")
+				} else {
+					infoConverted.DelegatorsCount = StrToInt64(delegators.Pagination.Total)
+				}
+
+				query.Info = &infoConverted
 
 				validators[index] = query
 			}(address, chain, index)

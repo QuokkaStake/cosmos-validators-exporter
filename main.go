@@ -114,6 +114,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	delegationsCountGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_delegations_count",
+			Help: "Validator delegations (in tokens)",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(successGauge)
 	registry.MustRegister(timingsGauge)
@@ -123,6 +131,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(delegationsUsdGauge)
+	registry.MustRegister(delegationsCountGauge)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -180,6 +189,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.TokensUSD)
+		}
+
+		if validator.Info.DelegatorsCount != 0 {
+			delegationsCountGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(float64(validator.Info.DelegatorsCount))
 		}
 	}
 

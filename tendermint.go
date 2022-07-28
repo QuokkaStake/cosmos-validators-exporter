@@ -36,8 +36,23 @@ func (rpc *RPC) GetValidator(address string) (*ValidatorResponse, error) {
 	return response, nil
 }
 
+func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, error) {
+	url := fmt.Sprintf(
+		"%s/cosmos/staking/v1beta1/validators/%s/delegations?pagination.count_total=true&pagination.limit=1",
+		rpc.URL,
+		address,
+	)
+
+	var response *PaginationResponse
+	if err := rpc.Get(url, &response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
 func (rpc *RPC) Get(url string, target interface{}) error {
-	client := &http.Client{Timeout: 10 * 1000000000}
+	client := &http.Client{Timeout: 100 * 1000000000}
 	start := time.Now()
 
 	req, err := http.NewRequest("GET", url, nil)

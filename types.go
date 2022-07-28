@@ -56,6 +56,7 @@ type ValidatorInfo struct {
 	UnbondingHeight         int64
 	UnbondingTime           time.Time
 	MinSelfDelegation       int64
+	DelegatorsCount         int64
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {
@@ -85,4 +86,12 @@ type ValidatorQuery struct {
 	Duration time.Duration
 	Success  bool
 	Info     *ValidatorInfo
+}
+
+type PaginationResponse struct {
+	Pagination Pagination `json:"pagination"`
+}
+
+type Pagination struct {
+	Total string `json:"total"`
 }
