@@ -21,7 +21,7 @@ func NewRPC(url string, logger zerolog.Logger) *RPC {
 	}
 }
 
-func (rpc *RPC) GetValidator(address string) (*ValidatorResponse, error) {
+func (rpc *RPC) GetValidator(address string) (*ValidatorResponse, QueryInfo, error) {
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s",
 		rpc.URL,
@@ -29,14 +29,15 @@ func (rpc *RPC) GetValidator(address string) (*ValidatorResponse, error) {
 	)
 
 	var response *ValidatorResponse
-	if err := rpc.Get(url, &response); err != nil {
-		return nil, err
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, info, err
 	}
 
-	return response, nil
+	return response, info, nil
 }
 
-func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, error) {
+func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, QueryInfo, error) {
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations?pagination.count_total=true&pagination.limit=1",
 		rpc.URL,
@@ -44,32 +45,44 @@ func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, error)
 	)
 
 	var response *PaginationResponse
-	if err := rpc.Get(url, &response); err != nil {
-		return nil, err
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, info, err
 	}
 
-	return response, nil
+	return response, info, nil
 }
 
-func (rpc *RPC) Get(url string, target interface{}) error {
-	client := &http.Client{Timeout: 100 * 1000000000}
+func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
+	client := &http.Client{Timeout: 10 * 1000000000}
 	start := time.Now()
+
+	info := QueryInfo{
+		URL:     url,
+		Success: false,
+	}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return info, err
 	}
 
 	rpc.Logger.Debug().Str("url", url).Msg("Doing a query...")
 
 	res, err := client.Do(req)
 	if err != nil {
+		info.Duration = time.Since(start)
 		rpc.Logger.Warn().Str("url", url).Err(err).Msg("Query failed")
-		return err
+		return info, err
 	}
 	defer res.Body.Close()
 
+	info.Duration = time.Since(start)
+
 	rpc.Logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
 
-	return json.NewDecoder(res.Body).Decode(target)
+	err = json.NewDecoder(res.Body).Decode(target)
+	info.Success = (err == nil)
+
+	return info, err
 }

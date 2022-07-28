@@ -42,10 +42,26 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		Str("request-id", uuid.New().String()).
 		Logger()
 
-	successGauge := prometheus.NewGaugeVec(
+	queriesCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_success",
-			Help: "Whether a scrape was successful",
+			Name: "cosmos_validators_exporter_queries_total",
+			Help: "Total queries done for this chain",
+		},
+		[]string{"chain", "address"},
+	)
+
+	queriesSuccessfulGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_queries_success",
+			Help: "Successful queries count for this chain",
+		},
+		[]string{"chain", "address"},
+	)
+
+	queriesFailedGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_queries_error",
+			Help: "Failed queries count for this chain",
 		},
 		[]string{"chain", "address"},
 	)
@@ -55,7 +71,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			Name: "cosmos_validators_exporter_timings",
 			Help: "External LCD query timing",
 		},
-		[]string{"chain", "address"},
+		[]string{"chain", "address", "url"},
 	)
 
 	validatorInfoGauge := prometheus.NewGaugeVec(
@@ -123,7 +139,9 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	)
 
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(successGauge)
+	registry.MustRegister(queriesCountGauge)
+	registry.MustRegister(queriesSuccessfulGauge)
+	registry.MustRegister(queriesFailedGauge)
 	registry.MustRegister(timingsGauge)
 	registry.MustRegister(validatorInfoGauge)
 	registry.MustRegister(commissionGauge)
@@ -135,17 +153,30 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
-		successGauge.With(prometheus.Labels{
+		queriesCountGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
 			"address": validator.Address,
-		}).Set(BoolToFloat64(validator.Success))
+		}).Set(float64(len(validator.Queries)))
 
-		timingsGauge.With(prometheus.Labels{
+		queriesSuccessfulGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
 			"address": validator.Address,
-		}).Set(validator.Duration.Seconds())
+		}).Set(float64(validator.GetSuccessfulQueriesCount()))
 
-		if !validator.Success {
+		queriesFailedGauge.With(prometheus.Labels{
+			"chain":   validator.Chain,
+			"address": validator.Address,
+		}).Set(float64(int64(len(validator.Queries)) - validator.GetSuccessfulQueriesCount()))
+
+		for _, query := range validator.Queries {
+			timingsGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"url":     query.URL,
+			}).Set(query.Duration.Seconds())
+		}
+
+		if validator.Info == nil {
 			continue
 		}
 

@@ -81,11 +81,10 @@ func NewValidatorInfo(validator Validator) ValidatorInfo {
 }
 
 type ValidatorQuery struct {
-	Chain    string
-	Address  string
-	Duration time.Duration
-	Success  bool
-	Info     *ValidatorInfo
+	Chain   string
+	Address string
+	Queries []QueryInfo
+	Info    *ValidatorInfo
 }
 
 type PaginationResponse struct {
@@ -94,4 +93,22 @@ type PaginationResponse struct {
 
 type Pagination struct {
 	Total string `json:"total"`
+}
+
+type QueryInfo struct {
+	URL      string
+	Duration time.Duration
+	Success  bool
+}
+
+func (q *ValidatorQuery) GetSuccessfulQueriesCount() int64 {
+	var count int64 = 0
+
+	for _, query := range q.Queries {
+		if query.Success {
+			count++
+		}
+	}
+
+	return count
 }

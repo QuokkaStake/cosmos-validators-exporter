@@ -2,7 +2,6 @@ package main
 
 import (
 	"sync"
-	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -46,15 +45,15 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 			go func(address string, chain Chain, index int) {
 				defer wg.Done()
 
-				start := time.Now()
-
 				query := ValidatorQuery{
 					Chain:   chain.Name,
 					Address: address,
 				}
 
-				info, err := rpc.GetValidator(address)
-				query.Duration = time.Since(start)
+				info, validatorQueryInfo, err := rpc.GetValidator(address)
+
+				rpcQueries := []QueryInfo{validatorQueryInfo}
+				query.Queries = rpcQueries
 
 				if err != nil {
 					m.Logger.Error().
@@ -62,12 +61,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("chain", chain.Name).
 						Str("address", address).
 						Msg("Error querying validator")
-					query.Success = false
 					validators[index] = query
 					return
 				}
-
-				query.Success = true
 
 				infoConverted := NewValidatorInfo(info.Validator)
 
@@ -76,7 +72,8 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					infoConverted.TokensUSD = m.CalculatePrice(infoConverted.Tokens, price, chain.DenomCoefficient)
 				}
 
-				if delegators, err := rpc.GetDelegationsCount(address); err != nil {
+				delegators, delegatorsCountQuery, err := rpc.GetDelegationsCount(address)
+				if err != nil {
 					m.Logger.Error().
 						Err(err).
 						Str("chain", chain.Name).
@@ -86,6 +83,8 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					infoConverted.DelegatorsCount = StrToInt64(delegators.Pagination.Total)
 				}
 
+				rpcQueries = append(rpcQueries, delegatorsCountQuery)
+				query.Queries = rpcQueries
 				query.Info = &infoConverted
 
 				validators[index] = query
