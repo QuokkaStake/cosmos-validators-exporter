@@ -11,7 +11,7 @@ You can use it for building a validator(s) dashboard(s) to visualize your valida
 
 Here's an example of the dashboard we're using in production:
 
-![Validators dashboard](https://raw.githubusercontent.com/freak12techno/cosmos-validators-exporter/master/images/01.jpg)
+![Validators dashboard](https://raw.githubusercontent.com/freak12techno/cosmos-validators-exporter/master/images/01.png)
 
 ## How can I set it up?
 
