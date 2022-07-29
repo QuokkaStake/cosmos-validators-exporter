@@ -1,0 +1,53 @@
+# Global timeout for RPC queries, in seconds. Defaults to 5.
+timeout = 5
+# The address the exporter will listen on .Defaults to ":9560".
+listen-address = ":9560"
+
+# Logging config
+[log]
+# Log level. Change it to "debug" or even trace for more verbosity and debugging. Defaults to "info".
+level = "debug"
+# Whether all the logs should be written in JSON instead of a pretty-printed text. Useful if you have
+# logging solutions, like ELK. Defaults to false.
+json = false
+
+# Per-chain config.
+[[chains]]
+# Chain name that will go into labels. Required.
+name = "bitsong"
+# LCD endpoint to query data from. Required.
+lcd-endpoint = "https://api.bitsong.freak12techno.io"
+# Coingecko currency, specify it if you want to also get the wallet balance
+# in total in USD.
+coingecko-currency = "bitsong"
+# The chain's base denom. Only balances with this denom will be used
+# to calculate wallet's USD price.
+base-denom = "ubtsg"
+# The coefficient you need to multiply base denom to to get 1 token on Coingecko.
+# Example: on Cosmos network the base denom is uatom, 1 atom = 1_000_000 uatom
+# and 1 atom on Coingecko = $10, and your wallet has 10 atom, or 10_000_000 uatom.
+# Then you need to specify the following parameters:
+# coingecko-currency = "cosmos-hub"
+# base-denom = "uatom"
+# denom-coefficient = 1000000
+# and after that, the /metrics endpoint will return your total balance as $100.
+# Defaults to 1000000
+denom-coefficient = 1000000
+# Bech32 prefix for a wallet address (example: "cosmos" for a Cosmos wallet). If omitted,
+# the self-delegation metric will not be present.
+bech-wallet-prefix = "bitsong"
+# List of validators to monitor.
+validators = [
+    "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge"
+]
+
+# There can be multiple chains.
+[[chains]]
+name = "emoney"
+lcd-endpoint = "https://api.emoney.freak12techno.io"
+coingecko-currency = "e-money"
+base-denom = "ungm"
+bech-wallet-prefix = "emoney"
+validators = [
+    "emoneyvaloper1jk4n79c5gv36972ptnly3rvx5nvn3hl3hgly9g"
+]
