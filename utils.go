@@ -34,7 +34,6 @@ func StrToInt64(s string) int64 {
 
 func ChangeBech32Prefix(source, newPrefix string) (string, error) {
 	_, bytes, err := bech32.Decode(source)
-
 	if err != nil {
 		return "", err
 	}

@@ -90,6 +90,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		},
 	)
 
+	isJailedGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_jailed",
+			Help: "Whether a validator is jailed (1 if yes, 0 if no)",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	commissionGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_commission",
@@ -176,6 +184,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(queriesFailedGauge)
 	registry.MustRegister(timingsGauge)
 	registry.MustRegister(validatorInfoGauge)
+	registry.MustRegister(isJailedGauge)
 	registry.MustRegister(commissionGauge)
 	registry.MustRegister(commissionMaxGauge)
 	registry.MustRegister(commissionMaxChangeGauge)
@@ -222,6 +231,12 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"security_contact": validator.Info.SecurityContact,
 				"website":          validator.Info.Website,
 			}).Set(1)
+
+			isJailedGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(BoolToFloat64(validator.Info.Jailed))
 
 			commissionGauge.With(prometheus.Labels{
 				"chain":   validator.Chain,
