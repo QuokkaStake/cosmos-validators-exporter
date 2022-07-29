@@ -90,7 +90,7 @@ type ValidatorQuery struct {
 	Chain   string
 	Address string
 	Queries []QueryInfo
-	Info    *ValidatorInfo
+	Info    ValidatorInfo
 }
 
 type PaginationResponse struct {
@@ -107,7 +107,7 @@ type QueryInfo struct {
 	Success  bool
 }
 
-func (q *ValidatorQuery) GetSuccessfulQueriesCount() int64 {
+func (q *ValidatorQuery) GetSuccessfulQueriesCount() float64 {
 	var count int64 = 0
 
 	for _, query := range q.Queries {
@@ -116,7 +116,11 @@ func (q *ValidatorQuery) GetSuccessfulQueriesCount() int64 {
 		}
 	}
 
-	return count
+	return float64(count)
+}
+
+func (q *ValidatorQuery) GetFailedQueriesCount() float64 {
+	return float64(len(q.Queries)) - q.GetSuccessfulQueriesCount()
 }
 
 type ValidatorsResponse struct {

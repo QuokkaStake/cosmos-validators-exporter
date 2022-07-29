@@ -197,12 +197,12 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		queriesSuccessfulGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
 			"address": validator.Address,
-		}).Set(float64(validator.GetSuccessfulQueriesCount()))
+		}).Set(validator.GetSuccessfulQueriesCount())
 
 		queriesFailedGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
 			"address": validator.Address,
-		}).Set(float64(int64(len(validator.Queries)) - validator.GetSuccessfulQueriesCount()))
+		}).Set(validator.GetFailedQueriesCount())
 
 		for _, query := range validator.Queries {
 			timingsGauge.With(prometheus.Labels{
@@ -212,43 +212,41 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(query.Duration.Seconds())
 		}
 
-		if validator.Info == nil {
-			continue
+		if validator.Info.Moniker != "" { // validator request may fail, here it's assumed it didn't
+			validatorInfoGauge.With(prometheus.Labels{
+				"chain":            validator.Chain,
+				"address":          validator.Address,
+				"moniker":          validator.Info.Moniker,
+				"details":          validator.Info.Details,
+				"identity":         validator.Info.Identity,
+				"security_contact": validator.Info.SecurityContact,
+				"website":          validator.Info.Website,
+			}).Set(1)
+
+			commissionGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.CommissionRate)
+
+			commissionMaxGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.CommissionMaxRate)
+
+			commissionMaxChangeGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.CommissionMaxChangeRate)
+
+			delegationsGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.Tokens)
 		}
-
-		validatorInfoGauge.With(prometheus.Labels{
-			"chain":            validator.Chain,
-			"address":          validator.Address,
-			"moniker":          validator.Info.Moniker,
-			"details":          validator.Info.Details,
-			"identity":         validator.Info.Identity,
-			"security_contact": validator.Info.SecurityContact,
-			"website":          validator.Info.Website,
-		}).Set(1)
-
-		commissionGauge.With(prometheus.Labels{
-			"chain":   validator.Chain,
-			"address": validator.Address,
-			"moniker": validator.Info.Moniker,
-		}).Set(validator.Info.CommissionRate)
-
-		commissionMaxGauge.With(prometheus.Labels{
-			"chain":   validator.Chain,
-			"address": validator.Address,
-			"moniker": validator.Info.Moniker,
-		}).Set(validator.Info.CommissionMaxRate)
-
-		commissionMaxChangeGauge.With(prometheus.Labels{
-			"chain":   validator.Chain,
-			"address": validator.Address,
-			"moniker": validator.Info.Moniker,
-		}).Set(validator.Info.CommissionMaxChangeRate)
-
-		delegationsGauge.With(prometheus.Labels{
-			"chain":   validator.Chain,
-			"address": validator.Address,
-			"moniker": validator.Info.Moniker,
-		}).Set(validator.Info.Tokens)
 
 		if validator.Info.TokensUSD != 0 {
 			delegationsUsdGauge.With(prometheus.Labels{
@@ -290,7 +288,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(float64(validator.Info.Rank))
 		}
 
-		if validator.Info.TotalStake != 0 {
+		if validator.Info.TotalStake != 0 && validator.Info.Tokens != 0 {
 			votingPowerPercent.With(prometheus.Labels{
 				"chain":   validator.Chain,
 				"address": validator.Address,

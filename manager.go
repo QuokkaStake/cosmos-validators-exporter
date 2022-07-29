@@ -46,67 +46,116 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 			go func(address string, chain Chain, index int) {
 				defer wg.Done()
 
-				query := ValidatorQuery{
-					Chain:   chain.Name,
-					Address: address,
-				}
+				var internalWg sync.WaitGroup
 
-				info, validatorQueryInfo, err := rpc.GetValidator(address)
+				var (
+					info                     *ValidatorResponse
+					validatorQueryInfo       QueryInfo
+					validatorQueryError      error
+					delegators               *PaginationResponse
+					delegatorsCountQuery     QueryInfo
+					delegatorsCountError     error
+					rank                     uint64
+					totalStake               float64
+					validatorsQueryInfo      QueryInfo
+					validatorsQueryError     error
+					selfDelegationAmount     float64
+					selfDelegationQuery      *QueryInfo
+					selfDelegationQueryError error
 
-				rpcQueries := []QueryInfo{validatorQueryInfo}
-				query.Queries = rpcQueries
+					validatorInfo ValidatorInfo
+				)
 
-				if err != nil {
+				internalWg.Add(4)
+				go func() {
+					info, validatorQueryInfo, validatorQueryError = rpc.GetValidator(address)
+					internalWg.Done()
+				}()
+
+				go func() {
+					delegators, delegatorsCountQuery, delegatorsCountError = rpc.GetDelegationsCount(address)
+					internalWg.Done()
+				}()
+
+				go func() {
+					rank, totalStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
+					internalWg.Done()
+				}()
+
+				go func() {
+					selfDelegationAmount, selfDelegationQuery, selfDelegationQueryError = m.GetSelfDelegationsBalance(chain, address, rpc)
+					internalWg.Done()
+				}()
+
+				internalWg.Wait()
+
+				if validatorQueryError != nil {
 					m.Logger.Error().
-						Err(err).
+						Err(validatorQueryError).
 						Str("chain", chain.Name).
 						Str("address", address).
 						Msg("Error querying validator")
-					validators[index] = query
-					return
+					validatorInfo = ValidatorInfo{}
+				} else {
+					validatorInfo = NewValidatorInfo(info.Validator)
 				}
-
-				infoConverted := NewValidatorInfo(info.Validator)
 
 				price, hasPrice := currenciesRates[chain.CoingeckoCurrency]
 				if hasPrice {
-					infoConverted.TokensUSD = m.CalculatePrice(infoConverted.Tokens, price, chain.DenomCoefficient)
+					validatorInfo.TokensUSD = m.CalculatePrice(validatorInfo.Tokens, price, chain.DenomCoefficient)
 				}
 
-				delegators, delegatorsCountQuery, err := rpc.GetDelegationsCount(address)
-				if err != nil {
+				if delegatorsCountError != nil {
 					m.Logger.Error().
-						Err(err).
+						Err(delegatorsCountError).
 						Str("chain", chain.Name).
 						Str("address", address).
 						Msg("Error querying validator delegations count")
 				} else {
-					infoConverted.DelegatorsCount = StrToInt64(delegators.Pagination.Total)
+					validatorInfo.DelegatorsCount = StrToInt64(delegators.Pagination.Total)
 				}
 
-				selfDelegation, selfDelegationQuery, _ := m.GetSelfDelegationsBalance(chain, address, rpc)
-				if selfDelegation != 0 {
-					infoConverted.SelfDelegation = selfDelegation
-					infoConverted.SelfDelegationUSD = m.CalculatePrice(
-						selfDelegation,
+				if selfDelegationQueryError != nil {
+					m.Logger.Error().
+						Err(selfDelegationQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying self-delegations for validator")
+				} else {
+					validatorInfo.SelfDelegation = selfDelegationAmount
+					validatorInfo.SelfDelegationUSD = m.CalculatePrice(
+						selfDelegationAmount,
 						price,
 						chain.DenomCoefficient,
 					)
 				}
 
-				rank, totalStake, validatorsQueryInfo, _ := m.GetValidatorRankAndTotalStake(chain, address, rpc)
-				if rank != 0 {
-					infoConverted.Rank = rank
-					infoConverted.TotalStake = totalStake
+				if validatorsQueryError != nil {
+					m.Logger.Error().
+						Err(validatorsQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying validators list")
+				} else {
+					validatorInfo.Rank = rank
+					validatorInfo.TotalStake = totalStake
 				}
 
-				rpcQueries = append(rpcQueries, delegatorsCountQuery, validatorsQueryInfo)
+				rpcQueries := []QueryInfo{
+					validatorQueryInfo,
+					delegatorsCountQuery,
+					validatorsQueryInfo,
+				}
 				if selfDelegationQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationQuery)
 				}
 
-				query.Queries = rpcQueries
-				query.Info = &infoConverted
+				query := ValidatorQuery{
+					Chain:   chain.Name,
+					Address: address,
+					Queries: rpcQueries,
+					Info:    validatorInfo,
+				}
 
 				validators[index] = query
 			}(address, chain, index)
