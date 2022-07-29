@@ -154,6 +154,22 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	validatorRankGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_validator_rank",
+			Help: "Rank of a validator compared to other validators on chain.",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	votingPowerPercent := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_validator_voting_power_percent",
+			Help: "Validator's voting power compared to all bonded tokens on chain.",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -168,6 +184,8 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(delegationsCountGauge)
 	registry.MustRegister(selfDelegatedTokensGauge)
 	registry.MustRegister(selfDelegatedUSDGauge)
+	registry.MustRegister(validatorRankGauge)
+	registry.MustRegister(votingPowerPercent)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -262,6 +280,22 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.SelfDelegationUSD)
+		}
+
+		if validator.Info.Rank != 0 {
+			validatorRankGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(float64(validator.Info.Rank))
+		}
+
+		if validator.Info.TotalStake != 0 {
+			votingPowerPercent.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.Tokens / validator.Info.TotalStake)
 		}
 	}
 

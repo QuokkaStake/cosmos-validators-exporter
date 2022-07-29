@@ -73,6 +73,18 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*stakingTypes.Que
 	return response, info, nil
 }
 
+func (rpc *RPC) GetAllValidators() (*ValidatorsResponse, QueryInfo, error) {
+	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000", rpc.URL)
+
+	var response *ValidatorsResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, info, err
+	}
+
+	return response, info, nil
+}
+
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	client := &http.Client{
 		Timeout: time.Duration(rpc.Timeout) * time.Second,

@@ -9,7 +9,7 @@ type ValidatorResponse struct {
 }
 
 type Validator struct {
-	OperatorAddress   string               `json:"validator_address"`
+	OperatorAddress   string               `json:"operator_address"`
 	Jailed            bool                 `json:"jailed"`
 	Status            string               `json:"status"`
 	Tokens            string               `json:"tokens"`
@@ -61,6 +61,8 @@ type ValidatorInfo struct {
 	DelegatorsCount         int64
 	SelfDelegation          float64
 	SelfDelegationUSD       float64
+	Rank                    uint64
+	TotalStake              float64
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {
@@ -115,4 +117,8 @@ func (q *ValidatorQuery) GetSuccessfulQueriesCount() int64 {
 	}
 
 	return count
+}
+
+type ValidatorsResponse struct {
+	Validators []Validator `json:"validators"`
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -93,7 +94,13 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					)
 				}
 
-				rpcQueries = append(rpcQueries, delegatorsCountQuery)
+				rank, totalStake, validatorsQueryInfo, _ := m.GetValidatorRankAndTotalStake(chain, address, rpc)
+				if rank != 0 {
+					infoConverted.Rank = rank
+					infoConverted.TotalStake = totalStake
+				}
+
+				rpcQueries = append(rpcQueries, delegatorsCountQuery, validatorsQueryInfo)
 				if selfDelegationQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationQuery)
 				}
@@ -143,6 +150,38 @@ func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RP
 	}
 
 	return balance.DelegationResponse.Delegation.Shares.MustFloat64(), &queryInfo, err
+}
+
+func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, float64, QueryInfo, error) {
+	allValidators, info, err := rpc.GetAllValidators()
+	if err != nil {
+		m.Logger.Error().
+			Err(err).
+			Str("chain", chain.Name).
+			Str("address", address).
+			Msg("Error querying for validatos")
+		return 0, 0, info, err
+	}
+
+	activeValidators := Filter(allValidators.Validators, func(v Validator) bool {
+		return v.Status == "BOND_STATUS_BONDED"
+	})
+
+	sort.Slice(activeValidators, func(i, j int) bool {
+		return StrToFloat64(activeValidators[i].DelegatorShares) > StrToFloat64(activeValidators[j].DelegatorShares)
+	})
+
+	var validatorRank uint64 = 0
+	var totalStake float64 = 0
+
+	for index, validator := range activeValidators {
+		totalStake += StrToFloat64(validator.DelegatorShares)
+		if validator.OperatorAddress == address {
+			validatorRank = uint64(index) + 1
+		}
+	}
+
+	return validatorRank, totalStake, info, nil
 }
 
 // func (m *Manager) MaybeGetUsdPrice(
