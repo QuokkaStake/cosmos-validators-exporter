@@ -66,6 +66,10 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					commissionQuery          QueryInfo
 					commissionQueryError     error
 
+					selfDelegationRewards           []Balance
+					selfDelegationRewardsQuery      *QueryInfo
+					selfDelegationRewardsQueryError error
+
 					validatorInfo ValidatorInfo
 				)
 
@@ -96,6 +100,12 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					commission, commissionQuery, commissionQueryError = rpc.GetValidatorCommission(address)
+					internalWg.Done()
+				}()
+
+				internalWg.Add(1)
+				go func() {
+					selfDelegationRewards, selfDelegationRewardsQuery, selfDelegationRewardsQueryError = m.GetSelfDelegationRewards(chain, address, rpc)
 					internalWg.Done()
 				}()
 
@@ -166,6 +176,19 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					}
 				}
 
+				if selfDelegationRewardsQueryError != nil {
+					m.Logger.Error().
+						Err(selfDelegationRewardsQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying validator self-delegation rewards")
+				} else {
+					validatorInfo.SelfDelegationRewards = selfDelegationRewards
+					if hasPrice {
+						validatorInfo.SelfDelegationRewardsUSD = m.CalculatePrices(selfDelegationRewards, price, chain)
+					}
+				}
+
 				rpcQueries := []QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
@@ -174,6 +197,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				}
 				if selfDelegationQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationQuery)
+				}
+				if selfDelegationRewardsQuery != nil {
+					rpcQueries = append(rpcQueries, *selfDelegationRewardsQuery)
 				}
 
 				query := ValidatorQuery{
@@ -257,6 +283,34 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 	}
 
 	return validatorRank, totalStake, info, nil
+}
+
+func (m *Manager) GetSelfDelegationRewards(chain Chain, address string, rpc *RPC) ([]Balance, *QueryInfo, error) {
+	if chain.BechWalletPrefix == "" {
+		return []Balance{}, nil, nil
+	}
+
+	wallet, err := ChangeBech32Prefix(address, chain.BechWalletPrefix)
+	if err != nil {
+		m.Logger.Error().
+			Err(err).
+			Str("chain", chain.Name).
+			Str("address", address).
+			Msg("Error converting validator address")
+		return []Balance{}, nil, err
+	}
+
+	balances, queryInfo, err := rpc.GetDelegatorRewards(address, wallet)
+	if err != nil {
+		m.Logger.Error().
+			Err(err).
+			Str("chain", chain.Name).
+			Str("address", address).
+			Msg("Error querying for validator self-delegation rewards")
+		return []Balance{}, &queryInfo, err
+	}
+
+	return balances, &queryInfo, err
 }
 
 func (m *Manager) CalculatePrices(balances []Balance, rate float64, chain Chain) float64 {

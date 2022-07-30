@@ -108,6 +108,28 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]Balance, QueryInfo, er
 	}), info, nil
 }
 
+func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]Balance, QueryInfo, error) {
+	url := fmt.Sprintf(
+		"%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s",
+		rpc.URL,
+		wallet,
+		validator,
+	)
+
+	var response *distributionTypes.QueryDelegationRewardsResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return []Balance{}, info, err
+	}
+
+	return Map(response.Rewards, func(balance types.DecCoin) Balance {
+		return Balance{
+			Amount: balance.Amount.MustFloat64(),
+			Denom:  balance.Denom,
+		}
+	}), info, nil
+}
+
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	client := &http.Client{
 		Timeout: time.Duration(rpc.Timeout) * time.Second,

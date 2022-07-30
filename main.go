@@ -181,15 +181,31 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	commissionUnclaimedTokens := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_unclaimed_commission",
-			Help: "Validator's unclaimed commission( in tokens)",
+			Help: "Validator's unclaimed commission (in tokens)",
 		},
 		[]string{"chain", "address", "moniker", "denom"},
 	)
 
-	commissionUnclaimedTokensUSD := prometheus.NewGaugeVec(
+	commissionUnclaimedUSD := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_unclaimed_commission_usd",
 			Help: "Validator's unclaimed commission (in USD)",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	selfDelegationRewardsTokens := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_self_delegation_rewards",
+			Help: "Validator's self-delegation rewards (in tokens)",
+		},
+		[]string{"chain", "address", "moniker", "denom"},
+	)
+
+	selfDelegationRewardsUSD := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_self_delegation_rewards_usd",
+			Help: "Validator's self-delegation rewards (in USD)",
 		},
 		[]string{"chain", "address", "moniker"},
 	)
@@ -212,7 +228,9 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(votingPowerPercent)
 	registry.MustRegister(commissionUnclaimedTokens)
-	registry.MustRegister(commissionUnclaimedTokensUSD)
+	registry.MustRegister(commissionUnclaimedUSD)
+	registry.MustRegister(selfDelegationRewardsTokens)
+	registry.MustRegister(selfDelegationRewardsUSD)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -339,11 +357,28 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		}
 
 		if validator.Info.CommissionUSD != 0 {
-			commissionUnclaimedTokensUSD.With(prometheus.Labels{
+			commissionUnclaimedUSD.With(prometheus.Labels{
 				"chain":   validator.Chain,
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.CommissionUSD)
+		}
+
+		for _, balance := range validator.Info.SelfDelegationRewards {
+			selfDelegationRewardsTokens.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+				"denom":   balance.Denom,
+			}).Set(balance.Amount)
+		}
+
+		if validator.Info.SelfDelegationRewardsUSD != 0 {
+			selfDelegationRewardsUSD.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.SelfDelegationRewardsUSD)
 		}
 	}
 

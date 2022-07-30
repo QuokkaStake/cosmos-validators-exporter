@@ -41,30 +41,32 @@ type ValidatorCommissionRates struct {
 }
 
 type ValidatorInfo struct {
-	Address                 string
-	Moniker                 string
-	Identity                string
-	Website                 string
-	SecurityContact         string
-	Details                 string
-	Tokens                  float64
-	TokensUSD               float64
-	Jailed                  bool
-	Status                  string
-	CommissionRate          float64
-	CommissionMaxRate       float64
-	CommissionMaxChangeRate float64
-	CommissionUpdateTime    time.Time
-	UnbondingHeight         int64
-	UnbondingTime           time.Time
-	MinSelfDelegation       int64
-	DelegatorsCount         int64
-	SelfDelegation          float64
-	SelfDelegationUSD       float64
-	Rank                    uint64
-	TotalStake              float64
-	Commission              []Balance
-	CommissionUSD           float64
+	Address                  string
+	Moniker                  string
+	Identity                 string
+	Website                  string
+	SecurityContact          string
+	Details                  string
+	Tokens                   float64
+	TokensUSD                float64
+	Jailed                   bool
+	Status                   string
+	CommissionRate           float64
+	CommissionMaxRate        float64
+	CommissionMaxChangeRate  float64
+	CommissionUpdateTime     time.Time
+	UnbondingHeight          int64
+	UnbondingTime            time.Time
+	MinSelfDelegation        int64
+	DelegatorsCount          int64
+	SelfDelegation           float64
+	SelfDelegationUSD        float64
+	Rank                     uint64
+	TotalStake               float64
+	Commission               []Balance
+	CommissionUSD            float64
+	SelfDelegationRewards    []Balance
+	SelfDelegationRewardsUSD float64
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {
