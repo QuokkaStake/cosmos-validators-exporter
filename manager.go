@@ -62,28 +62,40 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					selfDelegationAmount     float64
 					selfDelegationQuery      *QueryInfo
 					selfDelegationQueryError error
+					commission               []Balance
+					commissionQuery          QueryInfo
+					commissionQueryError     error
 
 					validatorInfo ValidatorInfo
 				)
 
-				internalWg.Add(4)
+				internalWg.Add(1)
 				go func() {
 					info, validatorQueryInfo, validatorQueryError = rpc.GetValidator(address)
 					internalWg.Done()
 				}()
 
+				internalWg.Add(1)
 				go func() {
 					delegators, delegatorsCountQuery, delegatorsCountError = rpc.GetDelegationsCount(address)
 					internalWg.Done()
 				}()
 
+				internalWg.Add(1)
 				go func() {
 					rank, totalStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
 					internalWg.Done()
 				}()
 
+				internalWg.Add(1)
 				go func() {
 					selfDelegationAmount, selfDelegationQuery, selfDelegationQueryError = m.GetSelfDelegationsBalance(chain, address, rpc)
+					internalWg.Done()
+				}()
+
+				internalWg.Add(1)
+				go func() {
+					commission, commissionQuery, commissionQueryError = rpc.GetValidatorCommission(address)
 					internalWg.Done()
 				}()
 
@@ -141,10 +153,24 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorInfo.TotalStake = totalStake
 				}
 
+				if commissionQueryError != nil {
+					m.Logger.Error().
+						Err(commissionQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying validator commission")
+				} else {
+					validatorInfo.Commission = commission
+					if hasPrice {
+						validatorInfo.CommissionUSD = m.CalculatePrices(commission, price, chain)
+					}
+				}
+
 				rpcQueries := []QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
 					validatorsQueryInfo,
+					commissionQuery,
 				}
 				if selfDelegationQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationQuery)
@@ -233,26 +259,16 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 	return validatorRank, totalStake, info, nil
 }
 
-// func (m *Manager) MaybeGetUsdPrice(
-// 	chain Chain,
-// 	balances []types.Coin,
-// 	rates map[string]float64,
-// ) float64 {
-// 	price, hasPrice := rates[chain.CoingeckoCurrency]
-// 	if !hasPrice {
-// 		return 0
-// 	}
+func (m *Manager) CalculatePrices(balances []Balance, rate float64, chain Chain) float64 {
+	var usdPriceTotal float64 = 0
+	for _, balance := range balances {
+		if balance.Denom == chain.BaseDenom {
+			usdPriceTotal += m.CalculatePrice(balance.Amount, rate, chain.DenomCoefficient)
+		}
+	}
 
-// 	var usdPriceTotal float64 = 0
-// 	for _, balance := range balances {
-// 		if balance.Denom == chain.BaseDenom {
-// 			usdPriceTotal += m.CalculatePrice(balance)
-// 			usdPriceTotal += StrToFloat64(balance.Amount) * price / float64(chain.DenomCoefficient)
-// 		}
-// 	}
-
-// 	return usdPriceTotal
-// }
+	return usdPriceTotal
+}
 
 func (m *Manager) CalculatePrice(amount float64, rate float64, coefficient int64) float64 {
 	return amount * rate / float64(coefficient)

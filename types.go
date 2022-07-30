@@ -63,6 +63,8 @@ type ValidatorInfo struct {
 	SelfDelegationUSD       float64
 	Rank                    uint64
 	TotalStake              float64
+	Commission              []Balance
+	CommissionUSD           float64
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {
@@ -125,4 +127,9 @@ func (q *ValidatorQuery) GetFailedQueriesCount() float64 {
 
 type ValidatorsResponse struct {
 	Validators []Validator `json:"validators"`
+}
+
+type Balance struct {
+	Amount float64
+	Denom  string
 }

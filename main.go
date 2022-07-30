@@ -164,7 +164,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 
 	validatorRankGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_validator_rank",
+			Name: "cosmos_validators_exporter_rank",
 			Help: "Rank of a validator compared to other validators on chain.",
 		},
 		[]string{"chain", "address", "moniker"},
@@ -172,8 +172,24 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 
 	votingPowerPercent := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_validator_voting_power_percent",
+			Name: "cosmos_validators_exporter_voting_power_percent",
 			Help: "Validator's voting power compared to all bonded tokens on chain.",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	commissionUnclaimedTokens := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_unclaimed_commission",
+			Help: "Validator's unclaimed commission( in tokens)",
+		},
+		[]string{"chain", "address", "moniker", "denom"},
+	)
+
+	commissionUnclaimedTokensUSD := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_unclaimed_commission_usd",
+			Help: "Validator's unclaimed commission (in USD)",
 		},
 		[]string{"chain", "address", "moniker"},
 	)
@@ -195,6 +211,8 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(selfDelegatedUSDGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(votingPowerPercent)
+	registry.MustRegister(commissionUnclaimedTokens)
+	registry.MustRegister(commissionUnclaimedTokensUSD)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -309,6 +327,23 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.Tokens / validator.Info.TotalStake)
+		}
+
+		for _, balance := range validator.Info.Commission {
+			commissionUnclaimedTokens.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+				"denom":   balance.Denom,
+			}).Set(balance.Amount)
+		}
+
+		if validator.Info.CommissionUSD != 0 {
+			commissionUnclaimedTokensUSD.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.CommissionUSD)
 		}
 	}
 

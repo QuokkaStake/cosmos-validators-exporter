@@ -50,3 +50,12 @@ func Filter[T any](slice []T, f func(T) bool) []T {
 	}
 	return n
 }
+
+func Map[T any, V any](slice []T, f func(T) V) []V {
+	n := make([]V, len(slice))
+
+	for index, e := range slice {
+		n[index] = f(e)
+	}
+	return n
+}
