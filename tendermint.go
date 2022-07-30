@@ -124,7 +124,7 @@ func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 		return info, err
 	}
 
-	rpc.Logger.Debug().Str("url", url).Msg("Doing a query...")
+	rpc.Logger.Trace().Str("url", url).Msg("Doing a query...")
 
 	res, err := client.Do(req)
 	if err != nil {
