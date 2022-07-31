@@ -130,6 +130,27 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]Balance, QueryI
 	}), info, nil
 }
 
+func (rpc *RPC) GetWalletBalance(wallet string) ([]Balance, QueryInfo, error) {
+	url := fmt.Sprintf(
+		"%s/cosmos/bank/v1beta1/balances/%s",
+		rpc.URL,
+		wallet,
+	)
+
+	var response BalancesResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return []Balance{}, info, err
+	}
+
+	return Map(response.Balances, func(balance types.Coin) Balance {
+		return Balance{
+			Amount: float64(balance.Amount.Int64()),
+			Denom:  balance.Denom,
+		}
+	}), info, nil
+}
+
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	client := &http.Client{
 		Timeout: time.Duration(rpc.Timeout) * time.Second,

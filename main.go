@@ -210,6 +210,22 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	walletBalanceTokens := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_wallet_balance",
+			Help: "Validator's wallet balance (in tokens)",
+		},
+		[]string{"chain", "address", "moniker", "denom"},
+	)
+
+	walletBalanceUSD := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_wallet_balance_usd",
+			Help: "Validator's wallet balance (in USD)",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -231,6 +247,8 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(commissionUnclaimedUSD)
 	registry.MustRegister(selfDelegationRewardsTokens)
 	registry.MustRegister(selfDelegationRewardsUSD)
+	registry.MustRegister(walletBalanceTokens)
+	registry.MustRegister(walletBalanceUSD)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -379,6 +397,23 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.SelfDelegationRewardsUSD)
+		}
+
+		for _, balance := range validator.Info.WalletBalance {
+			walletBalanceTokens.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+				"denom":   balance.Denom,
+			}).Set(balance.Amount)
+		}
+
+		if validator.Info.WalletBalanceUSD != 0 {
+			walletBalanceUSD.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(validator.Info.WalletBalanceUSD)
 		}
 	}
 

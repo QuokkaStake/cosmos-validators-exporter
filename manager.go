@@ -49,26 +49,32 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				var internalWg sync.WaitGroup
 
 				var (
-					info                     *ValidatorResponse
-					validatorQueryInfo       QueryInfo
-					validatorQueryError      error
-					delegators               *PaginationResponse
-					delegatorsCountQuery     QueryInfo
-					delegatorsCountError     error
-					rank                     uint64
-					totalStake               float64
-					validatorsQueryInfo      QueryInfo
-					validatorsQueryError     error
+					info                 *ValidatorResponse
+					validatorQueryInfo   QueryInfo
+					validatorQueryError  error
+					delegators           *PaginationResponse
+					delegatorsCountQuery QueryInfo
+					delegatorsCountError error
+					rank                 uint64
+					totalStake           float64
+					validatorsQueryInfo  QueryInfo
+					validatorsQueryError error
+
 					selfDelegationAmount     float64
 					selfDelegationQuery      *QueryInfo
 					selfDelegationQueryError error
-					commission               []Balance
-					commissionQuery          QueryInfo
-					commissionQueryError     error
+
+					commission           []Balance
+					commissionQuery      QueryInfo
+					commissionQueryError error
 
 					selfDelegationRewards           []Balance
 					selfDelegationRewardsQuery      *QueryInfo
 					selfDelegationRewardsQueryError error
+
+					walletBalance           []Balance
+					walletBalanceQuery      *QueryInfo
+					walletBalanceQueryError error
 
 					validatorInfo ValidatorInfo
 				)
@@ -106,6 +112,12 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					selfDelegationRewards, selfDelegationRewardsQuery, selfDelegationRewardsQueryError = m.GetSelfDelegationRewards(chain, address, rpc)
+					internalWg.Done()
+				}()
+
+				internalWg.Add(1)
+				go func() {
+					walletBalance, walletBalanceQuery, walletBalanceQueryError = m.GetWalletBalance(chain, address, rpc)
 					internalWg.Done()
 				}()
 
@@ -189,6 +201,19 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					}
 				}
 
+				if walletBalanceQueryError != nil {
+					m.Logger.Error().
+						Err(walletBalanceQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying validator wallet balance")
+				} else {
+					validatorInfo.WalletBalance = walletBalance
+					if hasPrice {
+						validatorInfo.WalletBalanceUSD = m.CalculatePrices(walletBalance, price, chain)
+					}
+				}
+
 				rpcQueries := []QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
@@ -200,6 +225,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				}
 				if selfDelegationRewardsQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationRewardsQuery)
+				}
+				if walletBalanceQuery != nil {
+					rpcQueries = append(rpcQueries, *walletBalanceQuery)
 				}
 
 				query := ValidatorQuery{
@@ -307,6 +335,34 @@ func (m *Manager) GetSelfDelegationRewards(chain Chain, address string, rpc *RPC
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error querying for validator self-delegation rewards")
+		return []Balance{}, &queryInfo, err
+	}
+
+	return balances, &queryInfo, err
+}
+
+func (m *Manager) GetWalletBalance(chain Chain, address string, rpc *RPC) ([]Balance, *QueryInfo, error) {
+	if chain.BechWalletPrefix == "" {
+		return []Balance{}, nil, nil
+	}
+
+	wallet, err := ChangeBech32Prefix(address, chain.BechWalletPrefix)
+	if err != nil {
+		m.Logger.Error().
+			Err(err).
+			Str("chain", chain.Name).
+			Str("address", address).
+			Msg("Error converting validator address")
+		return []Balance{}, nil, err
+	}
+
+	balances, queryInfo, err := rpc.GetWalletBalance(wallet)
+	if err != nil {
+		m.Logger.Error().
+			Err(err).
+			Str("chain", chain.Name).
+			Str("address", address).
+			Msg("Error querying for validator wallet balance")
 		return []Balance{}, &queryInfo, err
 	}
 

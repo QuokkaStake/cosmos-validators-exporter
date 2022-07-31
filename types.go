@@ -2,6 +2,8 @@ package main
 
 import (
 	"time"
+
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 type ValidatorResponse struct {
@@ -67,6 +69,8 @@ type ValidatorInfo struct {
 	CommissionUSD            float64
 	SelfDelegationRewards    []Balance
 	SelfDelegationRewardsUSD float64
+	WalletBalance            []Balance
+	WalletBalanceUSD         float64
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {
@@ -134,4 +138,8 @@ type ValidatorsResponse struct {
 type Balance struct {
 	Amount float64
 	Denom  string
+}
+
+type BalancesResponse struct {
+	Balances types.Coins `json:"balances"`
 }
