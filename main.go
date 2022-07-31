@@ -151,7 +151,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			Name: "cosmos_validators_exporter_self_delegated",
 			Help: "Validator's self delegated amount (in tokens)",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address", "moniker", "denom"},
 	)
 
 	selfDelegatedUSDGauge := prometheus.NewGaugeVec(
@@ -333,12 +333,13 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(float64(validator.Info.DelegatorsCount))
 		}
 
-		if validator.Info.SelfDelegation != 0 {
+		if validator.Info.SelfDelegation.Amount != 0 {
 			selfDelegatedTokensGauge.With(prometheus.Labels{
 				"chain":   validator.Chain,
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.SelfDelegation)
+				"denom":   validator.Info.SelfDelegation.Denom,
+			}).Set(validator.Info.SelfDelegation.Amount)
 		}
 
 		if validator.Info.SelfDelegationUSD != 0 {

@@ -60,7 +60,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorsQueryInfo  QueryInfo
 					validatorsQueryError error
 
-					selfDelegationAmount     float64
+					selfDelegationAmount     Balance
 					selfDelegationQuery      *QueryInfo
 					selfDelegationQueryError error
 
@@ -157,11 +157,10 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Msg("Error querying self-delegations for validator")
 				} else {
 					validatorInfo.SelfDelegation = selfDelegationAmount
-					validatorInfo.SelfDelegationUSD = m.CalculatePrice(
-						selfDelegationAmount,
-						price,
-						chain.DenomCoefficient,
-					)
+
+					if hasPrice {
+						validatorInfo.SelfDelegationUSD = m.CalculatePrices([]Balance{selfDelegationAmount}, price, chain)
+					}
 				}
 
 				if validatorsQueryError != nil {
@@ -249,9 +248,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 	return validators
 }
 
-func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RPC) (float64, *QueryInfo, error) {
+func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RPC) (Balance, *QueryInfo, error) {
 	if chain.BechWalletPrefix == "" {
-		return 0, nil, nil
+		return Balance{}, nil, nil
 	}
 
 	wallet, err := ChangeBech32Prefix(address, chain.BechWalletPrefix)
@@ -261,7 +260,7 @@ func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RP
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error converting validator address")
-		return 0, nil, err
+		return Balance{}, nil, err
 	}
 
 	balance, queryInfo, err := rpc.GetSingleDelegation(address, wallet)
@@ -271,14 +270,10 @@ func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RP
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error querying for validator self-delegation")
-		return 0, &queryInfo, err
+		return Balance{}, &queryInfo, err
 	}
 
-	if balance.DelegationResponse == nil {
-		return 0, &queryInfo, err
-	}
-
-	return balance.DelegationResponse.Delegation.Shares.MustFloat64(), &queryInfo, err
+	return balance, &queryInfo, err
 }
 
 func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, float64, QueryInfo, error) {

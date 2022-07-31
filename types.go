@@ -61,7 +61,7 @@ type ValidatorInfo struct {
 	UnbondingTime            time.Time
 	MinSelfDelegation        int64
 	DelegatorsCount          int64
-	SelfDelegation           float64
+	SelfDelegation           Balance
 	SelfDelegationUSD        float64
 	Rank                     uint64
 	TotalStake               float64

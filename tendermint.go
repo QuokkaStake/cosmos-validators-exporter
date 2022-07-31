@@ -58,7 +58,7 @@ func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, QueryI
 	return response, info, nil
 }
 
-func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*stakingTypes.QueryDelegationResponse, QueryInfo, error) {
+func (rpc *RPC) GetSingleDelegation(validator, wallet string) (Balance, QueryInfo, error) {
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
 		rpc.URL,
@@ -69,10 +69,13 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*stakingTypes.Que
 	var response *stakingTypes.QueryDelegationResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return Balance{}, info, err
 	}
 
-	return response, info, nil
+	return Balance{
+		Amount: float64(response.DelegationResponse.Balance.Amount.Int64()),
+		Denom:  response.DelegationResponse.Balance.Denom,
+	}, info, nil
 }
 
 func (rpc *RPC) GetAllValidators() (*ValidatorsResponse, QueryInfo, error) {
