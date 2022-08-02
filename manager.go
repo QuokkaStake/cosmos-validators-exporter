@@ -76,12 +76,26 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					walletBalanceQuery      *QueryInfo
 					walletBalanceQueryError error
 
+					signingInfo           *SigningInfoResponse
+					signingInfoQuery      *QueryInfo
+					signingInfoQueryError error
+
 					validatorInfo ValidatorInfo
 				)
 
 				internalWg.Add(1)
 				go func() {
 					info, validatorQueryInfo, validatorQueryError = rpc.GetValidator(address)
+
+					if validatorQueryError == nil {
+						valConsAddress, err := info.Validator.ConsensusPubkey.GetValConsAddress(chain.BechConsensusPrefix)
+						if err != nil {
+							signingInfoQueryError = err
+						} else {
+							signingInfo, signingInfoQuery, signingInfoQueryError = rpc.GetSigningInfo(valConsAddress)
+						}
+					}
+
 					internalWg.Done()
 				}()
 
@@ -213,6 +227,20 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					}
 				}
 
+				if signingInfoQueryError != nil {
+					m.Logger.Error().
+						Err(signingInfoQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying validator signing info")
+				} else if signingInfo != nil {
+					validatorInfo.MissedBlocksCount = StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
+					validatorInfo.IsTombstoned = signingInfo.ValSigningInfo.Tombstoned
+					validatorInfo.JailedUntil = signingInfo.ValSigningInfo.JailedUntil
+					validatorInfo.StartHeight = StrToInt64(signingInfo.ValSigningInfo.StartHeight)
+					validatorInfo.IndexOffset = StrToInt64(signingInfo.ValSigningInfo.IndexOffset)
+				}
+
 				rpcQueries := []QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
@@ -227,6 +255,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				}
 				if walletBalanceQuery != nil {
 					rpcQueries = append(rpcQueries, *walletBalanceQuery)
+				}
+				if signingInfoQuery != nil {
+					rpcQueries = append(rpcQueries, *signingInfoQuery)
 				}
 
 				query := ValidatorQuery{

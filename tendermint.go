@@ -154,6 +154,18 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]Balance, QueryInfo, error) {
 	}), info, nil
 }
 
+func (rpc *RPC) GetSigningInfo(valcons string) (*SigningInfoResponse, *QueryInfo, error) {
+	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.URL, valcons)
+
+	var response *SigningInfoResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	client := &http.Client{
 		Timeout: time.Duration(rpc.Timeout) * time.Second,

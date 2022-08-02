@@ -9,13 +9,14 @@ import (
 )
 
 type Chain struct {
-	Name              string   `toml:"name"`
-	LCDEndpoint       string   `toml:"lcd-endpoint"`
-	CoingeckoCurrency string   `toml:"coingecko-currency"`
-	BaseDenom         string   `toml:"base-denom"`
-	DenomCoefficient  int64    `toml:"denom-coefficient" default:"1000000"`
-	BechWalletPrefix  string   `toml:"bech-wallet-prefix"`
-	Validators        []string `toml:"validators"`
+	Name                string   `toml:"name"`
+	LCDEndpoint         string   `toml:"lcd-endpoint"`
+	CoingeckoCurrency   string   `toml:"coingecko-currency"`
+	BaseDenom           string   `toml:"base-denom"`
+	DenomCoefficient    int64    `toml:"denom-coefficient" default:"1000000"`
+	BechWalletPrefix    string   `toml:"bech-wallet-prefix"`
+	BechConsensusPrefix string   `toml:"bech-consensus-prefix"`
+	Validators          []string `toml:"validators"`
 }
 
 func (c *Chain) Validate() error {

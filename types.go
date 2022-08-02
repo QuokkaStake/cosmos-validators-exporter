@@ -3,6 +3,11 @@ package main
 import (
 	"time"
 
+	b64 "encoding/base64"
+
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -12,6 +17,7 @@ type ValidatorResponse struct {
 
 type Validator struct {
 	OperatorAddress   string               `json:"operator_address"`
+	ConsensusPubkey   ConsensusPubkey      `json:"consensus_pubkey"`
 	Jailed            bool                 `json:"jailed"`
 	Status            string               `json:"status"`
 	Tokens            string               `json:"tokens"`
@@ -21,6 +27,11 @@ type Validator struct {
 	UnbondingTime     time.Time            `json:"unbonding_time"`
 	Commission        ValidatorCommission  `json:"commission"`
 	MinSelfDelegation string               `json:"min_self_delegation"`
+}
+
+type ConsensusPubkey struct {
+	Type string `json:"@type"`
+	Key  string `json:"key"`
 }
 
 type ValidatorDescription struct {
@@ -71,6 +82,35 @@ type ValidatorInfo struct {
 	SelfDelegationRewardsUSD float64
 	WalletBalance            []Balance
 	WalletBalanceUSD         float64
+	MissedBlocksCount        int64
+	IsTombstoned             bool
+	JailedUntil              time.Time
+	StartHeight              int64
+	IndexOffset              int64
+}
+
+func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	interfaceRegistry := encCfg.InterfaceRegistry
+
+	sDec, _ := b64.StdEncoding.DecodeString(key.Key)
+	pk := codecTypes.Any{
+		TypeUrl: key.Type,
+		Value:   append([]byte{10, 32}, sDec...),
+	}
+
+	var pkProto cryptoTypes.PubKey
+	if err := interfaceRegistry.UnpackAny(&pk, &pkProto); err != nil {
+		return "", err
+	}
+
+	cosmosValCons := types.ConsAddress(pkProto.Address()).String()
+	properValCons, err := ChangeBech32Prefix(cosmosValCons, prefix)
+	if err != nil {
+		return "", err
+	}
+
+	return properValCons, nil
 }
 
 func NewValidatorInfo(validator Validator) ValidatorInfo {
@@ -91,6 +131,7 @@ func NewValidatorInfo(validator Validator) ValidatorInfo {
 		UnbondingHeight:         StrToInt64(validator.UnbondingHeight),
 		UnbondingTime:           validator.UnbondingTime,
 		MinSelfDelegation:       StrToInt64(validator.MinSelfDelegation),
+		MissedBlocksCount:       -1,
 	}
 }
 
@@ -142,4 +183,17 @@ type Balance struct {
 
 type BalancesResponse struct {
 	Balances types.Coins `json:"balances"`
+}
+
+type SigningInfoResponse struct {
+	ValSigningInfo ValidatorSigningInfo `json:"val_signing_info"`
+}
+
+type ValidatorSigningInfo struct {
+	Address             string    `json:"address"`
+	StartHeight         string    `json:"start_height"`
+	IndexOffset         string    `json:"index_offset"`
+	JailedUntil         time.Time `json:"jailed_until"`
+	Tombstoned          bool      `json:"tombstoned"`
+	MissedBlocksCounter string    `json:"missed_blocks_counter"`
 }

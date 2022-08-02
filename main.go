@@ -226,6 +226,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	missedBlocksGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_missed_blocks",
+			Help: "Validator's missed blocks",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -249,6 +257,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(selfDelegationRewardsUSD)
 	registry.MustRegister(walletBalanceTokens)
 	registry.MustRegister(walletBalanceUSD)
+	registry.MustRegister(missedBlocksGauge)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -415,6 +424,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.WalletBalanceUSD)
+		}
+
+		if validator.Info.MissedBlocksCount >= 0 {
+			missedBlocksGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(float64(validator.Info.MissedBlocksCount))
 		}
 	}
 
