@@ -1,9 +1,8 @@
 package main
 
 import (
-	"time"
-
 	b64 "encoding/base64"
+	"time"
 
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
