@@ -439,7 +439,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	h.ServeHTTP(w, r)
 
 	sublogger.Info().
-		Str("method", "GET").
+		Str("method", http.MethodGet).
 		Str("endpoint", "/metrics").
 		Float64("request-time", time.Since(requestStart).Seconds()).
 		Msg("Request processed")
