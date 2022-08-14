@@ -177,7 +177,7 @@ func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 		Success: false,
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return info, err
 	}
