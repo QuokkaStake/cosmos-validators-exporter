@@ -87,7 +87,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				go func() {
 					info, validatorQueryInfo, validatorQueryError = rpc.GetValidator(address)
 
-					if validatorQueryError == nil {
+					if validatorQueryError == nil && chain.BechConsensusPrefix != "" {
 						valConsAddress, err := info.Validator.ConsensusPubkey.GetValConsAddress(chain.BechConsensusPrefix)
 						if err != nil {
 							signingInfoQueryError = err
@@ -233,7 +233,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("chain", chain.Name).
 						Str("address", address).
 						Msg("Error querying validator signing info")
-				} else if signingInfo != nil {
+				} else if signingInfo != nil && signingInfo.ValSigningInfo.Address != "" {
 					validatorInfo.MissedBlocksCount = StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
 					validatorInfo.IsTombstoned = signingInfo.ValSigningInfo.Tombstoned
 					validatorInfo.JailedUntil = signingInfo.ValSigningInfo.JailedUntil
