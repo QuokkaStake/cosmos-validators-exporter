@@ -192,6 +192,16 @@ func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	}
 	defer res.Body.Close()
 
+	if res.StatusCode >= 400 {
+		info.Duration = time.Since(start)
+		rpc.Logger.Warn().
+			Str("url", url).
+			Err(err).
+			Int("status", res.StatusCode).
+			Msg("Query returned bad HTTP code")
+		return info, fmt.Errorf("bad HTTP code: %d", res.StatusCode)
+	}
+
 	info.Duration = time.Since(start)
 
 	rpc.Logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
