@@ -8,7 +8,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types"
 	distributionTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/rs/zerolog"
 )
 
@@ -66,14 +65,14 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (Balance, QueryInf
 		wallet,
 	)
 
-	var response *stakingTypes.QueryDelegationResponse
+	var response SingleDelegationResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
 		return Balance{}, info, err
 	}
 
 	return Balance{
-		Amount: float64(response.DelegationResponse.Balance.Amount.Int64()),
+		Amount: StrToFloat64(response.DelegationResponse.Balance.Amount),
 		Denom:  response.DelegationResponse.Balance.Denom,
 	}, info, nil
 }
@@ -146,9 +145,9 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]Balance, QueryInfo, error) {
 		return []Balance{}, info, err
 	}
 
-	return Map(response.Balances, func(balance types.Coin) Balance {
+	return Map(response.Balances, func(balance BalanceInResponse) Balance {
 		return Balance{
-			Amount: float64(balance.Amount.Int64()),
+			Amount: StrToFloat64(balance.Amount),
 			Denom:  balance.Denom,
 		}
 	}), info, nil
