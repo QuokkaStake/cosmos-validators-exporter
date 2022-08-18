@@ -46,3 +46,4 @@ linters:
     - exhaustruct
     - maintidx
     - promlinter
+    - gocyclo
