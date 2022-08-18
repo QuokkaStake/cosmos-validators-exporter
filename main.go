@@ -234,6 +234,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	missedBlocksPercentGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_missed_blocks_percent",
+			Help: "Validator's missed blocks %",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -258,6 +266,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(walletBalanceTokens)
 	registry.MustRegister(walletBalanceUSD)
 	registry.MustRegister(missedBlocksGauge)
+	registry.MustRegister(missedBlocksPercentGauge)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -432,6 +441,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(float64(validator.Info.MissedBlocksCount))
+		}
+
+		if validator.Info.MissedBlocksCount >= 0 && validator.Info.SignedBlocksWindow > 0 {
+			missedBlocksPercentGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(float64(validator.Info.MissedBlocksCount) / float64(validator.Info.SignedBlocksWindow))
 		}
 	}
 

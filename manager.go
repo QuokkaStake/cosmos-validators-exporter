@@ -80,6 +80,10 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					signingInfoQuery      *QueryInfo
 					signingInfoQueryError error
 
+					slashingParams           *SlashingParamsResponse
+					slashingParamsQuery      *QueryInfo
+					slashingParamsQueryError error
+
 					validatorInfo ValidatorInfo
 				)
 
@@ -132,6 +136,12 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					walletBalance, walletBalanceQuery, walletBalanceQueryError = m.GetWalletBalance(chain, address, rpc)
+					internalWg.Done()
+				}()
+
+				internalWg.Add(1)
+				go func() {
+					slashingParams, slashingParamsQuery, slashingParamsQueryError = rpc.GetSlashingParams()
 					internalWg.Done()
 				}()
 
@@ -241,6 +251,16 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorInfo.IndexOffset = StrToInt64(signingInfo.ValSigningInfo.IndexOffset)
 				}
 
+				if slashingParamsQueryError != nil {
+					m.Logger.Error().
+						Err(slashingParamsQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying slashing params")
+				} else if slashingParams != nil && slashingParams.SlashingParams.SignedBlocksWindow != "" {
+					validatorInfo.SignedBlocksWindow = StrToInt64(slashingParams.SlashingParams.SignedBlocksWindow)
+				}
+
 				rpcQueries := []QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
@@ -258,6 +278,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				}
 				if signingInfoQuery != nil {
 					rpcQueries = append(rpcQueries, *signingInfoQuery)
+				}
+				if slashingParamsQuery != nil {
+					rpcQueries = append(rpcQueries, *slashingParamsQuery)
 				}
 
 				query := ValidatorQuery{

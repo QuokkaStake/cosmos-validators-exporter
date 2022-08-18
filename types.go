@@ -86,6 +86,7 @@ type ValidatorInfo struct {
 	JailedUntil              time.Time
 	StartHeight              int64
 	IndexOffset              int64
+	SignedBlocksWindow       int64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
@@ -195,4 +196,12 @@ type ValidatorSigningInfo struct {
 	JailedUntil         time.Time `json:"jailed_until"`
 	Tombstoned          bool      `json:"tombstoned"`
 	MissedBlocksCounter string    `json:"missed_blocks_counter"`
+}
+
+type SlashingParamsResponse struct {
+	SlashingParams SlashingParams `json:"params"`
+}
+
+type SlashingParams struct {
+	SignedBlocksWindow string `json:"signed_blocks_window"`
 }

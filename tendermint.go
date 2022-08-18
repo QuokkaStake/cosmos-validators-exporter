@@ -166,6 +166,18 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*SigningInfoResponse, *QueryInfo
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetSlashingParams() (*SlashingParamsResponse, *QueryInfo, error) {
+	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/params", rpc.URL)
+
+	var response *SlashingParamsResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	client := &http.Client{
 		Timeout: time.Duration(rpc.Timeout) * time.Second,
