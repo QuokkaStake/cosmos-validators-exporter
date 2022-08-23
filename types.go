@@ -182,7 +182,12 @@ type Balance struct {
 }
 
 type BalancesResponse struct {
-	Balances types.Coins `json:"balances"`
+	Balances []BalanceInResponse `json:"balances"`
+}
+
+type BalanceInResponse struct {
+	Amount string
+	Denom  string
 }
 
 type SigningInfoResponse struct {
@@ -204,4 +209,12 @@ type SlashingParamsResponse struct {
 
 type SlashingParams struct {
 	SignedBlocksWindow string `json:"signed_blocks_window"`
+}
+
+type SingleDelegationResponse struct {
+	DelegationResponse DelegationResponse `json:"delegation_response"`
+}
+
+type DelegationResponse struct {
+	Balance BalanceInResponse `json:"balance"`
 }
