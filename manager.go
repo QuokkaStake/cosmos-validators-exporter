@@ -52,13 +52,14 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					info                 *ValidatorResponse
 					validatorQueryInfo   QueryInfo
 					validatorQueryError  error
-					delegators           *PaginationResponse
-					delegatorsCountQuery QueryInfo
-					delegatorsCountError error
 					rank                 uint64
 					totalStake           float64
 					validatorsQueryInfo  QueryInfo
 					validatorsQueryError error
+
+					delegators           *PaginationResponse
+					delegatorsCountQuery QueryInfo
+					delegatorsCountError error
 
 					selfDelegationAmount     Balance
 					selfDelegationQuery      *QueryInfo
@@ -83,6 +84,10 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					slashingParams           *SlashingParamsResponse
 					slashingParamsQuery      *QueryInfo
 					slashingParamsQueryError error
+
+					unbonds                *PaginationResponse
+					unbondsCountQuery      QueryInfo
+					unbondsCountQueryError error
 
 					validatorInfo ValidatorInfo
 				)
@@ -142,6 +147,12 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					slashingParams, slashingParamsQuery, slashingParamsQueryError = rpc.GetSlashingParams()
+					internalWg.Done()
+				}()
+
+				internalWg.Add(1)
+				go func() {
+					unbonds, unbondsCountQuery, unbondsCountQueryError = rpc.GetUnbondsCount(address)
 					internalWg.Done()
 				}()
 
@@ -261,9 +272,20 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorInfo.SignedBlocksWindow = StrToInt64(slashingParams.SlashingParams.SignedBlocksWindow)
 				}
 
+				if unbondsCountQueryError != nil {
+					m.Logger.Error().
+						Err(unbondsCountQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying unbonding delegations count")
+				} else if unbonds != nil {
+					validatorInfo.UnbondsCount = StrToInt64(unbonds.Pagination.Total)
+				}
+
 				rpcQueries := []QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
+					unbondsCountQuery,
 					validatorsQueryInfo,
 					commissionQuery,
 				}
