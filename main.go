@@ -141,7 +141,15 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	delegationsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_delegations_count",
-			Help: "Validator delegations (in tokens)",
+			Help: "Validator delegations count",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
+	unbondsCountGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_unbonds_count",
+			Help: "Validator unbonds count",
 		},
 		[]string{"chain", "address", "moniker"},
 	)
@@ -253,6 +261,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(commissionMaxGauge)
 	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
+	registry.MustRegister(unbondsCountGauge)
 	registry.MustRegister(delegationsUsdGauge)
 	registry.MustRegister(delegationsCountGauge)
 	registry.MustRegister(selfDelegatedTokensGauge)
@@ -349,6 +358,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(float64(validator.Info.DelegatorsCount))
+		}
+
+		if validator.Info.UnbondsCount != -1 {
+			unbondsCountGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(float64(validator.Info.UnbondsCount))
 		}
 
 		if validator.Info.SelfDelegation.Amount != 0 {

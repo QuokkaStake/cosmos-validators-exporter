@@ -57,6 +57,22 @@ func (rpc *RPC) GetDelegationsCount(address string) (*PaginationResponse, QueryI
 	return response, info, nil
 }
 
+func (rpc *RPC) GetUnbondsCount(address string) (*PaginationResponse, QueryInfo, error) {
+	url := fmt.Sprintf(
+		"%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations?pagination.count_total=true&pagination.limit=1",
+		rpc.URL,
+		address,
+	)
+
+	var response *PaginationResponse
+	info, err := rpc.Get(url, &response)
+	if err != nil {
+		return nil, info, err
+	}
+
+	return response, info, nil
+}
+
 func (rpc *RPC) GetSingleDelegation(validator, wallet string) (Balance, QueryInfo, error) {
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",

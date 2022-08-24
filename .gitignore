@@ -1,2 +1,2 @@
 main
-config.toml
+config*.toml

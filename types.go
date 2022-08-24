@@ -87,6 +87,7 @@ type ValidatorInfo struct {
 	StartHeight              int64
 	IndexOffset              int64
 	SignedBlocksWindow       int64
+	UnbondsCount             int64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
@@ -132,6 +133,7 @@ func NewValidatorInfo(validator Validator) ValidatorInfo {
 		UnbondingTime:           validator.UnbondingTime,
 		MinSelfDelegation:       StrToInt64(validator.MinSelfDelegation),
 		MissedBlocksCount:       -1,
+		UnbondsCount:            -1,
 	}
 }
 
