@@ -74,6 +74,7 @@ type ValidatorInfo struct {
 	SelfDelegation           Balance
 	SelfDelegationUSD        float64
 	Rank                     uint64
+	TotalValidators          int
 	TotalStake               float64
 	Commission               []Balance
 	CommissionUSD            float64
@@ -134,6 +135,7 @@ func NewValidatorInfo(validator Validator) ValidatorInfo {
 		MinSelfDelegation:       StrToInt64(validator.MinSelfDelegation),
 		MissedBlocksCount:       -1,
 		UnbondsCount:            -1,
+		TotalValidators:         -1,
 	}
 }
 
