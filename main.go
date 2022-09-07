@@ -178,6 +178,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
+	validatorsCountGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_validators_count",
+			Help: "Total active validators count on chain.",
+		},
+		[]string{"chain", "address", "moniker"},
+	)
+
 	votingPowerPercent := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_voting_power_percent",
@@ -267,6 +275,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(selfDelegatedTokensGauge)
 	registry.MustRegister(selfDelegatedUSDGauge)
 	registry.MustRegister(validatorRankGauge)
+	registry.MustRegister(validatorsCountGauge)
 	registry.MustRegister(votingPowerPercent)
 	registry.MustRegister(commissionUnclaimedTokens)
 	registry.MustRegister(commissionUnclaimedUSD)
@@ -391,6 +400,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(float64(validator.Info.Rank))
+		}
+
+		if validator.Info.TotalValidators != -1 {
+			validatorsCountGauge.With(prometheus.Labels{
+				"chain":   validator.Chain,
+				"address": validator.Address,
+				"moniker": validator.Info.Moniker,
+			}).Set(float64(validator.Info.TotalValidators))
 		}
 
 		if validator.Info.TotalStake != 0 && validator.Info.Tokens != 0 {

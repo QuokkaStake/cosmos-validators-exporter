@@ -53,6 +53,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorQueryInfo   QueryInfo
 					validatorQueryError  error
 					rank                 uint64
+					totalValidators      int
 					totalStake           float64
 					validatorsQueryInfo  QueryInfo
 					validatorsQueryError error
@@ -116,7 +117,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 
 				internalWg.Add(1)
 				go func() {
-					rank, totalStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
+					rank, totalValidators, totalStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
 					internalWg.Done()
 				}()
 
@@ -206,6 +207,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Msg("Error querying validators list")
 				} else {
 					validatorInfo.Rank = rank
+					validatorInfo.TotalValidators = totalValidators
 					validatorInfo.TotalStake = totalStake
 				}
 
@@ -352,7 +354,7 @@ func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RP
 	return balance, &queryInfo, err
 }
 
-func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, float64, QueryInfo, error) {
+func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, int, float64, QueryInfo, error) {
 	allValidators, info, err := rpc.GetAllValidators()
 	if err != nil {
 		m.Logger.Error().
@@ -360,7 +362,7 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error querying for validatos")
-		return 0, 0, info, err
+		return 0, 0, 0, info, err
 	}
 
 	activeValidators := Filter(allValidators.Validators, func(v Validator) bool {
@@ -381,7 +383,7 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 		}
 	}
 
-	return validatorRank, totalStake, info, nil
+	return validatorRank, len(activeValidators), totalStake, info, nil
 }
 
 func (m *Manager) GetSelfDelegationRewards(chain Chain, address string, rpc *RPC) ([]Balance, *QueryInfo, error) {

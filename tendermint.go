@@ -219,7 +219,7 @@ func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode >= 400 {
+	if res.StatusCode >= http.StatusBadRequest {
 		info.Duration = time.Since(start)
 		rpc.Logger.Warn().
 			Str("url", url).
