@@ -89,6 +89,7 @@ type ValidatorInfo struct {
 	IndexOffset              int64
 	SignedBlocksWindow       int64
 	UnbondsCount             int64
+	ActiveValidatorsCount    int64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
@@ -221,4 +222,12 @@ type SingleDelegationResponse struct {
 
 type DelegationResponse struct {
 	Balance BalanceInResponse `json:"balance"`
+}
+
+type StakingParams struct {
+	MaxValidators int `json:"max_validators"`
+}
+
+type StakingParamsResponse struct {
+	StakingParams StakingParams `json:"params"`
 }
