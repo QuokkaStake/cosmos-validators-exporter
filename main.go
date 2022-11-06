@@ -520,7 +520,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 
 		activeSetTokensGauge.With(prometheus.Labels{
 			"chain": validator.Chain,
-		}).Set(float64(validator.Info.LastValidatorStake))
+		}).Set(validator.Info.LastValidatorStake)
 	}
 
 	for _, chain := range manager.Config.Chains {
