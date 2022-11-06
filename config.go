@@ -13,6 +13,7 @@ type Chain struct {
 	LCDEndpoint         string   `toml:"lcd-endpoint"`
 	CoingeckoCurrency   string   `toml:"coingecko-currency"`
 	BaseDenom           string   `toml:"base-denom"`
+	Denom               string   `toml:"denom"`
 	DenomCoefficient    int64    `toml:"denom-coefficient" default:"1000000"`
 	BechWalletPrefix    string   `toml:"bech-wallet-prefix"`
 	BechConsensusPrefix string   `toml:"bech-consensus-prefix"`
