@@ -86,6 +86,10 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					slashingParamsQuery      *QueryInfo
 					slashingParamsQueryError error
 
+					stakingParams           *StakingParamsResponse
+					stakingParamsQuery      *QueryInfo
+					stakingParamsQueryError error
+
 					unbonds                *PaginationResponse
 					unbondsCountQuery      QueryInfo
 					unbondsCountQueryError error
@@ -148,6 +152,12 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					slashingParams, slashingParamsQuery, slashingParamsQueryError = rpc.GetSlashingParams()
+					internalWg.Done()
+				}()
+
+				internalWg.Add(1)
+				go func() {
+					stakingParams, stakingParamsQuery, stakingParamsQueryError = rpc.GetStakingParams()
 					internalWg.Done()
 				}()
 
@@ -274,6 +284,16 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorInfo.SignedBlocksWindow = StrToInt64(slashingParams.SlashingParams.SignedBlocksWindow)
 				}
 
+				if stakingParamsQueryError != nil {
+					m.Logger.Error().
+						Err(stakingParamsQueryError).
+						Str("chain", chain.Name).
+						Str("address", address).
+						Msg("Error querying staking params")
+				} else if stakingParams != nil {
+					validatorInfo.ActiveValidatorsCount = int64(stakingParams.StakingParams.MaxValidators)
+				}
+
 				if unbondsCountQueryError != nil {
 					m.Logger.Error().
 						Err(unbondsCountQueryError).
@@ -305,6 +325,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 				}
 				if slashingParamsQuery != nil {
 					rpcQueries = append(rpcQueries, *slashingParamsQuery)
+				}
+				if stakingParamsQuery != nil {
+					rpcQueries = append(rpcQueries, *stakingParamsQuery)
 				}
 
 				query := ValidatorQuery{
