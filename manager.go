@@ -21,9 +21,16 @@ func NewManager(config Config, logger *zerolog.Logger) *Manager {
 	}
 }
 
-func (m *Manager) GetAllValidators() []ValidatorQuery {
+func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 	currenciesList := m.Config.GetCoingeckoCurrencies()
 	currenciesRates := m.Coingecko.FetchPrices(currenciesList)
+
+	currenciesRatesToChains := map[string]float64{}
+	for _, chain := range m.Config.Chains {
+		if rate, ok := currenciesRates[chain.CoingeckoCurrency]; ok {
+			currenciesRatesToChains[chain.Name] = rate
+		}
+	}
 
 	length := 0
 	for _, chain := range m.Config.Chains {
@@ -352,7 +359,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 
 	wg.Wait()
 
-	return validators
+	return validators, currenciesRatesToChains
 }
 
 func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RPC) (Balance, *QueryInfo, error) {

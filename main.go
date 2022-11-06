@@ -282,6 +282,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain"},
 	)
 
+	tokenPriceGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_price",
+			Help: "Price of 1 token in display denom in USD",
+		},
+		[]string{"chain"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -312,8 +320,9 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(denomCoefficientGauge)
 	registry.MustRegister(activeSetSizeGauge)
 	registry.MustRegister(activeSetTokensGauge)
+	registry.MustRegister(tokenPriceGauge)
 
-	validators := manager.GetAllValidators()
+	validators, currencies := manager.GetAllValidators()
 	for _, validator := range validators {
 		queriesCountGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
@@ -529,6 +538,12 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			"display_denom": chain.Denom,
 			"denom":         chain.BaseDenom,
 		}).Set(float64(chain.DenomCoefficient))
+	}
+
+	for chain, price := range currencies {
+		tokenPriceGauge.With(prometheus.Labels{
+			"chain": chain,
+		}).Set(price)
 	}
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
