@@ -290,6 +290,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain"},
 	)
 
+	totalBondedTokensGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_tokens_bonded_total",
+			Help: "Total tokens bonded in chain",
+		},
+		[]string{"chain"},
+	)
+
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(queriesCountGauge)
 	registry.MustRegister(queriesSuccessfulGauge)
@@ -321,6 +329,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(activeSetSizeGauge)
 	registry.MustRegister(activeSetTokensGauge)
 	registry.MustRegister(tokenPriceGauge)
+	registry.MustRegister(totalBondedTokensGauge)
 
 	validators, currencies := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -530,6 +539,10 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		activeSetTokensGauge.With(prometheus.Labels{
 			"chain": validator.Chain,
 		}).Set(validator.Info.LastValidatorStake)
+
+		totalBondedTokensGauge.With(prometheus.Labels{
+			"chain": validator.Chain,
+		}).Set(validator.Info.TotalStake)
 	}
 
 	for _, chain := range manager.Config.Chains {
