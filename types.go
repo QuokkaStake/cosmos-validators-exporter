@@ -90,6 +90,7 @@ type ValidatorInfo struct {
 	SignedBlocksWindow       int64
 	UnbondsCount             int64
 	ActiveValidatorsCount    int64
+	LastValidatorStake       float64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {

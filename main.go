@@ -266,10 +266,18 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "denom", "display_denom"},
 	)
 
-	activeSetSize := prometheus.NewGaugeVec(
+	activeSetSizeGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_active_set_size",
 			Help: "Active set size",
+		},
+		[]string{"chain"},
+	)
+
+	activeSetTokensGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_active_set_tokens",
+			Help: "Tokens needed to get into active set (last validators' stake, or 0 if not enough validators)",
 		},
 		[]string{"chain"},
 	)
@@ -302,7 +310,8 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(missedBlocksGauge)
 	registry.MustRegister(missedBlocksPercentGauge)
 	registry.MustRegister(denomCoefficientGauge)
-	registry.MustRegister(activeSetSize)
+	registry.MustRegister(activeSetSizeGauge)
+	registry.MustRegister(activeSetTokensGauge)
 
 	validators := manager.GetAllValidators()
 	for _, validator := range validators {
@@ -504,10 +513,14 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		}
 
 		if validator.Info.ActiveValidatorsCount >= 0 {
-			activeSetSize.With(prometheus.Labels{
+			activeSetSizeGauge.With(prometheus.Labels{
 				"chain": validator.Chain,
 			}).Set(float64(validator.Info.ActiveValidatorsCount))
 		}
+
+		activeSetTokensGauge.With(prometheus.Labels{
+			"chain": validator.Chain,
+		}).Set(float64(validator.Info.LastValidatorStake))
 	}
 
 	for _, chain := range manager.Config.Chains {

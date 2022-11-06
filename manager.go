@@ -55,6 +55,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					rank                 uint64
 					totalValidators      int
 					totalStake           float64
+					lastValidatorStake   float64
 					validatorsQueryInfo  QueryInfo
 					validatorsQueryError error
 
@@ -121,7 +122,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 
 				internalWg.Add(1)
 				go func() {
-					rank, totalValidators, totalStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
+					rank, totalValidators, totalStake, lastValidatorStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
 					internalWg.Done()
 				}()
 
@@ -219,6 +220,11 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorInfo.Rank = rank
 					validatorInfo.TotalValidators = totalValidators
 					validatorInfo.TotalStake = totalStake
+
+					// should be 0 if there are not enough validators
+					if slashingParams != nil && totalValidators >= stakingParams.StakingParams.MaxValidators {
+						validatorInfo.LastValidatorStake = lastValidatorStake
+					}
 				}
 
 				if commissionQueryError != nil {
@@ -377,15 +383,15 @@ func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RP
 	return balance, &queryInfo, err
 }
 
-func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, int, float64, QueryInfo, error) {
+func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, int, float64, float64, QueryInfo, error) {
 	allValidators, info, err := rpc.GetAllValidators()
 	if err != nil {
 		m.Logger.Error().
 			Err(err).
 			Str("chain", chain.Name).
 			Str("address", address).
-			Msg("Error querying for validatos")
-		return 0, 0, 0, info, err
+			Msg("Error querying for validators")
+		return 0, 0, 0, 0, info, err
 	}
 
 	activeValidators := Filter(allValidators.Validators, func(v Validator) bool {
@@ -396,6 +402,7 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 		return StrToFloat64(activeValidators[i].DelegatorShares) > StrToFloat64(activeValidators[j].DelegatorShares)
 	})
 
+	lastValidatorStake := StrToFloat64(activeValidators[len(activeValidators)-1].DelegatorShares)
 	var validatorRank uint64 = 0
 	var totalStake float64 = 0
 
@@ -406,7 +413,7 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 		}
 	}
 
-	return validatorRank, len(activeValidators), totalStake, info, nil
+	return validatorRank, len(activeValidators), totalStake, lastValidatorStake, info, nil
 }
 
 func (m *Manager) GetSelfDelegationRewards(chain Chain, address string, rpc *RPC) ([]Balance, *QueryInfo, error) {
