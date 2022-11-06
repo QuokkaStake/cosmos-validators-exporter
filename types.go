@@ -53,44 +53,39 @@ type ValidatorCommissionRates struct {
 }
 
 type ValidatorInfo struct {
-	Address                  string
-	Moniker                  string
-	Identity                 string
-	Website                  string
-	SecurityContact          string
-	Details                  string
-	Tokens                   float64
-	TokensUSD                float64
-	Jailed                   bool
-	Status                   string
-	CommissionRate           float64
-	CommissionMaxRate        float64
-	CommissionMaxChangeRate  float64
-	CommissionUpdateTime     time.Time
-	UnbondingHeight          int64
-	UnbondingTime            time.Time
-	MinSelfDelegation        int64
-	DelegatorsCount          int64
-	SelfDelegation           Balance
-	SelfDelegationUSD        float64
-	Rank                     uint64
-	TotalValidators          int
-	TotalStake               float64
-	Commission               []Balance
-	CommissionUSD            float64
-	SelfDelegationRewards    []Balance
-	SelfDelegationRewardsUSD float64
-	WalletBalance            []Balance
-	WalletBalanceUSD         float64
-	MissedBlocksCount        int64
-	IsTombstoned             bool
-	JailedUntil              time.Time
-	StartHeight              int64
-	IndexOffset              int64
-	SignedBlocksWindow       int64
-	UnbondsCount             int64
-	ActiveValidatorsCount    int64
-	LastValidatorStake       float64
+	Address                 string
+	Moniker                 string
+	Identity                string
+	Website                 string
+	SecurityContact         string
+	Details                 string
+	Tokens                  float64
+	Jailed                  bool
+	Status                  string
+	CommissionRate          float64
+	CommissionMaxRate       float64
+	CommissionMaxChangeRate float64
+	CommissionUpdateTime    time.Time
+	UnbondingHeight         int64
+	UnbondingTime           time.Time
+	MinSelfDelegation       int64
+	DelegatorsCount         int64
+	SelfDelegation          Balance
+	Rank                    uint64
+	TotalValidators         int
+	TotalStake              float64
+	Commission              []Balance
+	SelfDelegationRewards   []Balance
+	WalletBalance           []Balance
+	MissedBlocksCount       int64
+	IsTombstoned            bool
+	JailedUntil             time.Time
+	StartHeight             int64
+	IndexOffset             int64
+	SignedBlocksWindow      int64
+	UnbondsCount            int64
+	ActiveValidatorsCount   int64
+	LastValidatorStake      float64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {

@@ -21,7 +21,7 @@ func NewManager(config Config, logger *zerolog.Logger) *Manager {
 	}
 }
 
-func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
+func (m *Manager) GetCurrencies() map[string]float64 {
 	currenciesList := m.Config.GetCoingeckoCurrencies()
 	currenciesRates := m.Coingecko.FetchPrices(currenciesList)
 
@@ -32,6 +32,10 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 		}
 	}
 
+	return currenciesRatesToChains
+}
+
+func (m *Manager) GetAllValidators() []ValidatorQuery {
 	length := 0
 	for _, chain := range m.Config.Chains {
 		for range chain.Validators {
@@ -188,11 +192,6 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 					validatorInfo = NewValidatorInfo(info.Validator)
 				}
 
-				price, hasPrice := currenciesRates[chain.CoingeckoCurrency]
-				if hasPrice {
-					validatorInfo.TokensUSD = m.CalculatePrice(validatorInfo.Tokens, price, chain.DenomCoefficient)
-				}
-
 				if delegatorsCountError != nil {
 					m.Logger.Error().
 						Err(delegatorsCountError).
@@ -211,10 +210,6 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 						Msg("Error querying self-delegations for validator")
 				} else {
 					validatorInfo.SelfDelegation = selfDelegationAmount
-
-					if hasPrice {
-						validatorInfo.SelfDelegationUSD = m.CalculatePrices([]Balance{selfDelegationAmount}, price, chain)
-					}
 				}
 
 				if validatorsQueryError != nil {
@@ -242,9 +237,6 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 						Msg("Error querying validator commission")
 				} else {
 					validatorInfo.Commission = commission
-					if hasPrice {
-						validatorInfo.CommissionUSD = m.CalculatePrices(commission, price, chain)
-					}
 				}
 
 				if selfDelegationRewardsQueryError != nil {
@@ -255,9 +247,6 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 						Msg("Error querying validator self-delegation rewards")
 				} else {
 					validatorInfo.SelfDelegationRewards = selfDelegationRewards
-					if hasPrice {
-						validatorInfo.SelfDelegationRewardsUSD = m.CalculatePrices(selfDelegationRewards, price, chain)
-					}
 				}
 
 				if walletBalanceQueryError != nil {
@@ -268,9 +257,6 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 						Msg("Error querying validator wallet balance")
 				} else {
 					validatorInfo.WalletBalance = walletBalance
-					if hasPrice {
-						validatorInfo.WalletBalanceUSD = m.CalculatePrices(walletBalance, price, chain)
-					}
 				}
 
 				if signingInfoQueryError != nil {
@@ -359,7 +345,7 @@ func (m *Manager) GetAllValidators() ([]ValidatorQuery, map[string]float64) {
 
 	wg.Wait()
 
-	return validators, currenciesRatesToChains
+	return validators
 }
 
 func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RPC) (Balance, *QueryInfo, error) {
@@ -477,19 +463,4 @@ func (m *Manager) GetWalletBalance(chain Chain, address string, rpc *RPC) ([]Bal
 	}
 
 	return balances, &queryInfo, err
-}
-
-func (m *Manager) CalculatePrices(balances []Balance, rate float64, chain Chain) float64 {
-	var usdPriceTotal float64 = 0
-	for _, balance := range balances {
-		if balance.Denom == chain.BaseDenom {
-			usdPriceTotal += m.CalculatePrice(balance.Amount, rate, chain.DenomCoefficient)
-		}
-	}
-
-	return usdPriceTotal
-}
-
-func (m *Manager) CalculatePrice(amount float64, rate float64, coefficient int64) float64 {
-	return amount * rate / float64(coefficient)
 }
