@@ -130,14 +130,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
-	delegationsUsdGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_total_delegations_usd",
-			Help: "Validator delegations (in USD)",
-		},
-		[]string{"chain", "address", "moniker"},
-	)
-
 	delegationsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_delegations_count",
@@ -162,14 +154,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker", "denom"},
 	)
 
-	selfDelegatedUSDGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegated_usd",
-			Help: "Validator's self delegated amount (in USD)",
-		},
-		[]string{"chain", "address", "moniker"},
-	)
-
 	validatorRankGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_rank",
@@ -186,28 +170,12 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
-	votingPowerPercent := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_voting_power_percent",
-			Help: "Validator's voting power compared to all bonded tokens on chain.",
-		},
-		[]string{"chain", "address", "moniker"},
-	)
-
 	commissionUnclaimedTokens := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_unclaimed_commission",
 			Help: "Validator's unclaimed commission (in tokens)",
 		},
 		[]string{"chain", "address", "moniker", "denom"},
-	)
-
-	commissionUnclaimedUSD := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_unclaimed_commission_usd",
-			Help: "Validator's unclaimed commission (in USD)",
-		},
-		[]string{"chain", "address", "moniker"},
 	)
 
 	selfDelegationRewardsTokens := prometheus.NewGaugeVec(
@@ -218,28 +186,12 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker", "denom"},
 	)
 
-	selfDelegationRewardsUSD := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegation_rewards_usd",
-			Help: "Validator's self-delegation rewards (in USD)",
-		},
-		[]string{"chain", "address", "moniker"},
-	)
-
 	walletBalanceTokens := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_wallet_balance",
 			Help: "Validator's wallet balance (in tokens)",
 		},
 		[]string{"chain", "address", "moniker", "denom"},
-	)
-
-	walletBalanceUSD := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_wallet_balance_usd",
-			Help: "Validator's wallet balance (in USD)",
-		},
-		[]string{"chain", "address", "moniker"},
 	)
 
 	missedBlocksGauge := prometheus.NewGaugeVec(
@@ -250,12 +202,12 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		[]string{"chain", "address", "moniker"},
 	)
 
-	missedBlocksPercentGauge := prometheus.NewGaugeVec(
+	blocksWindowGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_missed_blocks_percent",
-			Help: "Validator's missed blocks %",
+			Name: "cosmos_validators_exporter_missed_blocks_window",
+			Help: "Missed blocks window in network",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain"},
 	)
 
 	denomCoefficientGauge := prometheus.NewGaugeVec(
@@ -310,28 +262,22 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(unbondsCountGauge)
-	registry.MustRegister(delegationsUsdGauge)
 	registry.MustRegister(delegationsCountGauge)
 	registry.MustRegister(selfDelegatedTokensGauge)
-	registry.MustRegister(selfDelegatedUSDGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
-	registry.MustRegister(votingPowerPercent)
 	registry.MustRegister(commissionUnclaimedTokens)
-	registry.MustRegister(commissionUnclaimedUSD)
 	registry.MustRegister(selfDelegationRewardsTokens)
-	registry.MustRegister(selfDelegationRewardsUSD)
 	registry.MustRegister(walletBalanceTokens)
-	registry.MustRegister(walletBalanceUSD)
 	registry.MustRegister(missedBlocksGauge)
-	registry.MustRegister(missedBlocksPercentGauge)
+	registry.MustRegister(blocksWindowGauge)
 	registry.MustRegister(denomCoefficientGauge)
 	registry.MustRegister(activeSetSizeGauge)
 	registry.MustRegister(activeSetTokensGauge)
 	registry.MustRegister(tokenPriceGauge)
 	registry.MustRegister(totalBondedTokensGauge)
 
-	validators, currencies := manager.GetAllValidators()
+	validators := manager.GetAllValidators()
 	for _, validator := range validators {
 		queriesCountGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
@@ -398,14 +344,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(validator.Info.Tokens)
 		}
 
-		if validator.Info.TokensUSD != 0 {
-			delegationsUsdGauge.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.TokensUSD)
-		}
-
 		if validator.Info.DelegatorsCount != 0 {
 			delegationsCountGauge.With(prometheus.Labels{
 				"chain":   validator.Chain,
@@ -431,14 +369,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(validator.Info.SelfDelegation.Amount)
 		}
 
-		if validator.Info.SelfDelegationUSD != 0 {
-			selfDelegatedUSDGauge.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.SelfDelegationUSD)
-		}
-
 		if validator.Info.Rank != 0 {
 			validatorRankGauge.With(prometheus.Labels{
 				"chain":   validator.Chain,
@@ -455,14 +385,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(float64(validator.Info.TotalValidators))
 		}
 
-		if validator.Info.TotalStake != 0 && validator.Info.Tokens != 0 {
-			votingPowerPercent.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.Tokens / validator.Info.TotalStake)
-		}
-
 		for _, balance := range validator.Info.Commission {
 			commissionUnclaimedTokens.With(prometheus.Labels{
 				"chain":   validator.Chain,
@@ -470,14 +392,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"moniker": validator.Info.Moniker,
 				"denom":   balance.Denom,
 			}).Set(balance.Amount)
-		}
-
-		if validator.Info.CommissionUSD != 0 {
-			commissionUnclaimedUSD.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.CommissionUSD)
 		}
 
 		for _, balance := range validator.Info.SelfDelegationRewards {
@@ -489,14 +403,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(balance.Amount)
 		}
 
-		if validator.Info.SelfDelegationRewardsUSD != 0 {
-			selfDelegationRewardsUSD.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.SelfDelegationRewardsUSD)
-		}
-
 		for _, balance := range validator.Info.WalletBalance {
 			walletBalanceTokens.With(prometheus.Labels{
 				"chain":   validator.Chain,
@@ -504,14 +410,6 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"moniker": validator.Info.Moniker,
 				"denom":   balance.Denom,
 			}).Set(balance.Amount)
-		}
-
-		if validator.Info.WalletBalanceUSD != 0 {
-			walletBalanceUSD.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(validator.Info.WalletBalanceUSD)
 		}
 
 		if validator.Info.MissedBlocksCount >= 0 {
@@ -522,12 +420,10 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 			}).Set(float64(validator.Info.MissedBlocksCount))
 		}
 
-		if validator.Info.MissedBlocksCount >= 0 && validator.Info.SignedBlocksWindow > 0 {
-			missedBlocksPercentGauge.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(float64(validator.Info.MissedBlocksCount) / float64(validator.Info.SignedBlocksWindow))
+		if validator.Info.SignedBlocksWindow > 0 {
+			blocksWindowGauge.With(prometheus.Labels{
+				"chain": validator.Chain,
+			}).Set(float64(validator.Info.SignedBlocksWindow))
 		}
 
 		if validator.Info.ActiveValidatorsCount >= 0 {
@@ -553,6 +449,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		}).Set(float64(chain.DenomCoefficient))
 	}
 
+	currencies := manager.GetCurrencies()
 	for chain, price := range currencies {
 		tokenPriceGauge.With(prometheus.Labels{
 			"chain": chain,

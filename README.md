@@ -23,6 +23,14 @@ tar xvfz <filename you just downloaded>
 ./cosmos-validators-exporter
 ```
 
+Alternatively, build from source:
+```sh
+git clone https://github.com/freak12techno/cosmos-validators-exporter
+cd cosmos-validators-exporter
+go build
+# this will produce a binary at ./main, which you can run.
+```
+
 To run it detached, you need to run it as a systemd service. First of all, we have to copy the file to the system apps folder:
 
 ```sh
@@ -79,7 +87,8 @@ Here's the example of the Prometheus config you can use for scraping data:
 ```yaml
 scrape-configs:
   - job_name:       'cosmos-validators-exporter'
-    scrape_interval: 30s
+    scrape_interval: 60s
+    scrape_timeout: 60s
     static_configs:
       - targets:
         - localhost:9560 # replace localhost with scraper IP if it's on the other host
@@ -87,7 +96,19 @@ scrape-configs:
 
 Then restart Prometheus and you're good to go!
 
+*Important: consider setting quite big intervals/timeouts, both in app config and in Prometheus config. This is due to some requests taking a lot of time, and with a shorter timeout there's a chance the whole scrape request will timeout. If you face scrape errors, consider increasing the timeout.*
+
 All of the metrics provided by cosmos-validators-exporter have the `cosmos_validators_exporter_` as a prefix. For the full list of metrics, try running `curl localhost:9560/metrics` (or your host/port, if it's non-standard) and see the list of metrics there.
+
+## Queries examples
+
+When developing, we aimed to only return metrics that are required, and avoid creating metrics that can be computed on Grafana/Prometheus side. This decreases the amount of time series that this exporter will return, but will make writing queries more complex. Here are some examples of queries that we consider useful:
+
+- `count(cosmos_validators_exporter_info)` - number of validators monitored
+- `sum ((cosmos_validators_exporter_total_delegations) / on (chain) cosmos_validators_exporter_denom_coefficient * on (chain) cosmos_validators_exporter_price)` - total delegated tokens in $
+- `sum(cosmos_validators_exporter_delegations_count)` - total delegators count
+- `cosmos_validators_exporter_total_delegations / on (chain) cosmos_validators_exporter_tokens_bonded_total` - voting power percent of your validator
+- `1 - (cosmos_validators_exporter_missed_blocks / on (chain) cosmos_validators_exporter_missed_blocks_window)` - validator's uptime in %
 
 ## How can I configure it?
 
