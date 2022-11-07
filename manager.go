@@ -8,16 +8,18 @@ import (
 )
 
 type Manager struct {
-	Config    Config
-	Coingecko *Coingecko
-	Logger    zerolog.Logger
+	Config      Config
+	Coingecko   *Coingecko
+	DexScreener *DexScreener
+	Logger      zerolog.Logger
 }
 
 func NewManager(config Config, logger *zerolog.Logger) *Manager {
 	return &Manager{
-		Config:    config,
-		Coingecko: NewCoingecko(logger),
-		Logger:    logger.With().Str("component", "manager").Logger(),
+		Config:      config,
+		Coingecko:   NewCoingecko(logger),
+		DexScreener: NewDexScreener(logger),
+		Logger:      logger.With().Str("component", "manager").Logger(),
 	}
 }
 
@@ -27,8 +29,18 @@ func (m *Manager) GetCurrencies() map[string]float64 {
 
 	currenciesRatesToChains := map[string]float64{}
 	for _, chain := range m.Config.Chains {
+		// using coingeckon response
 		if rate, ok := currenciesRates[chain.CoingeckoCurrency]; ok {
 			currenciesRatesToChains[chain.Name] = rate
+			continue
+		}
+
+		// using dexscreener response
+		if chain.DexScreenerChainID != "" && chain.DexScreenerPair != "" {
+			rate, err := m.DexScreener.GetCurrency(chain.DexScreenerChainID, chain.DexScreenerPair)
+			if err == nil {
+				currenciesRatesToChains[chain.Name] = rate
+			}
 		}
 	}
 
