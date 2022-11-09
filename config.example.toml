@@ -20,6 +20,10 @@ lcd-endpoint = "https://api.bitsong.freak12techno.io"
 # Coingecko currency, specify it if you want to also get the wallet balance
 # in total in USD.
 coingecko-currency = "bitsong"
+# dexscreener.com's chain ID (usually ""osmosis") and pair (usually pool ID).
+# Won't be used if coingecko-currency is provided.
+dex-screener-chain-id = "osmosis"
+dex-screener-pair = "832"
 # The chain's base denom. Only balances with this denom will be used
 # to calculate wallet's USD price.
 base-denom = "ubtsg"
