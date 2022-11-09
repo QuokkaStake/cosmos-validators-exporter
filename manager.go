@@ -236,7 +236,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					validatorInfo.TotalStake = totalStake
 
 					// should be 0 if there are not enough validators
-					if slashingParams != nil && totalValidators >= stakingParams.StakingParams.MaxValidators {
+					if stakingParams != nil && totalValidators >= stakingParams.StakingParams.MaxValidators {
 						validatorInfo.LastValidatorStake = lastValidatorStake
 					}
 				}
