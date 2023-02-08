@@ -2,6 +2,7 @@
 
 ![Latest release](https://img.shields.io/github/v/release/freak12techno/cosmos-validators-exporter)
 [![Actions Status](https://github.com/freak12techno/cosmos-validators-exporter/workflows/test/badge.svg)](https://github.com/freak12techno/cosmos-validators-exporter/actions)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter?ref=badge_shield)
 
 cosmos-validators-exporter is a Prometheus scraper that fetches validators stats from an LCD server exposed by a fullnode.
 
@@ -117,3 +118,7 @@ All of the configuration is done via the .toml config file, which is passed to t
 ## How can I contribute?
 
 Bug reports and feature requests are always welcome! If you want to contribute, feel free to open issues or PRs.
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter?ref=badge_large)
