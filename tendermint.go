@@ -221,6 +221,8 @@ func (rpc *RPC) Get(url string, target interface{}) (QueryInfo, error) {
 		return info, err
 	}
 
+	req.Header.Set("User-Agent", "cosmos-validators-exporter")
+
 	rpc.Logger.Trace().Str("url", url).Msg("Doing a query...")
 
 	res, err := client.Do(req)
