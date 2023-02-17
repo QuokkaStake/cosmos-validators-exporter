@@ -1,10 +1,12 @@
-package main
+package dex_screener
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"main/pkg/utils"
 
 	"github.com/rs/zerolog"
 )
@@ -67,5 +69,5 @@ func (d *DexScreener) GetCurrency(chainID string, pair string) (float64, error) 
 		return 0, fmt.Errorf("malformed response")
 	}
 
-	return StrToFloat64(response.Pairs[0].PriceUSD), err
+	return utils.StrToFloat64(response.Pairs[0].PriceUSD), err
 }

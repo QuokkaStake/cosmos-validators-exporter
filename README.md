@@ -1,8 +1,8 @@
 # cosmos-validators-exporter
 
-![Latest release](https://img.shields.io/github/v/release/freak12techno/cosmos-validators-exporter)
-[![Actions Status](https://github.com/freak12techno/cosmos-validators-exporter/workflows/test/badge.svg)](https://github.com/freak12techno/cosmos-validators-exporter/actions)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter?ref=badge_shield)
+![Latest release](https://img.shields.io/github/v/release/QuokkaStake/cosmos-validators-exporter)
+[![Actions Status](https://github.com/QuokkaStake/cosmos-validators-exporter/workflows/test/badge.svg)](https://github.com/QuokkaStake/cosmos-validators-exporter/actions)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter?ref=badge_shield)
 
 cosmos-validators-exporter is a Prometheus scraper that fetches validators stats from an LCD server exposed by a fullnode.
 
@@ -12,11 +12,11 @@ You can use it for building a validator(s) dashboard(s) to visualize your valida
 
 Here's an example of the dashboard we're using in production:
 
-![Validators dashboard](https://raw.githubusercontent.com/freak12techno/cosmos-validators-exporter/master/images/01.png)
+![Validators dashboard](https://raw.githubusercontent.com/QuokkaStake/cosmos-validators-exporter/master/images/01.png)
 
 ## How can I set it up?
 
-First of all, you need to download the latest release from [the releases page](https://github.com/freak12techno/cosmos-validators-exporter/releases/). After that, you should unzip it and you are ready to go:
+First, you need to download the latest release from [the releases page](https://github.com/QuokkaStake/cosmos-validators-exporter/releases/). After that, you should unzip it, and you are ready to go:
 
 ```sh
 wget <the link from the releases page>
@@ -24,15 +24,17 @@ tar xvfz <filename you just downloaded>
 ./cosmos-validators-exporter
 ```
 
-Alternatively, build from source:
+Alternatively, you can build from source:
 ```sh
-git clone https://github.com/freak12techno/cosmos-validators-exporter
+git clone https://github.com/QuokkaStake/cosmos-validators-exporter
 cd cosmos-validators-exporter
-go build
-# this will produce a binary at ./main, which you can run.
+# This will produce a binary at ./cosmos-validators-exporter.
+make build
+# This will produce a binary at $GOPATH/bin/cosmos-validators-exporter.
+make install
 ```
 
-To run it detached, you need to run it as a systemd service. First of all, we have to copy the file to the system apps folder:
+To run it detached, you need to run it as a systemd service. First, we have to copy the file to the system apps folder:
 
 ```sh
 sudo cp ./cosmos-validators-exporter /usr/bin
@@ -66,7 +68,7 @@ KillSignal=SIGTERM
 WantedBy=multi-user.target
 ```
 
-Then we'll add this service to the autostart and run it:
+Then we'll add this service to autostart and run it:
 
 ```sh
 sudo systemctl daemon-reload # reflect the systemd file change
@@ -97,9 +99,9 @@ scrape-configs:
 
 Then restart Prometheus and you're good to go!
 
-*Important: consider setting quite big intervals/timeouts, both in app config and in Prometheus config. This is due to some requests taking a lot of time, and with a shorter timeout there's a chance the whole scrape request will timeout. If you face scrape errors, consider increasing the timeout.*
+*Important: consider setting quite big intervals/timeouts, both in app config and in Prometheus config. This is due to some requests taking a lot of time, and with a shorter timeout there's a chance the whole scrape request will time out. If you face scrape errors, consider increasing the timeout.*
 
-All of the metrics provided by cosmos-validators-exporter have the `cosmos_validators_exporter_` as a prefix. For the full list of metrics, try running `curl localhost:9560/metrics` (or your host/port, if it's non-standard) and see the list of metrics there.
+All the metrics provided by cosmos-validators-exporter have the `cosmos_validators_exporter_` as a prefix. For the full list of metrics, try running `curl localhost:9560/metrics` (or your host/port, if it's non-standard) and see the list of metrics there.
 
 ## Queries examples
 
@@ -113,7 +115,7 @@ When developing, we aimed to only return metrics that are required, and avoid cr
 
 ## How can I configure it?
 
-All of the configuration is done via the .toml config file, which is passed to the application via the `--config` app parameter. Check `config.example.toml` for a config reference.
+All configuration is done via the .toml config file, which is passed to the application via the `--config` app parameter. Check `config.example.toml` for a config reference.
 
 ## How can I contribute?
 
@@ -121,4 +123,4 @@ Bug reports and feature requests are always welcome! If you want to contribute, 
 
 
 ## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffreak12techno%2Fcosmos-validators-exporter?ref=badge_large)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter?ref=badge_large)

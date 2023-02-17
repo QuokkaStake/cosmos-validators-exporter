@@ -1,4 +1,4 @@
-package main
+package coingecko
 
 import (
 	"github.com/rs/zerolog"
