@@ -1,24 +1,31 @@
-package main
+package manager
 
 import (
 	"sort"
 	"sync"
 
+	"main/pkg/config"
+	"main/pkg/price_fetchers/coingecko"
+	"main/pkg/price_fetchers/dex_screener"
+	"main/pkg/tendermint"
+	"main/pkg/types"
+	"main/pkg/utils"
+
 	"github.com/rs/zerolog"
 )
 
 type Manager struct {
-	Config      Config
-	Coingecko   *Coingecko
-	DexScreener *DexScreener
+	Config      *config.Config
+	Coingecko   *coingecko.Coingecko
+	DexScreener *dex_screener.DexScreener
 	Logger      zerolog.Logger
 }
 
-func NewManager(config Config, logger *zerolog.Logger) *Manager {
+func NewManager(config *config.Config, logger *zerolog.Logger) *Manager {
 	return &Manager{
 		Config:      config,
-		Coingecko:   NewCoingecko(logger),
-		DexScreener: NewDexScreener(logger),
+		Coingecko:   coingecko.NewCoingecko(logger),
+		DexScreener: dex_screener.NewDexScreener(logger),
 		Logger:      logger.With().Str("component", "manager").Logger(),
 	}
 }
@@ -47,7 +54,7 @@ func (m *Manager) GetCurrencies() map[string]float64 {
 	return currenciesRatesToChains
 }
 
-func (m *Manager) GetAllValidators() []ValidatorQuery {
+func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 	length := 0
 	for _, chain := range m.Config.Chains {
 		for range chain.Validators {
@@ -55,7 +62,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 		}
 	}
 
-	validators := make([]ValidatorQuery, length)
+	validators := make([]types.ValidatorQuery, length)
 
 	var wg sync.WaitGroup
 	wg.Add(length)
@@ -63,62 +70,62 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 	index := 0
 
 	for _, chain := range m.Config.Chains {
-		rpc := NewRPC(chain.LCDEndpoint, m.Config.Timeout, m.Logger)
+		rpc := tendermint.NewRPC(chain.LCDEndpoint, m.Config.Timeout, m.Logger)
 
 		for _, address := range chain.Validators {
-			go func(address string, chain Chain, index int) {
+			go func(address string, chain config.Chain, index int) {
 				defer wg.Done()
 
 				var internalWg sync.WaitGroup
 
 				var (
-					info                 *ValidatorResponse
-					validatorQueryInfo   QueryInfo
+					info                 *types.ValidatorResponse
+					validatorQueryInfo   types.QueryInfo
 					validatorQueryError  error
 					rank                 uint64
 					totalValidators      int
 					totalStake           float64
 					lastValidatorStake   float64
-					validatorsQueryInfo  QueryInfo
+					validatorsQueryInfo  types.QueryInfo
 					validatorsQueryError error
 
-					delegators           *PaginationResponse
-					delegatorsCountQuery QueryInfo
+					delegators           *types.PaginationResponse
+					delegatorsCountQuery types.QueryInfo
 					delegatorsCountError error
 
-					selfDelegationAmount     Balance
-					selfDelegationQuery      *QueryInfo
+					selfDelegationAmount     types.Balance
+					selfDelegationQuery      *types.QueryInfo
 					selfDelegationQueryError error
 
-					commission           []Balance
-					commissionQuery      QueryInfo
+					commission           []types.Balance
+					commissionQuery      types.QueryInfo
 					commissionQueryError error
 
-					selfDelegationRewards           []Balance
-					selfDelegationRewardsQuery      *QueryInfo
+					selfDelegationRewards           []types.Balance
+					selfDelegationRewardsQuery      *types.QueryInfo
 					selfDelegationRewardsQueryError error
 
-					walletBalance           []Balance
-					walletBalanceQuery      *QueryInfo
+					walletBalance           []types.Balance
+					walletBalanceQuery      *types.QueryInfo
 					walletBalanceQueryError error
 
-					signingInfo           *SigningInfoResponse
-					signingInfoQuery      *QueryInfo
+					signingInfo           *types.SigningInfoResponse
+					signingInfoQuery      *types.QueryInfo
 					signingInfoQueryError error
 
-					slashingParams           *SlashingParamsResponse
-					slashingParamsQuery      *QueryInfo
+					slashingParams           *types.SlashingParamsResponse
+					slashingParamsQuery      *types.QueryInfo
 					slashingParamsQueryError error
 
-					stakingParams           *StakingParamsResponse
-					stakingParamsQuery      *QueryInfo
+					stakingParams           *types.StakingParamsResponse
+					stakingParamsQuery      *types.QueryInfo
 					stakingParamsQueryError error
 
-					unbonds                *PaginationResponse
-					unbondsCountQuery      QueryInfo
+					unbonds                *types.PaginationResponse
+					unbondsCountQuery      types.QueryInfo
 					unbondsCountQueryError error
 
-					validatorInfo ValidatorInfo
+					validatorInfo types.ValidatorInfo
 				)
 
 				internalWg.Add(1)
@@ -199,9 +206,9 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("chain", chain.Name).
 						Str("address", address).
 						Msg("Error querying validator")
-					validatorInfo = ValidatorInfo{}
+					validatorInfo = types.ValidatorInfo{}
 				} else {
-					validatorInfo = NewValidatorInfo(info.Validator)
+					validatorInfo = types.NewValidatorInfo(info.Validator)
 				}
 
 				if delegatorsCountError != nil {
@@ -211,7 +218,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("address", address).
 						Msg("Error querying validator delegations count")
 				} else {
-					validatorInfo.DelegatorsCount = StrToInt64(delegators.Pagination.Total)
+					validatorInfo.DelegatorsCount = utils.StrToInt64(delegators.Pagination.Total)
 				}
 
 				if selfDelegationQueryError != nil {
@@ -278,11 +285,11 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("address", address).
 						Msg("Error querying validator signing info")
 				} else if signingInfo != nil && signingInfo.ValSigningInfo.Address != "" {
-					validatorInfo.MissedBlocksCount = StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
+					validatorInfo.MissedBlocksCount = utils.StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
 					validatorInfo.IsTombstoned = signingInfo.ValSigningInfo.Tombstoned
 					validatorInfo.JailedUntil = signingInfo.ValSigningInfo.JailedUntil
-					validatorInfo.StartHeight = StrToInt64(signingInfo.ValSigningInfo.StartHeight)
-					validatorInfo.IndexOffset = StrToInt64(signingInfo.ValSigningInfo.IndexOffset)
+					validatorInfo.StartHeight = utils.StrToInt64(signingInfo.ValSigningInfo.StartHeight)
+					validatorInfo.IndexOffset = utils.StrToInt64(signingInfo.ValSigningInfo.IndexOffset)
 				}
 
 				if slashingParamsQueryError != nil {
@@ -292,7 +299,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("address", address).
 						Msg("Error querying slashing params")
 				} else if slashingParams != nil && slashingParams.SlashingParams.SignedBlocksWindow != "" {
-					validatorInfo.SignedBlocksWindow = StrToInt64(slashingParams.SlashingParams.SignedBlocksWindow)
+					validatorInfo.SignedBlocksWindow = utils.StrToInt64(slashingParams.SlashingParams.SignedBlocksWindow)
 				}
 
 				if stakingParamsQueryError != nil {
@@ -312,10 +319,10 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 						Str("address", address).
 						Msg("Error querying unbonding delegations count")
 				} else if unbonds != nil {
-					validatorInfo.UnbondsCount = StrToInt64(unbonds.Pagination.Total)
+					validatorInfo.UnbondsCount = utils.StrToInt64(unbonds.Pagination.Total)
 				}
 
-				rpcQueries := []QueryInfo{
+				rpcQueries := []types.QueryInfo{
 					validatorQueryInfo,
 					delegatorsCountQuery,
 					unbondsCountQuery,
@@ -341,7 +348,7 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 					rpcQueries = append(rpcQueries, *stakingParamsQuery)
 				}
 
-				query := ValidatorQuery{
+				query := types.ValidatorQuery{
 					Chain:   chain.Name,
 					Address: address,
 					Queries: rpcQueries,
@@ -360,19 +367,19 @@ func (m *Manager) GetAllValidators() []ValidatorQuery {
 	return validators
 }
 
-func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RPC) (Balance, *QueryInfo, error) {
+func (m *Manager) GetSelfDelegationsBalance(chain config.Chain, address string, rpc *tendermint.RPC) (types.Balance, *types.QueryInfo, error) {
 	if chain.BechWalletPrefix == "" {
-		return Balance{}, nil, nil
+		return types.Balance{}, nil, nil
 	}
 
-	wallet, err := ChangeBech32Prefix(address, chain.BechWalletPrefix)
+	wallet, err := utils.ChangeBech32Prefix(address, chain.BechWalletPrefix)
 	if err != nil {
 		m.Logger.Error().
 			Err(err).
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error converting validator address")
-		return Balance{}, nil, err
+		return types.Balance{}, nil, err
 	}
 
 	balance, queryInfo, err := rpc.GetSingleDelegation(address, wallet)
@@ -382,13 +389,13 @@ func (m *Manager) GetSelfDelegationsBalance(chain Chain, address string, rpc *RP
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error querying for validator self-delegation")
-		return Balance{}, &queryInfo, err
+		return types.Balance{}, &queryInfo, err
 	}
 
 	return balance, &queryInfo, err
 }
 
-func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc *RPC) (uint64, int, float64, float64, QueryInfo, error) {
+func (m *Manager) GetValidatorRankAndTotalStake(chain config.Chain, address string, rpc *tendermint.RPC) (uint64, int, float64, float64, types.QueryInfo, error) {
 	allValidators, info, err := rpc.GetAllValidators()
 	if err != nil {
 		m.Logger.Error().
@@ -399,20 +406,20 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 		return 0, 0, 0, 0, info, err
 	}
 
-	activeValidators := Filter(allValidators.Validators, func(v Validator) bool {
+	activeValidators := utils.Filter(allValidators.Validators, func(v types.Validator) bool {
 		return v.Status == "BOND_STATUS_BONDED"
 	})
 
 	sort.Slice(activeValidators, func(i, j int) bool {
-		return StrToFloat64(activeValidators[i].DelegatorShares) > StrToFloat64(activeValidators[j].DelegatorShares)
+		return utils.StrToFloat64(activeValidators[i].DelegatorShares) > utils.StrToFloat64(activeValidators[j].DelegatorShares)
 	})
 
-	lastValidatorStake := StrToFloat64(activeValidators[len(activeValidators)-1].DelegatorShares)
+	lastValidatorStake := utils.StrToFloat64(activeValidators[len(activeValidators)-1].DelegatorShares)
 	var validatorRank uint64 = 0
 	var totalStake float64 = 0
 
 	for index, validator := range activeValidators {
-		totalStake += StrToFloat64(validator.DelegatorShares)
+		totalStake += utils.StrToFloat64(validator.DelegatorShares)
 		if validator.OperatorAddress == address {
 			validatorRank = uint64(index) + 1
 		}
@@ -421,19 +428,19 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain Chain, address string, rpc
 	return validatorRank, len(activeValidators), totalStake, lastValidatorStake, info, nil
 }
 
-func (m *Manager) GetSelfDelegationRewards(chain Chain, address string, rpc *RPC) ([]Balance, *QueryInfo, error) {
+func (m *Manager) GetSelfDelegationRewards(chain config.Chain, address string, rpc *tendermint.RPC) ([]types.Balance, *types.QueryInfo, error) {
 	if chain.BechWalletPrefix == "" {
-		return []Balance{}, nil, nil
+		return []types.Balance{}, nil, nil
 	}
 
-	wallet, err := ChangeBech32Prefix(address, chain.BechWalletPrefix)
+	wallet, err := utils.ChangeBech32Prefix(address, chain.BechWalletPrefix)
 	if err != nil {
 		m.Logger.Error().
 			Err(err).
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error converting validator address")
-		return []Balance{}, nil, err
+		return []types.Balance{}, nil, err
 	}
 
 	balances, queryInfo, err := rpc.GetDelegatorRewards(address, wallet)
@@ -443,25 +450,25 @@ func (m *Manager) GetSelfDelegationRewards(chain Chain, address string, rpc *RPC
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error querying for validator self-delegation rewards")
-		return []Balance{}, &queryInfo, err
+		return []types.Balance{}, &queryInfo, err
 	}
 
 	return balances, &queryInfo, err
 }
 
-func (m *Manager) GetWalletBalance(chain Chain, address string, rpc *RPC) ([]Balance, *QueryInfo, error) {
+func (m *Manager) GetWalletBalance(chain config.Chain, address string, rpc *tendermint.RPC) ([]types.Balance, *types.QueryInfo, error) {
 	if chain.BechWalletPrefix == "" {
-		return []Balance{}, nil, nil
+		return []types.Balance{}, nil, nil
 	}
 
-	wallet, err := ChangeBech32Prefix(address, chain.BechWalletPrefix)
+	wallet, err := utils.ChangeBech32Prefix(address, chain.BechWalletPrefix)
 	if err != nil {
 		m.Logger.Error().
 			Err(err).
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error converting validator address")
-		return []Balance{}, nil, err
+		return []types.Balance{}, nil, err
 	}
 
 	balances, queryInfo, err := rpc.GetWalletBalance(wallet)
@@ -471,7 +478,7 @@ func (m *Manager) GetWalletBalance(chain Chain, address string, rpc *RPC) ([]Bal
 			Str("chain", chain.Name).
 			Str("address", address).
 			Msg("Error querying for validator wallet balance")
-		return []Balance{}, &queryInfo, err
+		return []types.Balance{}, &queryInfo, err
 	}
 
 	return balances, &queryInfo, err

@@ -1,8 +1,10 @@
-package main
+package types
 
 import (
 	b64 "encoding/base64"
 	"time"
+
+	"main/pkg/utils"
 
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -104,7 +106,7 @@ func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
 	}
 
 	cosmosValCons := types.ConsAddress(pkProto.Address()).String()
-	properValCons, err := ChangeBech32Prefix(cosmosValCons, prefix)
+	properValCons, err := utils.ChangeBech32Prefix(cosmosValCons, prefix)
 	if err != nil {
 		return "", err
 	}
@@ -120,16 +122,16 @@ func NewValidatorInfo(validator Validator) ValidatorInfo {
 		Website:                 validator.Description.Website,
 		SecurityContact:         validator.Description.SecurityContact,
 		Details:                 validator.Description.Details,
-		Tokens:                  StrToFloat64(validator.Tokens),
+		Tokens:                  utils.StrToFloat64(validator.Tokens),
 		Jailed:                  validator.Jailed,
 		Status:                  validator.Status,
-		CommissionRate:          StrToFloat64(validator.Commission.CommissionRates.Rate),
-		CommissionMaxRate:       StrToFloat64(validator.Commission.CommissionRates.MaxRate),
-		CommissionMaxChangeRate: StrToFloat64(validator.Commission.CommissionRates.MaxChangeRate),
+		CommissionRate:          utils.StrToFloat64(validator.Commission.CommissionRates.Rate),
+		CommissionMaxRate:       utils.StrToFloat64(validator.Commission.CommissionRates.MaxRate),
+		CommissionMaxChangeRate: utils.StrToFloat64(validator.Commission.CommissionRates.MaxChangeRate),
 		CommissionUpdateTime:    validator.Commission.UpdateTime,
-		UnbondingHeight:         StrToInt64(validator.UnbondingHeight),
+		UnbondingHeight:         utils.StrToInt64(validator.UnbondingHeight),
 		UnbondingTime:           validator.UnbondingTime,
-		MinSelfDelegation:       StrToInt64(validator.MinSelfDelegation),
+		MinSelfDelegation:       utils.StrToInt64(validator.MinSelfDelegation),
 		MissedBlocksCount:       -1,
 		UnbondsCount:            -1,
 		TotalValidators:         -1,

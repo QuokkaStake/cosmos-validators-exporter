@@ -16,7 +16,7 @@ json = false
 # Chain name that will go into labels. Required.
 name = "bitsong"
 # LCD endpoint to query data from. Required.
-lcd-endpoint = "https://api.bitsong.freak12techno.io"
+lcd-endpoint = "https://api.bitsong.quokkastake.io"
 # Coingecko currency, specify it if you want to also get the wallet balance
 # in total in USD.
 coingecko-currency = "bitsong"
@@ -53,7 +53,7 @@ validators = [
 # There can be multiple chains.
 [[chains]]
 name = "emoney"
-lcd-endpoint = "https://api.emoney.freak12techno.io"
+lcd-endpoint = "https://api.emoney.quokkastake.io"
 coingecko-currency = "e-money"
 base-denom = "ungm"
 denom = "ngm"

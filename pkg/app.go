@@ -1,44 +1,62 @@
-package main
+package pkg
 
 import (
 	"net/http"
 	"time"
 
+	"main/pkg/config"
+	"main/pkg/logger"
+	"main/pkg/manager"
+	"main/pkg/utils"
+
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
-	"github.com/spf13/cobra"
 )
 
-func Execute(configPath string) {
-	config, err := GetConfig(configPath)
+type App struct {
+	Config  *config.Config
+	Logger  *zerolog.Logger
+	Manager *manager.Manager
+}
+
+func NewApp(configPath string) *App {
+	appConfig, err := config.GetConfig(configPath)
 	if err != nil {
-		GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
+		logger.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
 
-	if err = config.Validate(); err != nil {
-		GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
+	if err = appConfig.Validate(); err != nil {
+		logger.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
 	}
 
-	log := GetLogger(config.LogConfig)
-	manager := NewManager(*config, log)
+	log := logger.GetLogger(appConfig.LogConfig)
+	manager := manager.NewManager(appConfig, log)
 
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		Handler(w, r, manager, log)
-	})
-
-	log.Info().Str("addr", config.ListenAddress).Msg("Listening")
-	err = http.ListenAndServe(config.ListenAddress, nil)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Could not start application")
+	return &App{
+		Logger:  log,
+		Config:  appConfig,
+		Manager: manager,
 	}
 }
 
-func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zerolog.Logger) {
+func (a *App) Start() {
+	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		a.Handler(w, r)
+	})
+
+	a.Logger.Info().Str("addr", a.Config.ListenAddress).Msg("Listening")
+	err := http.ListenAndServe(a.Config.ListenAddress, nil)
+	if err != nil {
+		a.Logger.Fatal().Err(err).Msg("Could not start application")
+	}
+}
+
+func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	requestStart := time.Now()
 
-	sublogger := log.With().
+	sublogger := a.Logger.With().
 		Str("request-id", uuid.New().String()).
 		Logger()
 
@@ -277,7 +295,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 	registry.MustRegister(tokenPriceGauge)
 	registry.MustRegister(totalBondedTokensGauge)
 
-	validators := manager.GetAllValidators()
+	validators := a.Manager.GetAllValidators()
 	for _, validator := range validators {
 		queriesCountGauge.With(prometheus.Labels{
 			"chain":   validator.Chain,
@@ -317,7 +335,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 				"chain":   validator.Chain,
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
-			}).Set(BoolToFloat64(validator.Info.Jailed))
+			}).Set(utils.BoolToFloat64(validator.Info.Jailed))
 
 			commissionGauge.With(prometheus.Labels{
 				"chain":   validator.Chain,
@@ -441,7 +459,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		}).Set(validator.Info.TotalStake)
 	}
 
-	for _, chain := range manager.Config.Chains {
+	for _, chain := range a.Config.Chains {
 		denomCoefficientGauge.With(prometheus.Labels{
 			"chain":         chain.Name,
 			"display_denom": chain.Denom,
@@ -449,7 +467,7 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		}).Set(float64(chain.DenomCoefficient))
 	}
 
-	currencies := manager.GetCurrencies()
+	currencies := a.Manager.GetCurrencies()
 	for chain, price := range currencies {
 		tokenPriceGauge.With(prometheus.Labels{
 			"chain": chain,
@@ -464,25 +482,4 @@ func Handler(w http.ResponseWriter, r *http.Request, manager *Manager, log *zero
 		Str("endpoint", "/metrics").
 		Float64("request-time", time.Since(requestStart).Seconds()).
 		Msg("Request processed")
-}
-
-func main() {
-	var ConfigPath string
-
-	rootCmd := &cobra.Command{
-		Use:  "cosmos-validators-exporter",
-		Long: "Scrapes validators info on multiple chains.",
-		Run: func(cmd *cobra.Command, args []string) {
-			Execute(ConfigPath)
-		},
-	}
-
-	rootCmd.PersistentFlags().StringVar(&ConfigPath, "config", "", "Config file path")
-	if err := rootCmd.MarkPersistentFlagRequired("config"); err != nil {
-		GetDefaultLogger().Fatal().Err(err).Msg("Could not set flag as required")
-	}
-
-	if err := rootCmd.Execute(); err != nil {
-		GetDefaultLogger().Fatal().Err(err).Msg("Could not start application")
-	}
 }

@@ -6,6 +6,10 @@ linters-settings:
     excludes:
       - G402
       - G404
+  staticcheck:
+    checks:
+      - all
+      - '-SA1019'
   revive:
     rules:
       - name: var-declaration
@@ -14,36 +18,36 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - prealloc
+    - funlen
+    - scopelint
+    - interfacer
+    - exhaustivestruct
+    - maligned
+    - golint
+    - nlreturn
+    - wrapcheck
+    - gomnd
+    - cyclop
+    - goerr113
+    - exhaustruct
+    - wsl
     - lll
     - dupl
-    - funlen
-    - wsl
-    - gomnd
-    - unparam
-    - goerr113
-    - nestif
-    - errcheck
-    - golint
-    - scopelint
-    - maligned
-    - interfacer
-    - wrapcheck
     - varnamelen
-    - tagliatelle
-    - exhaustivestruct
     - gomoddirectives
-    - ireturn
-    - nlreturn
-    - cyclop
-    - errorlint
-    - noctx
     - gocognit
-    - gochecknoglobals
+    - tagliatelle
+    - errorlint
+    - gofumpt
+    - noctx
     - gosec
-    - exportloopref
     - stylecheck
-    - exhaustruct
-    - maintidx
+    - gosimple
+    - ireturn
+    - nosnakecase
+    - ifshort
+    - gci
     - promlinter
     - gocyclo
+    - maintidx
+    - deadcode
