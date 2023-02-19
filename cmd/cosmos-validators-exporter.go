@@ -7,6 +7,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	version = "unknown"
+)
+
 func Execute(configPath string) {
 	app := pkg.NewApp(configPath)
 	app.Start()
@@ -16,8 +20,9 @@ func main() {
 	var ConfigPath string
 
 	rootCmd := &cobra.Command{
-		Use:  "cosmos-validators-exporter",
-		Long: "Scrapes validators info on multiple chains.",
+		Use:     "cosmos-validators-exporter",
+		Long:    "Scrapes validators info on multiple chains.",
+		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
 			Execute(ConfigPath)
 		},
