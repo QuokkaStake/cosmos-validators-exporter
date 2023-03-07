@@ -89,10 +89,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorsQueryInfo  types.QueryInfo
 					validatorsQueryError error
 
-					delegators           *types.PaginationResponse
-					delegatorsCountQuery types.QueryInfo
-					delegatorsCountError error
-
 					selfDelegationAmount     types.Balance
 					selfDelegationQuery      *types.QueryInfo
 					selfDelegationQueryError error
@@ -137,12 +133,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 						}
 					}
 
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
-					delegators, delegatorsCountQuery, delegatorsCountError = rpc.GetDelegationsCount(address)
 					internalWg.Done()
 				}()
 
@@ -199,16 +189,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorInfo = types.ValidatorInfo{}
 				} else {
 					validatorInfo = types.NewValidatorInfo(info.Validator)
-				}
-
-				if delegatorsCountError != nil {
-					m.Logger.Error().
-						Err(delegatorsCountError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying validator delegations count")
-				} else {
-					validatorInfo.DelegatorsCount = utils.StrToInt64(delegators.Pagination.Total)
 				}
 
 				if selfDelegationQueryError != nil {
@@ -304,7 +284,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 
 				rpcQueries := []types.QueryInfo{
 					validatorQueryInfo,
-					delegatorsCountQuery,
 					unbondsCountQuery,
 					validatorsQueryInfo,
 				}

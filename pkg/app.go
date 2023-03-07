@@ -8,7 +8,7 @@ import (
 
 	"main/pkg/config"
 	"main/pkg/logger"
-	"main/pkg/manager"
+	managerPkg "main/pkg/manager"
 	queriersPkg "main/pkg/queriers"
 	"main/pkg/utils"
 
@@ -21,7 +21,7 @@ import (
 type App struct {
 	Config   *config.Config
 	Logger   *zerolog.Logger
-	Manager  *manager.Manager
+	Manager  *managerPkg.Manager
 	Queriers []types.Querier
 }
 
@@ -36,10 +36,11 @@ func NewApp(configPath string) *App {
 	}
 
 	log := logger.GetLogger(appConfig.LogConfig)
-	manager := manager.NewManager(appConfig, log)
+	manager := managerPkg.NewManager(appConfig, log)
 
 	queriers := []types.Querier{
 		queriersPkg.NewCommissionQuerier(log, appConfig),
+		queriersPkg.NewDelegationsQuerier(log, appConfig),
 	}
 
 	return &App{
@@ -153,14 +154,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_total_delegations",
 			Help: "Validator delegations (in tokens)",
-		},
-		[]string{"chain", "address", "moniker"},
-	)
-
-	delegationsCountGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_delegations_count",
-			Help: "Validator delegations count",
 		},
 		[]string{"chain", "address", "moniker"},
 	)
@@ -281,7 +274,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(unbondsCountGauge)
-	registry.MustRegister(delegationsCountGauge)
 	registry.MustRegister(selfDelegatedTokensGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
@@ -361,14 +353,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.Tokens)
-		}
-
-		if validator.Info.DelegatorsCount != 0 {
-			delegationsCountGauge.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(float64(validator.Info.DelegatorsCount))
 		}
 
 		if validator.Info.UnbondsCount != -1 {

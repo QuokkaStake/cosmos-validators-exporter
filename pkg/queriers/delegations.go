@@ -6,22 +6,23 @@ import (
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"sync"
 )
 
-type CommissionQuerier struct {
+type DelegationsQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
 }
 
-func NewCommissionQuerier(logger *zerolog.Logger, config *config.Config) *CommissionQuerier {
-	return &CommissionQuerier{
+func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *DelegationsQuerier {
+	return &DelegationsQuerier{
 		Logger: logger.With().Str("component", "commission_querier").Logger(),
 		Config: config,
 	}
 }
 
-func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
+func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
 	var collectors []prometheus.Collector
 	var queryInfos []types.QueryInfo
 
@@ -35,7 +36,7 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 			wg.Add(1)
 			go func(validator string, rpc *tendermint.RPC) {
 				defer wg.Done()
-				commission, query, err := rpc.GetValidatorCommission(validator)
+				delegatorsResponse, query, err := rpc.GetDelegationsCount(validator)
 
 				mutex.Lock()
 				defer mutex.Unlock()
@@ -51,21 +52,18 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 					return
 				}
 
-				commissionUnclaimedTokens := prometheus.NewGaugeVec(
+				delegationsCountGauge := prometheus.NewGaugeVec(
 					prometheus.GaugeOpts{
-						Name: "cosmos_validators_exporter_unclaimed_commission",
-						Help: "Validator's unclaimed commission (in tokens)",
+						Name: "cosmos_validators_exporter_delegations_count",
+						Help: "Validator delegations count",
 					},
-					[]string{"chain", "address", "denom"},
+					[]string{"chain", "address"},
 				)
 
-				for _, balance := range commission {
-					commissionUnclaimedTokens.With(prometheus.Labels{
-						"chain":   chain.Name,
-						"address": validator,
-						"denom":   balance.Denom,
-					}).Set(balance.Amount)
-				}
+				delegationsCountGauge.With(prometheus.Labels{
+					"chain":   chain.Name,
+					"address": validator,
+				}).Set(float64(utils.StrToInt64(delegatorsResponse.Pagination.Total)))
 			}(validator, rpc)
 		}
 	}
