@@ -30,30 +30,6 @@ func NewManager(config *config.Config, logger *zerolog.Logger) *Manager {
 	}
 }
 
-func (m *Manager) GetCurrencies() map[string]float64 {
-	currenciesList := m.Config.GetCoingeckoCurrencies()
-	currenciesRates := m.Coingecko.FetchPrices(currenciesList)
-
-	currenciesRatesToChains := map[string]float64{}
-	for _, chain := range m.Config.Chains {
-		// using coingecko response
-		if rate, ok := currenciesRates[chain.CoingeckoCurrency]; ok {
-			currenciesRatesToChains[chain.Name] = rate
-			continue
-		}
-
-		// using dexscreener response
-		if chain.DexScreenerChainID != "" && chain.DexScreenerPair != "" {
-			rate, err := m.DexScreener.GetCurrency(chain.DexScreenerChainID, chain.DexScreenerPair)
-			if err == nil {
-				currenciesRatesToChains[chain.Name] = rate
-			}
-		}
-	}
-
-	return currenciesRatesToChains
-}
-
 func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 	length := 0
 	for _, chain := range m.Config.Chains {
@@ -280,34 +256,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 	wg.Wait()
 
 	return validators
-}
-
-func (m *Manager) GetSelfDelegationsBalance(chain config.Chain, address string, rpc *tendermint.RPC) (types.Balance, *types.QueryInfo, error) {
-	if chain.BechWalletPrefix == "" {
-		return types.Balance{}, nil, nil
-	}
-
-	wallet, err := utils.ChangeBech32Prefix(address, chain.BechWalletPrefix)
-	if err != nil {
-		m.Logger.Error().
-			Err(err).
-			Str("chain", chain.Name).
-			Str("address", address).
-			Msg("Error converting validator address")
-		return types.Balance{}, nil, err
-	}
-
-	balance, queryInfo, err := rpc.GetSingleDelegation(address, wallet)
-	if err != nil {
-		m.Logger.Error().
-			Err(err).
-			Str("chain", chain.Name).
-			Str("address", address).
-			Msg("Error querying for validator self-delegation")
-		return types.Balance{}, &queryInfo, err
-	}
-
-	return balance, &queryInfo, err
 }
 
 func (m *Manager) GetValidatorRankAndTotalStake(chain config.Chain, address string, rpc *tendermint.RPC) (uint64, int, float64, float64, types.QueryInfo, error) {

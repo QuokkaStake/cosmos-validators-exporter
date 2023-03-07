@@ -1,6 +1,8 @@
 package pkg
 
 import (
+	coingeckoPkg "main/pkg/price_fetchers/coingecko"
+	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
 	"main/pkg/types"
 	"net/http"
 	"sync"
@@ -38,11 +40,15 @@ func NewApp(configPath string) *App {
 	log := logger.GetLogger(appConfig.LogConfig)
 	manager := managerPkg.NewManager(appConfig, log)
 
+	coingecko := coingeckoPkg.NewCoingecko(log)
+	dexScreener := dexScreenerPkg.NewDexScreener(log)
+
 	queriers := []types.Querier{
 		queriersPkg.NewCommissionQuerier(log, appConfig),
 		queriersPkg.NewDelegationsQuerier(log, appConfig),
 		queriersPkg.NewUnbondsQuerier(log, appConfig),
 		queriersPkg.NewSelfDelegationsQuerier(log, appConfig),
+		queriersPkg.NewPriceQuerier(log, appConfig, coingecko, dexScreener),
 	}
 
 	return &App{
@@ -232,14 +238,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		[]string{"chain"},
 	)
 
-	tokenPriceGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_price",
-			Help: "Price of 1 token in display denom in USD",
-		},
-		[]string{"chain"},
-	)
-
 	totalBondedTokensGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_tokens_bonded_total",
@@ -268,7 +266,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(denomCoefficientGauge)
 	registry.MustRegister(activeSetSizeGauge)
 	registry.MustRegister(activeSetTokensGauge)
-	registry.MustRegister(tokenPriceGauge)
 	registry.MustRegister(totalBondedTokensGauge)
 
 	validators := a.Manager.GetAllValidators()
@@ -408,13 +405,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 			"display_denom": chain.Denom,
 			"denom":         chain.BaseDenom,
 		}).Set(float64(chain.DenomCoefficient))
-	}
-
-	currencies := a.Manager.GetCurrencies()
-	for chain, price := range currencies {
-		tokenPriceGauge.With(prometheus.Labels{
-			"chain": chain,
-		}).Set(price)
 	}
 
 	var wg sync.WaitGroup
