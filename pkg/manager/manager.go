@@ -89,10 +89,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorsQueryInfo  types.QueryInfo
 					validatorsQueryError error
 
-					selfDelegationAmount     types.Balance
-					selfDelegationQuery      *types.QueryInfo
-					selfDelegationQueryError error
-
 					selfDelegationRewards           []types.Balance
 					selfDelegationRewardsQuery      *types.QueryInfo
 					selfDelegationRewardsQueryError error
@@ -140,12 +136,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 
 				internalWg.Add(1)
 				go func() {
-					selfDelegationAmount, selfDelegationQuery, selfDelegationQueryError = m.GetSelfDelegationsBalance(chain, address, rpc)
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
 					selfDelegationRewards, selfDelegationRewardsQuery, selfDelegationRewardsQueryError = m.GetSelfDelegationRewards(chain, address, rpc)
 					internalWg.Done()
 				}()
@@ -179,16 +169,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorInfo = types.ValidatorInfo{}
 				} else {
 					validatorInfo = types.NewValidatorInfo(info.Validator)
-				}
-
-				if selfDelegationQueryError != nil {
-					m.Logger.Error().
-						Err(selfDelegationQueryError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying self-delegations for validator")
-				} else {
-					validatorInfo.SelfDelegation = selfDelegationAmount
 				}
 
 				if validatorsQueryError != nil {
@@ -266,9 +246,7 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorQueryInfo,
 					validatorsQueryInfo,
 				}
-				if selfDelegationQuery != nil {
-					rpcQueries = append(rpcQueries, *selfDelegationQuery)
-				}
+
 				if selfDelegationRewardsQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationRewardsQuery)
 				}

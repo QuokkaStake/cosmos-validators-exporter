@@ -42,6 +42,7 @@ func NewApp(configPath string) *App {
 		queriersPkg.NewCommissionQuerier(log, appConfig),
 		queriersPkg.NewDelegationsQuerier(log, appConfig),
 		queriersPkg.NewUnbondsQuerier(log, appConfig),
+		queriersPkg.NewSelfDelegationsQuerier(log, appConfig),
 	}
 
 	return &App{
@@ -159,14 +160,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		[]string{"chain", "address", "moniker"},
 	)
 
-	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegated",
-			Help: "Validator's self delegated amount (in tokens)",
-		},
-		[]string{"chain", "address", "moniker", "denom"},
-	)
-
 	validatorRankGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_rank",
@@ -266,7 +259,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(commissionMaxGauge)
 	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
-	registry.MustRegister(selfDelegatedTokensGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
 	registry.MustRegister(selfDelegationRewardsTokens)
@@ -345,15 +337,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.Tokens)
-		}
-
-		if validator.Info.SelfDelegation.Amount != 0 {
-			selfDelegatedTokensGauge.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-				"denom":   validator.Info.SelfDelegation.Denom,
-			}).Set(validator.Info.SelfDelegation.Amount)
 		}
 
 		if validator.Info.Rank != 0 {
