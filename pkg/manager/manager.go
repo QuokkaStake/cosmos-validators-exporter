@@ -63,10 +63,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					signingInfoQuery      *types.QueryInfo
 					signingInfoQueryError error
 
-					slashingParams           *types.SlashingParamsResponse
-					slashingParamsQuery      *types.QueryInfo
-					slashingParamsQueryError error
-
 					stakingParams           *types.StakingParamsResponse
 					stakingParamsQuery      *types.QueryInfo
 					stakingParamsQueryError error
@@ -93,12 +89,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					rank, totalValidators, totalStake, lastValidatorStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
-					slashingParams, slashingParamsQuery, slashingParamsQueryError = rpc.GetSlashingParams()
 					internalWg.Done()
 				}()
 
@@ -152,16 +142,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorInfo.IndexOffset = utils.StrToInt64(signingInfo.ValSigningInfo.IndexOffset)
 				}
 
-				if slashingParamsQueryError != nil {
-					m.Logger.Error().
-						Err(slashingParamsQueryError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying slashing params")
-				} else if slashingParams != nil && slashingParams.SlashingParams.SignedBlocksWindow != "" {
-					validatorInfo.SignedBlocksWindow = utils.StrToInt64(slashingParams.SlashingParams.SignedBlocksWindow)
-				}
-
 				if stakingParamsQueryError != nil {
 					m.Logger.Error().
 						Err(stakingParamsQueryError).
@@ -179,9 +159,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 
 				if signingInfoQuery != nil {
 					rpcQueries = append(rpcQueries, *signingInfoQuery)
-				}
-				if slashingParamsQuery != nil {
-					rpcQueries = append(rpcQueries, *slashingParamsQuery)
 				}
 				if stakingParamsQuery != nil {
 					rpcQueries = append(rpcQueries, *stakingParamsQuery)

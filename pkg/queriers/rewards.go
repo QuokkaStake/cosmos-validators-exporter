@@ -59,6 +59,8 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 				}
 
 				balances, query, err := rpc.GetDelegatorRewards(validator, wallet)
+				queryInfos = append(queryInfos, query)
+
 				if err != nil {
 					q.Logger.Error().
 						Err(err).
@@ -70,8 +72,6 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 
 				mutex.Lock()
 				defer mutex.Unlock()
-
-				queryInfos = append(queryInfos, query)
 
 				if err != nil {
 					q.Logger.Error().

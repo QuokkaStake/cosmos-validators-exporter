@@ -51,6 +51,7 @@ func NewApp(configPath string) *App {
 		queriersPkg.NewPriceQuerier(log, appConfig, coingecko, dexScreener),
 		queriersPkg.NewRewardsQuerier(log, appConfig),
 		queriersPkg.NewWalletQuerier(log, appConfig),
+		queriersPkg.NewSlashingParamsQuerier(log, appConfig),
 	}
 
 	return &App{
@@ -192,14 +193,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		[]string{"chain", "address", "moniker"},
 	)
 
-	blocksWindowGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_missed_blocks_window",
-			Help: "Missed blocks window in network",
-		},
-		[]string{"chain"},
-	)
-
 	activeSetSizeGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_active_set_size",
@@ -238,7 +231,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
 	registry.MustRegister(missedBlocksGauge)
-	registry.MustRegister(blocksWindowGauge)
 	registry.MustRegister(activeSetSizeGauge)
 	registry.MustRegister(activeSetTokensGauge)
 	registry.MustRegister(totalBondedTokensGauge)
@@ -333,12 +325,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(float64(validator.Info.MissedBlocksCount))
-		}
-
-		if validator.Info.SignedBlocksWindow > 0 {
-			blocksWindowGauge.With(prometheus.Labels{
-				"chain": validator.Chain,
-			}).Set(float64(validator.Info.SignedBlocksWindow))
 		}
 
 		if validator.Info.ActiveValidatorsCount >= 0 {

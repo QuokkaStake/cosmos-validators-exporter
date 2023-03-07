@@ -41,7 +41,7 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo)
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC) {
+			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
 				defer wg.Done()
 
 				if chain.BechWalletPrefix == "" {
@@ -59,6 +59,8 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo)
 				}
 
 				balances, query, err := rpc.GetWalletBalance(wallet)
+				queryInfos = append(queryInfos, query)
+
 				if err != nil {
 					q.Logger.Error().
 						Err(err).
@@ -71,17 +73,6 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo)
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
-
-				if err != nil {
-					q.Logger.Error().
-						Err(err).
-						Str("chain", chain.Name).
-						Str("address", validator).
-						Msg("Error querying validator wallet balance")
-					return
-				}
-
 				for _, balance := range balances {
 					walletBalanceTokens.With(prometheus.Labels{
 						"chain":   chain.Name,
@@ -89,7 +80,7 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo)
 						"denom":   balance.Denom,
 					}).Set(balance.Amount)
 				}
-			}(validator, rpc)
+			}(validator, rpc, chain)
 		}
 	}
 

@@ -59,6 +59,8 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 				}
 
 				balance, query, err := rpc.GetSingleDelegation(validator, wallet)
+				queryInfos = append(queryInfos, query)
+
 				if err != nil {
 					q.Logger.Error().
 						Err(err).
@@ -70,8 +72,6 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 
 				mutex.Lock()
 				defer mutex.Unlock()
-
-				queryInfos = append(queryInfos, query)
 
 				if err != nil {
 					q.Logger.Error().
