@@ -10,25 +10,25 @@ import (
 	"sync"
 )
 
-type DelegationsQuerier struct {
+type UnbondsQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
 }
 
-func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *DelegationsQuerier {
-	return &DelegationsQuerier{
+func NewUnbondsQuerier(logger *zerolog.Logger, config *config.Config) *UnbondsQuerier {
+	return &UnbondsQuerier{
 		Logger: logger.With().Str("component", "commission_querier").Logger(),
 		Config: config,
 	}
 }
 
-func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
+func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
 	var queryInfos []types.QueryInfo
 
-	delegationsCountGauge := prometheus.NewGaugeVec(
+	unbondsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_delegations_count",
-			Help: "Validator delegations count",
+			Name: "cosmos_validators_exporter_unbonds_count",
+			Help: "Validator unbonds count",
 		},
 		[]string{"chain", "address"},
 	)
@@ -43,7 +43,7 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 			wg.Add(1)
 			go func(validator string, rpc *tendermint.RPC) {
 				defer wg.Done()
-				delegatorsResponse, query, err := rpc.GetDelegationsCount(validator)
+				unbondsResponse, query, err := rpc.GetUnbondsCount(validator)
 
 				mutex.Lock()
 				defer mutex.Unlock()
@@ -59,15 +59,15 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 					return
 				}
 
-				delegationsCountGauge.With(prometheus.Labels{
+				unbondsCountGauge.With(prometheus.Labels{
 					"chain":   chain.Name,
 					"address": validator,
-				}).Set(float64(utils.StrToInt64(delegatorsResponse.Pagination.Total)))
+				}).Set(float64(utils.StrToInt64(unbondsResponse.Pagination.Total)))
 			}(validator, rpc)
 		}
 	}
 
 	wg.Wait()
 
-	return []prometheus.Collector{delegationsCountGauge}, queryInfos
+	return []prometheus.Collector{unbondsCountGauge}, queryInfos
 }

@@ -113,10 +113,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					stakingParamsQuery      *types.QueryInfo
 					stakingParamsQueryError error
 
-					unbonds                *types.PaginationResponse
-					unbondsCountQuery      types.QueryInfo
-					unbondsCountQueryError error
-
 					validatorInfo types.ValidatorInfo
 				)
 
@@ -169,12 +165,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					stakingParams, stakingParamsQuery, stakingParamsQueryError = rpc.GetStakingParams()
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
-					unbonds, unbondsCountQuery, unbondsCountQueryError = rpc.GetUnbondsCount(address)
 					internalWg.Done()
 				}()
 
@@ -272,19 +262,8 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorInfo.ActiveValidatorsCount = int64(stakingParams.StakingParams.MaxValidators)
 				}
 
-				if unbondsCountQueryError != nil {
-					m.Logger.Error().
-						Err(unbondsCountQueryError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying unbonding delegations count")
-				} else if unbonds != nil {
-					validatorInfo.UnbondsCount = utils.StrToInt64(unbonds.Pagination.Total)
-				}
-
 				rpcQueries := []types.QueryInfo{
 					validatorQueryInfo,
-					unbondsCountQuery,
 					validatorsQueryInfo,
 				}
 				if selfDelegationQuery != nil {

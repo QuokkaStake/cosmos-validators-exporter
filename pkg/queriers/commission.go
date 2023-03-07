@@ -22,11 +22,18 @@ func NewCommissionQuerier(logger *zerolog.Logger, config *config.Config) *Commis
 }
 
 func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var collectors []prometheus.Collector
 	var queryInfos []types.QueryInfo
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
+
+	commissionUnclaimedTokens := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_unclaimed_commission",
+			Help: "Validator's unclaimed commission (in tokens)",
+		},
+		[]string{"chain", "address", "denom"},
+	)
 
 	for _, chain := range q.Config.Chains {
 		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger)
@@ -51,14 +58,6 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 					return
 				}
 
-				commissionUnclaimedTokens := prometheus.NewGaugeVec(
-					prometheus.GaugeOpts{
-						Name: "cosmos_validators_exporter_unclaimed_commission",
-						Help: "Validator's unclaimed commission (in tokens)",
-					},
-					[]string{"chain", "address", "denom"},
-				)
-
 				for _, balance := range commission {
 					commissionUnclaimedTokens.With(prometheus.Labels{
 						"chain":   chain.Name,
@@ -72,5 +71,5 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 
 	wg.Wait()
 
-	return collectors, queryInfos
+	return []prometheus.Collector{commissionUnclaimedTokens}, queryInfos
 }

@@ -41,6 +41,7 @@ func NewApp(configPath string) *App {
 	queriers := []types.Querier{
 		queriersPkg.NewCommissionQuerier(log, appConfig),
 		queriersPkg.NewDelegationsQuerier(log, appConfig),
+		queriersPkg.NewUnbondsQuerier(log, appConfig),
 	}
 
 	return &App{
@@ -158,14 +159,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		[]string{"chain", "address", "moniker"},
 	)
 
-	unbondsCountGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_unbonds_count",
-			Help: "Validator unbonds count",
-		},
-		[]string{"chain", "address", "moniker"},
-	)
-
 	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_self_delegated",
@@ -273,7 +266,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(commissionMaxGauge)
 	registry.MustRegister(commissionMaxChangeGauge)
 	registry.MustRegister(delegationsGauge)
-	registry.MustRegister(unbondsCountGauge)
 	registry.MustRegister(selfDelegatedTokensGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
@@ -353,14 +345,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(validator.Info.Tokens)
-		}
-
-		if validator.Info.UnbondsCount != -1 {
-			unbondsCountGauge.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-			}).Set(float64(validator.Info.UnbondsCount))
 		}
 
 		if validator.Info.SelfDelegation.Amount != 0 {
