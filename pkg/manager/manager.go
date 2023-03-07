@@ -36,7 +36,7 @@ func (m *Manager) GetCurrencies() map[string]float64 {
 
 	currenciesRatesToChains := map[string]float64{}
 	for _, chain := range m.Config.Chains {
-		// using coingeckon response
+		// using coingecko response
 		if rate, ok := currenciesRates[chain.CoingeckoCurrency]; ok {
 			currenciesRatesToChains[chain.Name] = rate
 			continue
@@ -70,7 +70,7 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 	index := 0
 
 	for _, chain := range m.Config.Chains {
-		rpc := tendermint.NewRPC(chain.LCDEndpoint, m.Config.Timeout, m.Logger)
+		rpc := tendermint.NewRPC(chain, m.Config.Timeout, m.Logger)
 
 		for _, address := range chain.Validators {
 			go func(address string, chain config.Chain, index int) {
@@ -96,10 +96,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					selfDelegationAmount     types.Balance
 					selfDelegationQuery      *types.QueryInfo
 					selfDelegationQueryError error
-
-					commission           []types.Balance
-					commissionQuery      types.QueryInfo
-					commissionQueryError error
 
 					selfDelegationRewards           []types.Balance
 					selfDelegationRewardsQuery      *types.QueryInfo
@@ -159,12 +155,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					selfDelegationAmount, selfDelegationQuery, selfDelegationQueryError = m.GetSelfDelegationsBalance(chain, address, rpc)
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
-					commission, commissionQuery, commissionQueryError = rpc.GetValidatorCommission(address)
 					internalWg.Done()
 				}()
 
@@ -248,16 +238,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					}
 				}
 
-				if commissionQueryError != nil {
-					m.Logger.Error().
-						Err(commissionQueryError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying validator commission")
-				} else {
-					validatorInfo.Commission = commission
-				}
-
 				if selfDelegationRewardsQueryError != nil {
 					m.Logger.Error().
 						Err(selfDelegationRewardsQueryError).
@@ -327,7 +307,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					delegatorsCountQuery,
 					unbondsCountQuery,
 					validatorsQueryInfo,
-					commissionQuery,
 				}
 				if selfDelegationQuery != nil {
 					rpcQueries = append(rpcQueries, *selfDelegationQuery)

@@ -2,6 +2,7 @@ package types
 
 import (
 	b64 "encoding/base64"
+	"github.com/prometheus/client_golang/prometheus"
 	"time"
 
 	"main/pkg/utils"
@@ -154,6 +155,7 @@ type Pagination struct {
 }
 
 type QueryInfo struct {
+	Chain    string
 	URL      string
 	Duration time.Duration
 	Success  bool
@@ -228,4 +230,8 @@ type StakingParams struct {
 
 type StakingParamsResponse struct {
 	StakingParams StakingParams `json:"params"`
+}
+
+type Querier interface {
+	GetMetrics() ([]prometheus.Collector, []QueryInfo)
 }

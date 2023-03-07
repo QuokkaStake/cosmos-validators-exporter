@@ -3,6 +3,7 @@ package tendermint
 import (
 	"encoding/json"
 	"fmt"
+	"main/pkg/config"
 	"net/http"
 	"time"
 
@@ -15,14 +16,16 @@ import (
 )
 
 type RPC struct {
+	Chain   string
 	URL     string
 	Timeout int
 	Logger  zerolog.Logger
 }
 
-func NewRPC(url string, timeout int, logger zerolog.Logger) *RPC {
+func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger) *RPC {
 	return &RPC{
-		URL:     url,
+		Chain:   chain.Name,
+		URL:     chain.LCDEndpoint,
 		Timeout: timeout,
 		Logger:  logger.With().Str("component", "rpc").Logger(),
 	}
@@ -215,6 +218,7 @@ func (rpc *RPC) Get(url string, target interface{}) (types2.QueryInfo, error) {
 	start := time.Now()
 
 	info := types2.QueryInfo{
+		Chain:   rpc.Chain,
 		URL:     url,
 		Success: false,
 	}
