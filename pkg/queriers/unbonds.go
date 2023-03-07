@@ -17,7 +17,7 @@ type UnbondsQuerier struct {
 
 func NewUnbondsQuerier(logger *zerolog.Logger, config *config.Config) *UnbondsQuerier {
 	return &UnbondsQuerier{
-		Logger: logger.With().Str("component", "commission_querier").Logger(),
+		Logger: logger.With().Str("component", "unbonds_querier").Logger(),
 		Config: config,
 	}
 }

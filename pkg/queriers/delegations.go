@@ -17,7 +17,7 @@ type DelegationsQuerier struct {
 
 func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *DelegationsQuerier {
 	return &DelegationsQuerier{
-		Logger: logger.With().Str("component", "commission_querier").Logger(),
+		Logger: logger.With().Str("component", "delegations_querier").Logger(),
 		Config: config,
 	}
 }

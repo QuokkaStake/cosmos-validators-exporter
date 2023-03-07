@@ -49,6 +49,7 @@ func NewApp(configPath string) *App {
 		queriersPkg.NewUnbondsQuerier(log, appConfig),
 		queriersPkg.NewSelfDelegationsQuerier(log, appConfig),
 		queriersPkg.NewPriceQuerier(log, appConfig, coingecko, dexScreener),
+		queriersPkg.NewRewardsQuerier(log, appConfig),
 	}
 
 	return &App{
@@ -182,14 +183,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		[]string{"chain", "address", "moniker"},
 	)
 
-	selfDelegationRewardsTokens := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegation_rewards",
-			Help: "Validator's self-delegation rewards (in tokens)",
-		},
-		[]string{"chain", "address", "moniker", "denom"},
-	)
-
 	walletBalanceTokens := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_wallet_balance",
@@ -259,7 +252,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
-	registry.MustRegister(selfDelegationRewardsTokens)
 	registry.MustRegister(walletBalanceTokens)
 	registry.MustRegister(missedBlocksGauge)
 	registry.MustRegister(blocksWindowGauge)
@@ -350,15 +342,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 				"address": validator.Address,
 				"moniker": validator.Info.Moniker,
 			}).Set(float64(validator.Info.TotalValidators))
-		}
-
-		for _, balance := range validator.Info.SelfDelegationRewards {
-			selfDelegationRewardsTokens.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-				"denom":   balance.Denom,
-			}).Set(balance.Amount)
 		}
 
 		for _, balance := range validator.Info.WalletBalance {

@@ -23,7 +23,7 @@ func NewPriceQuerier(
 	dexScreener *dexScreenerPkg.DexScreener,
 ) *PriceQuerier {
 	return &PriceQuerier{
-		Logger:      logger.With().Str("component", "commission_querier").Logger(),
+		Logger:      logger.With().Str("component", "price_querier").Logger(),
 		Config:      config,
 		Coingecko:   coingecko,
 		DexScreener: dexScreener,

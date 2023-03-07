@@ -10,25 +10,25 @@ import (
 	"sync"
 )
 
-type SelfDelegationsQuerier struct {
+type RewardsQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
 }
 
-func NewSelfDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *SelfDelegationsQuerier {
-	return &SelfDelegationsQuerier{
-		Logger: logger.With().Str("component", "self_delegations_querier").Logger(),
+func NewRewardsQuerier(logger *zerolog.Logger, config *config.Config) *RewardsQuerier {
+	return &RewardsQuerier{
+		Logger: logger.With().Str("component", "rewards_querier").Logger(),
 		Config: config,
 	}
 }
 
-func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
+func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
 	var queryInfos []types.QueryInfo
 
-	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
+	selfDelegationRewardsTokens := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegated",
-			Help: "Validator's self delegated amount (in tokens)",
+			Name: "cosmos_validators_exporter_self_delegation_rewards",
+			Help: "Validator's self-delegation rewards (in tokens)",
 		},
 		[]string{"chain", "address", "denom"},
 	)
@@ -58,13 +58,13 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 					return
 				}
 
-				balance, query, err := rpc.GetSingleDelegation(validator, wallet)
+				balances, query, err := rpc.GetDelegatorRewards(validator, wallet)
 				if err != nil {
 					q.Logger.Error().
 						Err(err).
 						Str("chain", chain.Name).
 						Str("address", validator).
-						Msg("Error querying for validator self-delegation")
+						Msg("Error querying for validator self-delegation rewards")
 					return
 				}
 
@@ -82,8 +82,8 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 					return
 				}
 
-				if balance.Amount != 0 {
-					selfDelegatedTokensGauge.With(prometheus.Labels{
+				for _, balance := range balances {
+					selfDelegationRewardsTokens.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
 						"denom":   balance.Denom,
@@ -95,5 +95,5 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 
 	wg.Wait()
 
-	return []prometheus.Collector{selfDelegatedTokensGauge}, queryInfos
+	return []prometheus.Collector{selfDelegationRewardsTokens}, queryInfos
 }

@@ -5,8 +5,6 @@ import (
 	"sync"
 
 	"main/pkg/config"
-	"main/pkg/price_fetchers/coingecko"
-	"main/pkg/price_fetchers/dex_screener"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
@@ -15,18 +13,14 @@ import (
 )
 
 type Manager struct {
-	Config      *config.Config
-	Coingecko   *coingecko.Coingecko
-	DexScreener *dex_screener.DexScreener
-	Logger      zerolog.Logger
+	Config *config.Config
+	Logger zerolog.Logger
 }
 
 func NewManager(config *config.Config, logger *zerolog.Logger) *Manager {
 	return &Manager{
-		Config:      config,
-		Coingecko:   coingecko.NewCoingecko(logger),
-		DexScreener: dex_screener.NewDexScreener(logger),
-		Logger:      logger.With().Str("component", "manager").Logger(),
+		Config: config,
+		Logger: logger.With().Str("component", "manager").Logger(),
 	}
 }
 
@@ -64,10 +58,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					lastValidatorStake   float64
 					validatorsQueryInfo  types.QueryInfo
 					validatorsQueryError error
-
-					selfDelegationRewards           []types.Balance
-					selfDelegationRewardsQuery      *types.QueryInfo
-					selfDelegationRewardsQueryError error
 
 					walletBalance           []types.Balance
 					walletBalanceQuery      *types.QueryInfo
@@ -107,12 +97,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					rank, totalValidators, totalStake, lastValidatorStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
-					selfDelegationRewards, selfDelegationRewardsQuery, selfDelegationRewardsQueryError = m.GetSelfDelegationRewards(chain, address, rpc)
 					internalWg.Done()
 				}()
 
@@ -164,16 +148,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					}
 				}
 
-				if selfDelegationRewardsQueryError != nil {
-					m.Logger.Error().
-						Err(selfDelegationRewardsQueryError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying validator self-delegation rewards")
-				} else {
-					validatorInfo.SelfDelegationRewards = selfDelegationRewards
-				}
-
 				if walletBalanceQueryError != nil {
 					m.Logger.Error().
 						Err(walletBalanceQueryError).
@@ -223,9 +197,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorsQueryInfo,
 				}
 
-				if selfDelegationRewardsQuery != nil {
-					rpcQueries = append(rpcQueries, *selfDelegationRewardsQuery)
-				}
 				if walletBalanceQuery != nil {
 					rpcQueries = append(rpcQueries, *walletBalanceQuery)
 				}
@@ -289,34 +260,6 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain config.Chain, address stri
 	}
 
 	return validatorRank, len(activeValidators), totalStake, lastValidatorStake, info, nil
-}
-
-func (m *Manager) GetSelfDelegationRewards(chain config.Chain, address string, rpc *tendermint.RPC) ([]types.Balance, *types.QueryInfo, error) {
-	if chain.BechWalletPrefix == "" {
-		return []types.Balance{}, nil, nil
-	}
-
-	wallet, err := utils.ChangeBech32Prefix(address, chain.BechWalletPrefix)
-	if err != nil {
-		m.Logger.Error().
-			Err(err).
-			Str("chain", chain.Name).
-			Str("address", address).
-			Msg("Error converting validator address")
-		return []types.Balance{}, nil, err
-	}
-
-	balances, queryInfo, err := rpc.GetDelegatorRewards(address, wallet)
-	if err != nil {
-		m.Logger.Error().
-			Err(err).
-			Str("chain", chain.Name).
-			Str("address", address).
-			Msg("Error querying for validator self-delegation rewards")
-		return []types.Balance{}, &queryInfo, err
-	}
-
-	return balances, &queryInfo, err
 }
 
 func (m *Manager) GetWalletBalance(chain config.Chain, address string, rpc *tendermint.RPC) ([]types.Balance, *types.QueryInfo, error) {
