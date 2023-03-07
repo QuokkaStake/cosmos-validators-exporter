@@ -55,7 +55,7 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 						Err(err).
 						Str("chain", chain.Name).
 						Str("address", validator).
-						Msg("Error querying validator commission")
+						Msg("Error querying validator delegators count")
 					return
 				}
 

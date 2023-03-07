@@ -50,6 +50,7 @@ func NewApp(configPath string) *App {
 		queriersPkg.NewSelfDelegationsQuerier(log, appConfig),
 		queriersPkg.NewPriceQuerier(log, appConfig, coingecko, dexScreener),
 		queriersPkg.NewRewardsQuerier(log, appConfig),
+		queriersPkg.NewWalletQuerier(log, appConfig),
 	}
 
 	return &App{
@@ -183,14 +184,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		[]string{"chain", "address", "moniker"},
 	)
 
-	walletBalanceTokens := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_wallet_balance",
-			Help: "Validator's wallet balance (in tokens)",
-		},
-		[]string{"chain", "address", "moniker", "denom"},
-	)
-
 	missedBlocksGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_missed_blocks",
@@ -205,14 +198,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 			Help: "Missed blocks window in network",
 		},
 		[]string{"chain"},
-	)
-
-	denomCoefficientGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_denom_coefficient",
-			Help: "Denom coefficient info",
-		},
-		[]string{"chain", "denom", "display_denom"},
 	)
 
 	activeSetSizeGauge := prometheus.NewGaugeVec(
@@ -252,10 +237,8 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	registry.MustRegister(delegationsGauge)
 	registry.MustRegister(validatorRankGauge)
 	registry.MustRegister(validatorsCountGauge)
-	registry.MustRegister(walletBalanceTokens)
 	registry.MustRegister(missedBlocksGauge)
 	registry.MustRegister(blocksWindowGauge)
-	registry.MustRegister(denomCoefficientGauge)
 	registry.MustRegister(activeSetSizeGauge)
 	registry.MustRegister(activeSetTokensGauge)
 	registry.MustRegister(totalBondedTokensGauge)
@@ -344,15 +327,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 			}).Set(float64(validator.Info.TotalValidators))
 		}
 
-		for _, balance := range validator.Info.WalletBalance {
-			walletBalanceTokens.With(prometheus.Labels{
-				"chain":   validator.Chain,
-				"address": validator.Address,
-				"moniker": validator.Info.Moniker,
-				"denom":   balance.Denom,
-			}).Set(balance.Amount)
-		}
-
 		if validator.Info.MissedBlocksCount >= 0 {
 			missedBlocksGauge.With(prometheus.Labels{
 				"chain":   validator.Chain,
@@ -380,14 +354,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		totalBondedTokensGauge.With(prometheus.Labels{
 			"chain": validator.Chain,
 		}).Set(validator.Info.TotalStake)
-	}
-
-	for _, chain := range a.Config.Chains {
-		denomCoefficientGauge.With(prometheus.Labels{
-			"chain":         chain.Name,
-			"display_denom": chain.Denom,
-			"denom":         chain.BaseDenom,
-		}).Set(float64(chain.DenomCoefficient))
 	}
 
 	var wg sync.WaitGroup

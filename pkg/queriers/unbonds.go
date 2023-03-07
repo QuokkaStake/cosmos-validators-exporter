@@ -55,7 +55,7 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 						Err(err).
 						Str("chain", chain.Name).
 						Str("address", validator).
-						Msg("Error querying validator commission")
+						Msg("Error querying validator unbonding delegations count")
 					return
 				}
 

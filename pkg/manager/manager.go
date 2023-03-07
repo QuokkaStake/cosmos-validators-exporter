@@ -59,10 +59,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorsQueryInfo  types.QueryInfo
 					validatorsQueryError error
 
-					walletBalance           []types.Balance
-					walletBalanceQuery      *types.QueryInfo
-					walletBalanceQueryError error
-
 					signingInfo           *types.SigningInfoResponse
 					signingInfoQuery      *types.QueryInfo
 					signingInfoQueryError error
@@ -97,12 +93,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 				internalWg.Add(1)
 				go func() {
 					rank, totalValidators, totalStake, lastValidatorStake, validatorsQueryInfo, validatorsQueryError = m.GetValidatorRankAndTotalStake(chain, address, rpc)
-					internalWg.Done()
-				}()
-
-				internalWg.Add(1)
-				go func() {
-					walletBalance, walletBalanceQuery, walletBalanceQueryError = m.GetWalletBalance(chain, address, rpc)
 					internalWg.Done()
 				}()
 
@@ -148,16 +138,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					}
 				}
 
-				if walletBalanceQueryError != nil {
-					m.Logger.Error().
-						Err(walletBalanceQueryError).
-						Str("chain", chain.Name).
-						Str("address", address).
-						Msg("Error querying validator wallet balance")
-				} else {
-					validatorInfo.WalletBalance = walletBalance
-				}
-
 				if signingInfoQueryError != nil {
 					m.Logger.Error().
 						Err(signingInfoQueryError).
@@ -197,9 +177,6 @@ func (m *Manager) GetAllValidators() []types.ValidatorQuery {
 					validatorsQueryInfo,
 				}
 
-				if walletBalanceQuery != nil {
-					rpcQueries = append(rpcQueries, *walletBalanceQuery)
-				}
 				if signingInfoQuery != nil {
 					rpcQueries = append(rpcQueries, *signingInfoQuery)
 				}
@@ -260,32 +237,4 @@ func (m *Manager) GetValidatorRankAndTotalStake(chain config.Chain, address stri
 	}
 
 	return validatorRank, len(activeValidators), totalStake, lastValidatorStake, info, nil
-}
-
-func (m *Manager) GetWalletBalance(chain config.Chain, address string, rpc *tendermint.RPC) ([]types.Balance, *types.QueryInfo, error) {
-	if chain.BechWalletPrefix == "" {
-		return []types.Balance{}, nil, nil
-	}
-
-	wallet, err := utils.ChangeBech32Prefix(address, chain.BechWalletPrefix)
-	if err != nil {
-		m.Logger.Error().
-			Err(err).
-			Str("chain", chain.Name).
-			Str("address", address).
-			Msg("Error converting validator address")
-		return []types.Balance{}, nil, err
-	}
-
-	balances, queryInfo, err := rpc.GetWalletBalance(wallet)
-	if err != nil {
-		m.Logger.Error().
-			Err(err).
-			Str("chain", chain.Name).
-			Str("address", address).
-			Msg("Error querying for validator wallet balance")
-		return []types.Balance{}, &queryInfo, err
-	}
-
-	return balances, &queryInfo, err
 }
