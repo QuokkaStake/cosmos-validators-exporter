@@ -311,7 +311,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 
 					for index, activeValidator := range activeValidators {
 						totalStake += utils.StrToFloat64(activeValidator.DelegatorShares)
-						if validatorInfo.Validator.OperatorAddress == validator {
+						if activeValidator.OperatorAddress == validator {
 							validatorRank = uint64(index) + 1
 						}
 					}
