@@ -1,13 +1,14 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type SlashingParamsQuerier struct {
@@ -45,6 +46,10 @@ func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []types.Qu
 			defer wg.Done()
 
 			params, query, err := rpc.GetSlashingParams()
+
+			mutex.Lock()
+			defer mutex.Unlock()
+
 			queryInfos = append(queryInfos, query)
 
 			if err != nil {
@@ -61,9 +66,6 @@ func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []types.Qu
 					Msg("Malformed response when querying for slashing params")
 				return
 			}
-
-			mutex.Lock()
-			defer mutex.Unlock()
 
 			blocksWindowGauge.With(prometheus.Labels{
 				"chain": chain.Name,

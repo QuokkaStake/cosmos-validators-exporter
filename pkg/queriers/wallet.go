@@ -1,13 +1,14 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type WalletQuerier struct {
@@ -59,6 +60,10 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo)
 				}
 
 				balances, query, err := rpc.GetWalletBalance(wallet)
+
+				mutex.Lock()
+				defer mutex.Unlock()
+
 				queryInfos = append(queryInfos, query)
 
 				if err != nil {
@@ -69,9 +74,6 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo)
 						Msg("Error querying for validator wallet balance")
 					return
 				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
 
 				for _, balance := range balances {
 					walletBalanceTokens.With(prometheus.Labels{

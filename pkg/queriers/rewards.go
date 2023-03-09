@@ -1,13 +1,14 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type RewardsQuerier struct {
@@ -59,6 +60,10 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 				}
 
 				balances, query, err := rpc.GetDelegatorRewards(validator, wallet)
+
+				mutex.Lock()
+				defer mutex.Unlock()
+
 				queryInfos = append(queryInfos, query)
 
 				if err != nil {
@@ -69,9 +74,6 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 						Msg("Error querying for validator self-delegation rewards")
 					return
 				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
 
 				if err != nil {
 					q.Logger.Error().

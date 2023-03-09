@@ -1,12 +1,13 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
 	"main/pkg/types"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type PriceQuerier struct {

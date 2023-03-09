@@ -1,10 +1,11 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/types"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type DenomCoefficientsQuerier struct {

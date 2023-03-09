@@ -1,13 +1,14 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type SelfDelegationsQuerier struct {
@@ -59,6 +60,10 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 				}
 
 				balance, query, err := rpc.GetSingleDelegation(validator, wallet)
+
+				mutex.Lock()
+				defer mutex.Unlock()
+
 				queryInfos = append(queryInfos, query)
 
 				if err != nil {
@@ -67,18 +72,6 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying for validator self-delegation")
-					return
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-
-				if err != nil {
-					q.Logger.Error().
-						Err(err).
-						Str("chain", chain.Name).
-						Str("address", validator).
-						Msg("Error querying validator commission")
 					return
 				}
 

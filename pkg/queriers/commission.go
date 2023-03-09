@@ -1,12 +1,13 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type CommissionQuerier struct {
@@ -40,7 +41,7 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC) {
+			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
 				defer wg.Done()
 				commission, query, err := rpc.GetValidatorCommission(validator)
 
@@ -65,7 +66,7 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 						"denom":   balance.Denom,
 					}).Set(balance.Amount)
 				}
-			}(validator, rpc)
+			}(validator, rpc, chain)
 		}
 	}
 

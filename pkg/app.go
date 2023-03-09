@@ -8,13 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"main/pkg/config"
+	"main/pkg/logger"
+	queriersPkg "main/pkg/queriers"
+
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
-	"main/pkg/config"
-	"main/pkg/logger"
-	queriersPkg "main/pkg/queriers"
 )
 
 type App struct {
@@ -155,7 +156,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 					}).Inc()
 				}
 			}
-
 		}(querierExt)
 	}
 

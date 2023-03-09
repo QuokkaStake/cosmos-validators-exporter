@@ -1,13 +1,14 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type DelegationsQuerier struct {
@@ -41,7 +42,7 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC) {
+			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
 				defer wg.Done()
 				delegatorsResponse, query, err := rpc.GetDelegationsCount(validator)
 
@@ -63,7 +64,7 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 					"chain":   chain.Name,
 					"address": validator,
 				}).Set(float64(utils.StrToInt64(delegatorsResponse.Pagination.Total)))
-			}(validator, rpc)
+			}(validator, rpc, chain)
 		}
 	}
 

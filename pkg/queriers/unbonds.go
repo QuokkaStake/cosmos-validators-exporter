@@ -1,13 +1,14 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type UnbondsQuerier struct {
@@ -41,7 +42,7 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC) {
+			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
 				defer wg.Done()
 				unbondsResponse, query, err := rpc.GetUnbondsCount(validator)
 
@@ -63,7 +64,7 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 					"chain":   chain.Name,
 					"address": validator,
 				}).Set(float64(utils.StrToInt64(unbondsResponse.Pagination.Total)))
-			}(validator, rpc)
+			}(validator, rpc, chain)
 		}
 	}
 

@@ -2,8 +2,9 @@ package types
 
 import (
 	b64 "encoding/base64"
-	"github.com/prometheus/client_golang/prometheus"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"main/pkg/utils"
 

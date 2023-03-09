@@ -1,14 +1,15 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type ValidatorQuerier struct {
@@ -178,7 +179,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					}
 
 					valConsAddress, err := validatorInfo.Validator.ConsensusPubkey.GetValConsAddress(chain.BechConsensusPrefix)
-					if signingInfoQueryError != nil {
+					if err != nil {
 						q.Logger.Error().
 							Err(validatorQueryError).
 							Str("chain", chain.Name).
@@ -187,6 +188,14 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 						signingInfoQueryError = err
 					} else {
 						signingInfo, signingInfoQuery, signingInfoQueryError = rpc.GetSigningInfo(valConsAddress)
+
+						if signingInfoQueryError != nil {
+							q.Logger.Error().
+								Err(validatorQueryError).
+								Str("chain", chain.Name).
+								Str("address", validator).
+								Msg("Error getting validator signing info")
+						}
 					}
 				}()
 
