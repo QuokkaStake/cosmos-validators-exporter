@@ -199,16 +199,16 @@ func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, types2.Quer
 	return response, info, nil
 }
 
-func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, types2.QueryInfo, error) {
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", rpc.URL)
 
 	var response *types2.StakingParamsResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
-		return nil, &info, err
+		return nil, info, err
 	}
 
-	return response, &info, nil
+	return response, info, nil
 }
 
 func (rpc *RPC) Get(url string, target interface{}) (types2.QueryInfo, error) {
