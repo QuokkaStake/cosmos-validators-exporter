@@ -4,6 +4,8 @@ import (
 	b64 "encoding/base64"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"main/pkg/utils"
 
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -154,6 +156,7 @@ type Pagination struct {
 }
 
 type QueryInfo struct {
+	Chain    string
 	URL      string
 	Duration time.Duration
 	Success  bool
@@ -228,4 +231,8 @@ type StakingParams struct {
 
 type StakingParamsResponse struct {
 	StakingParams StakingParams `json:"params"`
+}
+
+type Querier interface {
+	GetMetrics() ([]prometheus.Collector, []QueryInfo)
 }

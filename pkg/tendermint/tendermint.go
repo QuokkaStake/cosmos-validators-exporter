@@ -3,6 +3,7 @@ package tendermint
 import (
 	"encoding/json"
 	"fmt"
+	"main/pkg/config"
 	"net/http"
 	"time"
 
@@ -15,14 +16,16 @@ import (
 )
 
 type RPC struct {
+	Chain   string
 	URL     string
 	Timeout int
 	Logger  zerolog.Logger
 }
 
-func NewRPC(url string, timeout int, logger zerolog.Logger) *RPC {
+func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger) *RPC {
 	return &RPC{
-		URL:     url,
+		Chain:   chain.Name,
+		URL:     chain.LCDEndpoint,
 		Timeout: timeout,
 		Logger:  logger.With().Str("component", "rpc").Logger(),
 	}
@@ -184,28 +187,28 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*types2.SigningInfoResponse, *ty
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, types2.QueryInfo, error) {
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/params", rpc.URL)
 
 	var response *types2.SlashingParamsResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
-		return nil, &info, err
+		return nil, info, err
 	}
 
-	return response, &info, nil
+	return response, info, nil
 }
 
-func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, types2.QueryInfo, error) {
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", rpc.URL)
 
 	var response *types2.StakingParamsResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
-		return nil, &info, err
+		return nil, info, err
 	}
 
-	return response, &info, nil
+	return response, info, nil
 }
 
 func (rpc *RPC) Get(url string, target interface{}) (types2.QueryInfo, error) {
@@ -215,6 +218,7 @@ func (rpc *RPC) Get(url string, target interface{}) (types2.QueryInfo, error) {
 	start := time.Now()
 
 	info := types2.QueryInfo{
+		Chain:   rpc.Chain,
 		URL:     url,
 		Success: false,
 	}
