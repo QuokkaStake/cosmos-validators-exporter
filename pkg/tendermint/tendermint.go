@@ -50,6 +50,10 @@ func (rpc *RPC) GetValidator(address string) (*types2.ValidatorResponse, *types2
 }
 
 func (rpc *RPC) GetDelegationsCount(address string) (*types2.PaginationResponse, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("delegations") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations?pagination.count_total=true&pagination.limit=1",
 		rpc.Chain.LCDEndpoint,

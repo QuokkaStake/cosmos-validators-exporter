@@ -49,7 +49,9 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Quer
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -57,6 +59,10 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Quer
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator delegators count")
+					return
+				}
+
+				if delegatorsResponse == nil {
 					return
 				}
 
