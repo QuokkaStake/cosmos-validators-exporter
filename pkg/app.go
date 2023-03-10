@@ -78,53 +78,19 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		Str("request-id", uuid.New().String()).
 		Logger()
 
-	queriesCountGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_queries_total",
-			Help: "Total queries done for this chain",
-		},
-		[]string{"chain", "url"},
-	)
-
-	queriesSuccessfulGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_queries_success",
-			Help: "Successful queries count for this chain",
-		},
-		[]string{"chain", "url"},
-	)
-
-	queriesFailedGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_queries_error",
-			Help: "Failed queries count for this chain",
-		},
-		[]string{"chain", "url"},
-	)
-
-	timingsGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_timings",
-			Help: "External LCD query timing",
-		},
-		[]string{"chain", "url"},
-	)
-
 	registry := prometheus.NewRegistry()
-	registry.MustRegister(queriesCountGauge)
-	registry.MustRegister(queriesSuccessfulGauge)
-	registry.MustRegister(queriesFailedGauge)
-	registry.MustRegister(timingsGauge)
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
+
+	var queryInfos []types.QueryInfo
 
 	for _, querierExt := range a.Queriers {
 		wg.Add(1)
 
 		go func(querier types.Querier) {
 			defer wg.Done()
-			collectors, queryInfos := querier.GetMetrics()
+			collectors, querierQueryInfos := querier.GetMetrics()
 
 			mutex.Lock()
 			defer mutex.Unlock()
@@ -133,33 +99,18 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 				registry.MustRegister(collector)
 			}
 
-			for _, query := range queryInfos {
-				queriesCountGauge.With(prometheus.Labels{
-					"chain": query.Chain,
-					"url":   query.URL,
-				}).Inc()
-
-				timingsGauge.With(prometheus.Labels{
-					"chain": query.Chain,
-					"url":   query.URL,
-				}).Set(query.Duration.Seconds())
-
-				if query.Success {
-					queriesSuccessfulGauge.With(prometheus.Labels{
-						"chain": query.Chain,
-						"url":   query.URL,
-					}).Inc()
-				} else {
-					queriesFailedGauge.With(prometheus.Labels{
-						"chain": query.Chain,
-						"url":   query.URL,
-					}).Inc()
-				}
-			}
+			queryInfos = append(queryInfos, querierQueryInfos...)
 		}(querierExt)
 	}
 
 	wg.Wait()
+
+	queriesQuerier := queriersPkg.NewQueriesQuerier(a.Config, queryInfos)
+	queriesMetrics, _ := queriesQuerier.GetMetrics()
+
+	for _, metric := range queriesMetrics {
+		registry.MustRegister(metric)
+	}
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 	h.ServeHTTP(w, r)
