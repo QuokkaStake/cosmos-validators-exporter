@@ -114,6 +114,10 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types2.Balance, 
 }
 
 func (rpc *RPC) GetAllValidators() (*types2.ValidatorsResponse, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("validators") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000", rpc.Chain.LCDEndpoint)
 
 	var response *types2.ValidatorsResponse
