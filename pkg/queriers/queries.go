@@ -1,9 +1,10 @@
 package queriers
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/types"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type QueriesQuerier struct {
