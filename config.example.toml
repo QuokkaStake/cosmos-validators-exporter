@@ -22,6 +22,7 @@ lcd-endpoint = "https://api.bitsong.quokkastake.io"
 coingecko-currency = "bitsong"
 # dexscreener.com's chain ID (usually ""osmosis") and pair (usually pool ID).
 # Won't be used if coingecko-currency is provided.
+# Either coingecko-currency or these two params are required for getting token price.
 dex-screener-chain-id = "osmosis"
 dex-screener-pair = "832"
 # The chain's base denom. Only balances with this denom will be used
@@ -49,6 +50,34 @@ bech-consensus-prefix = "bitsongvalcons"
 validators = [
     "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge"
 ]
+# List of queries to enable/disable.
+# If the list is not provided, or the value for query is not specified,
+# then this query will be enabled. Useful if some queries on some chains are broken or
+# do not return any meaningful value (like signing info on e-Money) or are too heavy and
+# the node can't handle such requests (like delegators count on Cosmos Hub).
+[chains.queries]
+# Query for validator info
+validator = true
+# Query for delegators count
+delegations = true
+# Query for unbonding delegations count
+unbonds = true
+# Query for self-delegated amount
+self-delegation = true
+# Query for all delegators count/ranking. Also used in total bonded tokens calculation.
+validators = true
+# Query for validator unclaimed commission
+commission = true
+# Query for validator unclaimed self-delegated rewards
+rewards = true
+# Query for validator wallet balance
+balance = true
+# Query for validator signing info
+signing-info = true
+# Query for chain slashing params/missed blocks window
+slashing-params = true
+# Query for chain staking params/max validators count
+staking-params = true
 
 # There can be multiple chains.
 [[chains]]
