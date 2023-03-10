@@ -238,7 +238,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					queryInfos = append(queryInfos, *signingInfoQuery)
 				}
 
-				if validatorInfo.Validator.Description.Moniker != "" { // validator request may fail, here it's assumed it didn't
+				if validatorInfo != nil && validatorInfo.Validator.Description.Moniker != "" { // validator request may fail, here it's assumed it didn't
 					validatorInfoGauge.With(prometheus.Labels{
 						"chain":            chain.Name,
 						"address":          validator,
