@@ -130,6 +130,10 @@ func (rpc *RPC) GetAllValidators() (*types2.ValidatorsResponse, *types2.QueryInf
 }
 
 func (rpc *RPC) GetValidatorCommission(address string) ([]types2.Balance, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("commission") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/distribution/v1beta1/validators/%s/commission",
 		rpc.Chain.LCDEndpoint,

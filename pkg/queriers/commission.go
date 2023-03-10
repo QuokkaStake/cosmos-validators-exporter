@@ -48,7 +48,9 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []*types.Query
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -56,6 +58,10 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []*types.Query
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator commission")
+					return
+				}
+
+				if commission == nil {
 					return
 				}
 
