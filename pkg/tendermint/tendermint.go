@@ -238,6 +238,10 @@ func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, *types2.Que
 }
 
 func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("staking-params") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", rpc.Chain.LCDEndpoint)
 
 	var response *types2.StakingParamsResponse
