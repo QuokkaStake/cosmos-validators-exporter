@@ -89,7 +89,11 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types2.PaginationResponse, *ty
 	return response, info, nil
 }
 
-func (rpc *RPC) GetSingleDelegation(validator, wallet string) (types2.Balance, *types2.QueryInfo, error) {
+func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types2.Balance, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("self-delegation") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
 		rpc.Chain.LCDEndpoint,
@@ -100,10 +104,10 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (types2.Balance, *
 	var response types2.SingleDelegationResponse
 	info, err := rpc.Get(url, &response)
 	if err != nil {
-		return types2.Balance{}, info, err
+		return &types2.Balance{}, info, err
 	}
 
-	return types2.Balance{
+	return &types2.Balance{
 		Amount: utils.StrToFloat64(response.DelegationResponse.Balance.Amount),
 		Denom:  response.DelegationResponse.Balance.Denom,
 	}, info, nil
