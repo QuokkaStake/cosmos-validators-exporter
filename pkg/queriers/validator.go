@@ -280,13 +280,15 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					}).Set(utils.StrToFloat64(validatorInfo.Validator.DelegatorShares))
 				}
 
-				missedBlocksCounter := utils.StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
-				if missedBlocksCounter >= 0 {
-					missedBlocksGauge.With(prometheus.Labels{
-						"chain":   chain.Name,
-						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
-					}).Set(float64(missedBlocksCounter))
+				if signingInfo != nil {
+					missedBlocksCounter := utils.StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
+					if missedBlocksCounter >= 0 {
+						missedBlocksGauge.With(prometheus.Labels{
+							"chain":   chain.Name,
+							"address": validator,
+							"moniker": validatorInfo.Validator.Description.Moniker,
+						}).Set(float64(missedBlocksCounter))
+					}
 				}
 
 				if stakingParams != nil {
