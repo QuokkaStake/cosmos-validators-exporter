@@ -70,6 +70,10 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types2.PaginationResponse,
 }
 
 func (rpc *RPC) GetUnbondsCount(address string) (*types2.PaginationResponse, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("unbonds") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations?pagination.count_total=true&pagination.limit=1",
 		rpc.Chain.LCDEndpoint,

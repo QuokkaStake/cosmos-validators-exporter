@@ -49,7 +49,9 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -57,6 +59,10 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator unbonding delegations count")
+					return
+				}
+
+				if unbondsResponse == nil {
 					return
 				}
 
