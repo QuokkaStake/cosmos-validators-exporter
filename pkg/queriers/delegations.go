@@ -23,8 +23,8 @@ func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *Deleg
 	}
 }
 
-func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	delegationsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

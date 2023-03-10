@@ -9,17 +9,17 @@ import (
 
 type QueriesQuerier struct {
 	Config *config.Config
-	Infos  []types.QueryInfo
+	Infos  []*types.QueryInfo
 }
 
-func NewQueriesQuerier(appConfig *config.Config, queryInfos []types.QueryInfo) *QueriesQuerier {
+func NewQueriesQuerier(appConfig *config.Config, queryInfos []*types.QueryInfo) *QueriesQuerier {
 	return &QueriesQuerier{
 		Config: appConfig,
 		Infos:  queryInfos,
 	}
 }
 
-func (q *QueriesQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
+func (q *QueriesQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
 	queriesCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_queries_total",
@@ -93,5 +93,5 @@ func (q *QueriesQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 		queriesSuccessfulGauge,
 		queriesFailedGauge,
 		timingsGauge,
-	}, []types.QueryInfo{}
+	}, []*types.QueryInfo{}
 }

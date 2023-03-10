@@ -23,8 +23,8 @@ func NewUnbondsQuerier(logger *zerolog.Logger, config *config.Config) *UnbondsQu
 	}
 }
 
-func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	unbondsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

@@ -24,8 +24,8 @@ func NewValidatorQuerier(logger *zerolog.Logger, config *config.Config) *Validat
 	}
 }
 
-func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -146,7 +146,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					validatorQueryError error
 
 					allValidators           *types.ValidatorsResponse
-					allValidatorsQueryInfo  types.QueryInfo
+					allValidatorsQueryInfo  *types.QueryInfo
 					allValidatorsQueryError error
 
 					signingInfo           *types.SigningInfoResponse
@@ -154,7 +154,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					signingInfoQueryError error
 
 					stakingParams           *types.StakingParamsResponse
-					stakingParamsQuery      types.QueryInfo
+					stakingParamsQuery      *types.QueryInfo
 					stakingParamsQueryError error
 
 					internalWg sync.WaitGroup
@@ -233,12 +233,17 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, stakingParamsQuery, allValidatorsQueryInfo)
 				if validatorQueryInfo != nil {
-					queryInfos = append(queryInfos, *validatorQueryInfo)
+					queryInfos = append(queryInfos, validatorQueryInfo)
 				}
 				if signingInfoQuery != nil {
-					queryInfos = append(queryInfos, *signingInfoQuery)
+					queryInfos = append(queryInfos, signingInfoQuery)
+				}
+				if stakingParamsQuery != nil {
+					queryInfos = append(queryInfos, stakingParamsQuery)
+				}
+				if allValidatorsQueryInfo != nil {
+					queryInfos = append(queryInfos, allValidatorsQueryInfo)
 				}
 
 				// validator request may fail or be disabled, here it's assumed it didn't

@@ -23,8 +23,8 @@ func NewSlashingParamsQuerier(logger *zerolog.Logger, config *config.Config) *Sl
 	}
 }
 
-func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex

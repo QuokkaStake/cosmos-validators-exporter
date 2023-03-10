@@ -23,8 +23,8 @@ func NewRewardsQuerier(logger *zerolog.Logger, config *config.Config) *RewardsQu
 	}
 }
 
-func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	selfDelegationRewardsTokens := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

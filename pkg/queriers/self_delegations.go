@@ -23,8 +23,8 @@ func NewSelfDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *S
 	}
 }
 
-func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

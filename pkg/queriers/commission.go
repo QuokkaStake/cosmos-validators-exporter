@@ -22,8 +22,8 @@ func NewCommissionQuerier(logger *zerolog.Logger, config *config.Config) *Commis
 	}
 }
 
-func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
