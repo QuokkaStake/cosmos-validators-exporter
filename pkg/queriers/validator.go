@@ -289,11 +289,13 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					}).Set(float64(missedBlocksCounter))
 				}
 
-				maxValidators := int64(stakingParams.StakingParams.MaxValidators)
-				if maxValidators >= 0 {
-					activeSetSizeGauge.With(prometheus.Labels{
-						"chain": chain.Name,
-					}).Set(float64(maxValidators))
+				if stakingParams != nil {
+					maxValidators := int64(stakingParams.StakingParams.MaxValidators)
+					if maxValidators >= 0 {
+						activeSetSizeGauge.With(prometheus.Labels{
+							"chain": chain.Name,
+						}).Set(float64(maxValidators))
+					}
 				}
 
 				if allValidators != nil && len(allValidators.Validators) > 0 {
