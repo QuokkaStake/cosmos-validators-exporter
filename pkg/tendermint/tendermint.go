@@ -222,6 +222,10 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*types2.SigningInfoResponse, *ty
 }
 
 func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("slashing-params") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/params", rpc.Chain.LCDEndpoint)
 
 	var response *types2.SlashingParamsResponse

@@ -50,7 +50,9 @@ func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Q
 			mutex.Lock()
 			defer mutex.Unlock()
 
-			queryInfos = append(queryInfos, query)
+			if query != nil {
+				queryInfos = append(queryInfos, query)
+			}
 
 			if err != nil {
 				q.Logger.Error().
@@ -60,7 +62,11 @@ func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Q
 				return
 			}
 
-			if params == nil || params.SlashingParams.SignedBlocksWindow == "" {
+			if params == nil {
+				return
+			}
+
+			if params.SlashingParams.SignedBlocksWindow == "" {
 				q.Logger.Error().
 					Str("chain", chain.Name).
 					Msg("Malformed response when querying for slashing params")
