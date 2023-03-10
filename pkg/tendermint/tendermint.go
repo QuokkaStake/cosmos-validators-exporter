@@ -206,6 +206,10 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types2.Balance, *types2.Query
 }
 
 func (rpc *RPC) GetSigningInfo(valcons string) (*types2.SigningInfoResponse, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("signing-info") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
 	var response *types2.SigningInfoResponse
