@@ -64,7 +64,9 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -72,6 +74,10 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying for validator wallet balance")
+					return
+				}
+
+				if balances == nil {
 					return
 				}
 

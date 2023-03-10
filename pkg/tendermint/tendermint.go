@@ -181,6 +181,10 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types2.Balance,
 }
 
 func (rpc *RPC) GetWalletBalance(wallet string) ([]types2.Balance, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("balance") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/bank/v1beta1/balances/%s",
 		rpc.Chain.LCDEndpoint,
