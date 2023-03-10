@@ -9,17 +9,18 @@ import (
 )
 
 type Chain struct {
-	Name                string   `toml:"name"`
-	LCDEndpoint         string   `toml:"lcd-endpoint"`
-	CoingeckoCurrency   string   `toml:"coingecko-currency"`
-	DexScreenerChainID  string   `toml:"dex-screener-chain-id"`
-	DexScreenerPair     string   `toml:"dex-screener-pair"`
-	BaseDenom           string   `toml:"base-denom"`
-	Denom               string   `toml:"denom"`
-	DenomCoefficient    int64    `toml:"denom-coefficient" default:"1000000"`
-	BechWalletPrefix    string   `toml:"bech-wallet-prefix"`
-	BechConsensusPrefix string   `toml:"bech-consensus-prefix"`
-	Validators          []string `toml:"validators"`
+	Name                string          `toml:"name"`
+	LCDEndpoint         string          `toml:"lcd-endpoint"`
+	CoingeckoCurrency   string          `toml:"coingecko-currency"`
+	DexScreenerChainID  string          `toml:"dex-screener-chain-id"`
+	DexScreenerPair     string          `toml:"dex-screener-pair"`
+	BaseDenom           string          `toml:"base-denom"`
+	Denom               string          `toml:"denom"`
+	DenomCoefficient    int64           `toml:"denom-coefficient" default:"1000000"`
+	BechWalletPrefix    string          `toml:"bech-wallet-prefix"`
+	BechConsensusPrefix string          `toml:"bech-consensus-prefix"`
+	Validators          []string        `toml:"validators"`
+	Queries             map[string]bool `toml:"queries"`
 }
 
 func (c *Chain) Validate() error {
@@ -36,6 +37,14 @@ func (c *Chain) Validate() error {
 	}
 
 	return nil
+}
+
+func (c *Chain) QueryEnabled(query string) bool {
+	if value, ok := c.Queries[query]; !ok {
+		return true // all queries are enabled by default
+	} else {
+		return value
+	}
 }
 
 type Config struct {
