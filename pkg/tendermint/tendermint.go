@@ -155,6 +155,10 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types2.Balance, *types
 }
 
 func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types2.Balance, *types2.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("rewards") {
+		return nil, nil, nil
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s",
 		rpc.Chain.LCDEndpoint,

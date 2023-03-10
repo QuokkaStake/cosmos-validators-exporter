@@ -64,7 +64,9 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -75,12 +77,7 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 					return
 				}
 
-				if err != nil {
-					q.Logger.Error().
-						Err(err).
-						Str("chain", chain.Name).
-						Str("address", validator).
-						Msg("Error querying validator commission")
+				if balances == nil {
 					return
 				}
 
