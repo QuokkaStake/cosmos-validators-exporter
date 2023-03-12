@@ -23,8 +23,8 @@ func NewSelfDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *S
 	}
 }
 
-func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -64,7 +64,9 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -72,6 +74,10 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Q
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying for validator self-delegation")
+					return
+				}
+
+				if balance == nil {
 					return
 				}
 

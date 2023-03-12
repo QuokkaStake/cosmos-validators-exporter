@@ -31,9 +31,7 @@ func NewPriceQuerier(
 	}
 }
 
-func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
-
+func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
 	currenciesList := q.Config.GetCoingeckoCurrencies()
 	currenciesRates := q.Coingecko.FetchPrices(currenciesList)
 
@@ -68,5 +66,5 @@ func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) 
 		}).Set(price)
 	}
 
-	return []prometheus.Collector{tokenPriceGauge}, queryInfos
+	return []prometheus.Collector{tokenPriceGauge}, []*types.QueryInfo{}
 }

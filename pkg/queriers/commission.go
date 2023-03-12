@@ -22,8 +22,8 @@ func NewCommissionQuerier(logger *zerolog.Logger, config *config.Config) *Commis
 	}
 }
 
-func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -48,7 +48,9 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -56,6 +58,10 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryI
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator commission")
+					return
+				}
+
+				if commission == nil {
 					return
 				}
 

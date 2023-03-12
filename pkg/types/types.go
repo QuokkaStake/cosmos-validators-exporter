@@ -234,5 +234,5 @@ type StakingParamsResponse struct {
 }
 
 type Querier interface {
-	GetMetrics() ([]prometheus.Collector, []QueryInfo)
+	GetMetrics() ([]prometheus.Collector, []*QueryInfo)
 }

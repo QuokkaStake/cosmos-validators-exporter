@@ -83,7 +83,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	var queryInfos []types.QueryInfo
+	var queryInfos []*types.QueryInfo
 
 	for _, querierExt := range a.Queriers {
 		wg.Add(1)

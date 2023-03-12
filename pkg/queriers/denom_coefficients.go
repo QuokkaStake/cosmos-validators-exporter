@@ -23,7 +23,7 @@ func NewDenomCoefficientsQuerier(
 	}
 }
 
-func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
+func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
 	denomCoefficientGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_denom_coefficient",
@@ -40,5 +40,5 @@ func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []types
 		}).Set(float64(chain.DenomCoefficient))
 	}
 
-	return []prometheus.Collector{denomCoefficientGauge}, []types.QueryInfo{}
+	return []prometheus.Collector{denomCoefficientGauge}, []*types.QueryInfo{}
 }

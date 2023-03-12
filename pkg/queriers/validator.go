@@ -24,8 +24,8 @@ func NewValidatorQuerier(logger *zerolog.Logger, config *config.Config) *Validat
 	}
 }
 
-func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -51,7 +51,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_jailed",
 			Help: "Whether a validator is jailed (1 if yes, 0 if no)",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	commissionGauge := prometheus.NewGaugeVec(
@@ -59,7 +59,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_commission",
 			Help: "Validator current commission",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	commissionMaxGauge := prometheus.NewGaugeVec(
@@ -67,7 +67,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_commission_max",
 			Help: "Max commission for validator",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	commissionMaxChangeGauge := prometheus.NewGaugeVec(
@@ -75,7 +75,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_commission_max_change",
 			Help: "Max commission change for validator",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	delegationsGauge := prometheus.NewGaugeVec(
@@ -83,7 +83,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_total_delegations",
 			Help: "Validator delegations (in tokens)",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	missedBlocksGauge := prometheus.NewGaugeVec(
@@ -91,7 +91,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_missed_blocks",
 			Help: "Validator's missed blocks",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	activeSetSizeGauge := prometheus.NewGaugeVec(
@@ -107,7 +107,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_rank",
 			Help: "Rank of a validator compared to other validators on chain.",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	validatorsCountGauge := prometheus.NewGaugeVec(
@@ -115,7 +115,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			Name: "cosmos_validators_exporter_validators_count",
 			Help: "Total active validators count on chain.",
 		},
-		[]string{"chain", "address", "moniker"},
+		[]string{"chain", "address"},
 	)
 
 	activeSetTokensGauge := prometheus.NewGaugeVec(
@@ -142,11 +142,11 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
 				var (
 					validatorInfo       *types.ValidatorResponse
-					validatorQueryInfo  types.QueryInfo
+					validatorQueryInfo  *types.QueryInfo
 					validatorQueryError error
 
 					allValidators           *types.ValidatorsResponse
-					allValidatorsQueryInfo  types.QueryInfo
+					allValidatorsQueryInfo  *types.QueryInfo
 					allValidatorsQueryError error
 
 					signingInfo           *types.SigningInfoResponse
@@ -154,7 +154,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					signingInfoQueryError error
 
 					stakingParams           *types.StakingParamsResponse
-					stakingParamsQuery      types.QueryInfo
+					stakingParamsQuery      *types.QueryInfo
 					stakingParamsQueryError error
 
 					internalWg sync.WaitGroup
@@ -174,7 +174,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 						return
 					}
 
-					if chain.BechConsensusPrefix == "" {
+					if chain.BechConsensusPrefix == "" || validatorInfo == nil {
 						return
 					}
 
@@ -233,12 +233,21 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, validatorQueryInfo, stakingParamsQuery, allValidatorsQueryInfo)
+				if validatorQueryInfo != nil {
+					queryInfos = append(queryInfos, validatorQueryInfo)
+				}
 				if signingInfoQuery != nil {
-					queryInfos = append(queryInfos, *signingInfoQuery)
+					queryInfos = append(queryInfos, signingInfoQuery)
+				}
+				if stakingParamsQuery != nil {
+					queryInfos = append(queryInfos, stakingParamsQuery)
+				}
+				if allValidatorsQueryInfo != nil {
+					queryInfos = append(queryInfos, allValidatorsQueryInfo)
 				}
 
-				if validatorInfo != nil && validatorInfo.Validator.Description.Moniker != "" { // validator request may fail, here it's assumed it didn't
+				// validator request may fail or be disabled, here it's assumed it didn't
+				if validatorInfo != nil && validatorInfo.Validator.Description.Moniker != "" {
 					validatorInfoGauge.With(prometheus.Labels{
 						"chain":            chain.Name,
 						"address":          validator,
@@ -252,31 +261,26 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 					isJailedGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
 					}).Set(utils.BoolToFloat64(validatorInfo.Validator.Jailed))
 
 					commissionGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
 					}).Set(utils.StrToFloat64(validatorInfo.Validator.Commission.CommissionRates.Rate))
 
 					commissionMaxGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
 					}).Set(utils.StrToFloat64(validatorInfo.Validator.Commission.CommissionRates.MaxRate))
 
 					commissionMaxChangeGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
 					}).Set(utils.StrToFloat64(validatorInfo.Validator.Commission.CommissionRates.MaxChangeRate))
 
 					delegationsGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
 					}).Set(utils.StrToFloat64(validatorInfo.Validator.DelegatorShares))
 				}
 
@@ -286,7 +290,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 						missedBlocksGauge.With(prometheus.Labels{
 							"chain":   chain.Name,
 							"address": validator,
-							"moniker": validatorInfo.Validator.Description.Moniker,
 						}).Set(float64(missedBlocksCounter))
 					}
 				}
@@ -324,14 +327,12 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryIn
 						validatorRankGauge.With(prometheus.Labels{
 							"chain":   chain.Name,
 							"address": validator,
-							"moniker": validatorInfo.Validator.Description.Moniker,
 						}).Set(float64(validatorRank))
 					}
 
 					validatorsCountGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
-						"moniker": validatorInfo.Validator.Description.Moniker,
 					}).Set(float64(len(activeValidators)))
 
 					totalBondedTokensGauge.With(prometheus.Labels{

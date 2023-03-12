@@ -23,8 +23,8 @@ func NewUnbondsQuerier(logger *zerolog.Logger, config *config.Config) *UnbondsQu
 	}
 }
 
-func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	unbondsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -49,7 +49,9 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -57,6 +59,10 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator unbonding delegations count")
+					return
+				}
+
+				if unbondsResponse == nil {
 					return
 				}
 

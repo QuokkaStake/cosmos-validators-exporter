@@ -23,8 +23,8 @@ func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *Deleg
 	}
 }
 
-func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.QueryInfo) {
-	var queryInfos []types.QueryInfo
+func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+	var queryInfos []*types.QueryInfo
 
 	delegationsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -49,7 +49,9 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 				mutex.Lock()
 				defer mutex.Unlock()
 
-				queryInfos = append(queryInfos, query)
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
 
 				if err != nil {
 					q.Logger.Error().
@@ -57,6 +59,10 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []types.Query
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator delegators count")
+					return
+				}
+
+				if delegatorsResponse == nil {
 					return
 				}
 
