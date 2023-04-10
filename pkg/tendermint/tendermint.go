@@ -1,12 +1,9 @@
 package tendermint
 
 import (
-	"encoding/json"
 	"fmt"
 	"main/pkg/config"
-	"net/http"
-	"time"
-
+	"main/pkg/http"
 	types2 "main/pkg/types"
 	"main/pkg/utils"
 
@@ -17,6 +14,7 @@ import (
 
 type RPC struct {
 	Chain   config.Chain
+	Client  *http.Client
 	Timeout int
 	Logger  zerolog.Logger
 }
@@ -24,6 +22,7 @@ type RPC struct {
 func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger) *RPC {
 	return &RPC{
 		Chain:   chain,
+		Client:  http.NewClient(&logger, chain.Name),
 		Timeout: timeout,
 		Logger:  logger.With().Str("component", "rpc").Logger(),
 	}
@@ -41,7 +40,7 @@ func (rpc *RPC) GetValidator(address string) (*types2.ValidatorResponse, *types2
 	)
 
 	var response *types2.ValidatorResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
@@ -61,7 +60,7 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types2.PaginationResponse,
 	)
 
 	var response *types2.PaginationResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
@@ -81,7 +80,7 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types2.PaginationResponse, *ty
 	)
 
 	var response *types2.PaginationResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
@@ -102,7 +101,7 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types2.Balance, 
 	)
 
 	var response types2.SingleDelegationResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return &types2.Balance{}, info, err
 	}
@@ -121,7 +120,7 @@ func (rpc *RPC) GetAllValidators() (*types2.ValidatorsResponse, *types2.QueryInf
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000", rpc.Chain.LCDEndpoint)
 
 	var response *types2.ValidatorsResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
@@ -141,7 +140,7 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types2.Balance, *types
 	)
 
 	var response *distributionTypes.QueryValidatorCommissionResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return []types2.Balance{}, info, err
 	}
@@ -167,7 +166,7 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types2.Balance,
 	)
 
 	var response *distributionTypes.QueryDelegationRewardsResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return []types2.Balance{}, info, err
 	}
@@ -192,7 +191,7 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types2.Balance, *types2.Query
 	)
 
 	var response types2.BalancesResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return []types2.Balance{}, info, err
 	}
@@ -213,7 +212,7 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*types2.SigningInfoResponse, *ty
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
 	var response *types2.SigningInfoResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
@@ -229,7 +228,7 @@ func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, *types2.Que
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/params", rpc.Chain.LCDEndpoint)
 
 	var response *types2.SlashingParamsResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
@@ -245,59 +244,10 @@ func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, *types2.Query
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", rpc.Chain.LCDEndpoint)
 
 	var response *types2.StakingParamsResponse
-	info, err := rpc.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, info, err
 	}
 
 	return response, info, nil
-}
-
-func (rpc *RPC) Get(url string, target interface{}) (*types2.QueryInfo, error) {
-	client := &http.Client{
-		Timeout: time.Duration(rpc.Timeout) * time.Second,
-	}
-	start := time.Now()
-
-	info := &types2.QueryInfo{
-		Chain:   rpc.Chain.Name,
-		URL:     url,
-		Success: false,
-	}
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return info, err
-	}
-
-	req.Header.Set("User-Agent", "cosmos-validators-exporter")
-
-	rpc.Logger.Trace().Str("url", url).Msg("Doing a query...")
-
-	res, err := client.Do(req)
-	if err != nil {
-		info.Duration = time.Since(start)
-		rpc.Logger.Warn().Str("url", url).Err(err).Msg("Query failed")
-		return info, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode >= http.StatusBadRequest {
-		info.Duration = time.Since(start)
-		rpc.Logger.Warn().
-			Str("url", url).
-			Err(err).
-			Int("status", res.StatusCode).
-			Msg("Query returned bad HTTP code")
-		return info, fmt.Errorf("bad HTTP code: %d", res.StatusCode)
-	}
-
-	info.Duration = time.Since(start)
-
-	rpc.Logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
-
-	err = json.NewDecoder(res.Body).Decode(target)
-	info.Success = (err == nil)
-
-	return info, err
 }
