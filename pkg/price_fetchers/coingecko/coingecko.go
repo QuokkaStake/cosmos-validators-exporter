@@ -35,7 +35,7 @@ func (c *Coingecko) FetchPrices(currencies []string) (map[string]float64, types.
 
 	if err != nil {
 		c.Logger.Error().Err(err).Msg("Could not get rate")
-		return nil, *queryInfo
+		return nil, queryInfo
 	}
 
 	prices := map[string]float64{}
@@ -46,5 +46,5 @@ func (c *Coingecko) FetchPrices(currencies []string) (map[string]float64, types.
 		}
 	}
 
-	return prices, *queryInfo
+	return prices, queryInfo
 }

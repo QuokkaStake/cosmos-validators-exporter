@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"main/pkg/config"
 	"main/pkg/http"
-	types2 "main/pkg/types"
+	"main/pkg/types"
 	"main/pkg/utils"
 
-	"github.com/cosmos/cosmos-sdk/types"
+	cosmosTypes "github.com/cosmos/cosmos-sdk/types"
 	distributionTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/rs/zerolog"
 )
@@ -28,7 +28,7 @@ func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger) *RPC {
 	}
 }
 
-func (rpc *RPC) GetValidator(address string) (*types2.ValidatorResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("validator") {
 		return nil, nil, nil
 	}
@@ -39,16 +39,16 @@ func (rpc *RPC) GetValidator(address string) (*types2.ValidatorResponse, *types2
 		address,
 	)
 
-	var response *types2.ValidatorResponse
+	var response *types.ValidatorResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }
 
-func (rpc *RPC) GetDelegationsCount(address string) (*types2.PaginationResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetDelegationsCount(address string) (*types.PaginationResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("delegations") {
 		return nil, nil, nil
 	}
@@ -59,16 +59,16 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types2.PaginationResponse,
 		address,
 	)
 
-	var response *types2.PaginationResponse
+	var response *types.PaginationResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }
 
-func (rpc *RPC) GetUnbondsCount(address string) (*types2.PaginationResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("unbonds") {
 		return nil, nil, nil
 	}
@@ -79,16 +79,16 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types2.PaginationResponse, *ty
 		address,
 	)
 
-	var response *types2.PaginationResponse
+	var response *types.PaginationResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }
 
-func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types2.Balance, *types2.QueryInfo, error) {
+func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Balance, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("self-delegation") {
 		return nil, nil, nil
 	}
@@ -100,35 +100,35 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types2.Balance, 
 		wallet,
 	)
 
-	var response types2.SingleDelegationResponse
+	var response types.SingleDelegationResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return &types2.Balance{}, info, err
+		return &types.Balance{}, &info, err
 	}
 
-	return &types2.Balance{
+	return &types.Balance{
 		Amount: utils.StrToFloat64(response.DelegationResponse.Balance.Amount),
 		Denom:  response.DelegationResponse.Balance.Denom,
-	}, info, nil
+	}, &info, nil
 }
 
-func (rpc *RPC) GetAllValidators() (*types2.ValidatorsResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("validators") {
 		return nil, nil, nil
 	}
 
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000", rpc.Chain.LCDEndpoint)
 
-	var response *types2.ValidatorsResponse
+	var response *types.ValidatorsResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }
 
-func (rpc *RPC) GetValidatorCommission(address string) ([]types2.Balance, *types2.QueryInfo, error) {
+func (rpc *RPC) GetValidatorCommission(address string) ([]types.Balance, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("commission") {
 		return nil, nil, nil
 	}
@@ -142,18 +142,18 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types2.Balance, *types
 	var response *distributionTypes.QueryValidatorCommissionResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return []types2.Balance{}, info, err
+		return []types.Balance{}, &info, err
 	}
 
-	return utils.Map(response.Commission.Commission, func(balance types.DecCoin) types2.Balance {
-		return types2.Balance{
+	return utils.Map(response.Commission.Commission, func(balance cosmosTypes.DecCoin) types.Balance {
+		return types.Balance{
 			Amount: balance.Amount.MustFloat64(),
 			Denom:  balance.Denom,
 		}
-	}), info, nil
+	}), &info, nil
 }
 
-func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types2.Balance, *types2.QueryInfo, error) {
+func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Balance, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("rewards") {
 		return nil, nil, nil
 	}
@@ -168,18 +168,18 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types2.Balance,
 	var response *distributionTypes.QueryDelegationRewardsResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return []types2.Balance{}, info, err
+		return []types.Balance{}, &info, err
 	}
 
-	return utils.Map(response.Rewards, func(balance types.DecCoin) types2.Balance {
-		return types2.Balance{
+	return utils.Map(response.Rewards, func(balance cosmosTypes.DecCoin) types.Balance {
+		return types.Balance{
 			Amount: balance.Amount.MustFloat64(),
 			Denom:  balance.Denom,
 		}
-	}), info, nil
+	}), &info, nil
 }
 
-func (rpc *RPC) GetWalletBalance(wallet string) ([]types2.Balance, *types2.QueryInfo, error) {
+func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Balance, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("balance") {
 		return nil, nil, nil
 	}
@@ -190,64 +190,64 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types2.Balance, *types2.Query
 		wallet,
 	)
 
-	var response types2.BalancesResponse
+	var response types.BalancesResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return []types2.Balance{}, info, err
+		return []types.Balance{}, &info, err
 	}
 
-	return utils.Map(response.Balances, func(balance types2.BalanceInResponse) types2.Balance {
-		return types2.Balance{
+	return utils.Map(response.Balances, func(balance types.BalanceInResponse) types.Balance {
+		return types.Balance{
 			Amount: utils.StrToFloat64(balance.Amount),
 			Denom:  balance.Denom,
 		}
-	}), info, nil
+	}), &info, nil
 }
 
-func (rpc *RPC) GetSigningInfo(valcons string) (*types2.SigningInfoResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetSigningInfo(valcons string) (*types.SigningInfoResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("signing-info") {
 		return nil, nil, nil
 	}
 
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
-	var response *types2.SigningInfoResponse
+	var response *types.SigningInfoResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }
 
-func (rpc *RPC) GetSlashingParams() (*types2.SlashingParamsResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetSlashingParams() (*types.SlashingParamsResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("slashing-params") {
 		return nil, nil, nil
 	}
 
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/params", rpc.Chain.LCDEndpoint)
 
-	var response *types2.SlashingParamsResponse
+	var response *types.SlashingParamsResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }
 
-func (rpc *RPC) GetStakingParams() (*types2.StakingParamsResponse, *types2.QueryInfo, error) {
+func (rpc *RPC) GetStakingParams() (*types.StakingParamsResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("staking-params") {
 		return nil, nil, nil
 	}
 
 	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", rpc.Chain.LCDEndpoint)
 
-	var response *types2.StakingParamsResponse
+	var response *types.StakingParamsResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return nil, info, err
+		return nil, &info, err
 	}
 
-	return response, info, nil
+	return response, &info, nil
 }

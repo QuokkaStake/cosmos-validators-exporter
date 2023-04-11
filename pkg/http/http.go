@@ -21,7 +21,7 @@ func NewClient(logger *zerolog.Logger, chain string) *Client {
 	}
 }
 
-func (c *Client) Get(url string, target interface{}) (*types.QueryInfo, error) {
+func (c *Client) Get(url string, target interface{}) (types.QueryInfo, error) {
 	client := &http.Client{Timeout: 10 * 1000000000}
 	start := time.Now()
 
@@ -33,7 +33,7 @@ func (c *Client) Get(url string, target interface{}) (*types.QueryInfo, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return &queryInfo, err
+		return queryInfo, err
 	}
 
 	req.Header.Set("User-Agent", "cosmos-validators-exporter")
@@ -44,7 +44,7 @@ func (c *Client) Get(url string, target interface{}) (*types.QueryInfo, error) {
 	queryInfo.Duration = time.Since(start)
 	if err != nil {
 		c.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
-		return &queryInfo, err
+		return queryInfo, err
 	}
 	defer res.Body.Close()
 
@@ -53,5 +53,5 @@ func (c *Client) Get(url string, target interface{}) (*types.QueryInfo, error) {
 	err = json.NewDecoder(res.Body).Decode(target)
 	queryInfo.Success = err == nil
 
-	return &queryInfo, err
+	return queryInfo, err
 }
