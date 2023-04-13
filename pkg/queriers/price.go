@@ -33,7 +33,7 @@ func NewPriceQuerier(
 
 func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
 	currenciesList := q.Config.GetCoingeckoCurrencies()
-	currenciesRates := q.Coingecko.FetchPrices(currenciesList)
+	currenciesRates, query := q.Coingecko.FetchPrices(currenciesList)
 
 	currenciesRatesToChains := map[string]float64{}
 	for _, chain := range q.Config.Chains {
@@ -66,5 +66,5 @@ func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo)
 		}).Set(price)
 	}
 
-	return []prometheus.Collector{tokenPriceGauge}, []*types.QueryInfo{}
+	return []prometheus.Collector{tokenPriceGauge}, []*types.QueryInfo{&query}
 }
