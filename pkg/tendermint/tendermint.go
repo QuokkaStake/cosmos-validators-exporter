@@ -89,6 +89,10 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *typ
 		return nil, &info, err
 	}
 
+	if response.Code != 0 {
+		return &types.PaginationResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return response, &info, nil
 }
 
