@@ -66,6 +66,10 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Quer
 					return
 				}
 
+				if delegatorsResponse.Pagination.Total == "" {
+					return
+				}
+
 				delegationsCountGauge.With(prometheus.Labels{
 					"chain":   chain.Name,
 					"address": validator,
