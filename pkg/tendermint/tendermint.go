@@ -45,6 +45,10 @@ func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.Q
 		return nil, &info, err
 	}
 
+	if response.Code != 0 {
+		return &types.ValidatorResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return response, &info, nil
 }
 

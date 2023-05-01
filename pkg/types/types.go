@@ -15,6 +15,7 @@ import (
 )
 
 type ValidatorResponse struct {
+	Code      int       `json:"code"`
 	Validator Validator `json:"validator"`
 }
 
