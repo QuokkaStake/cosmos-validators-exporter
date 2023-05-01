@@ -65,6 +65,10 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types.PaginationResponse, 
 		return nil, &info, err
 	}
 
+	if response.Code != 0 {
+		return &types.PaginationResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return response, &info, nil
 }
 
@@ -104,6 +108,10 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Balance, *
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return &types.Balance{}, &info, err
+	}
+
+	if response.Code != 0 {
+		return &types.Balance{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
 	return &types.Balance{
