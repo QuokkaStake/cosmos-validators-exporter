@@ -11,7 +11,6 @@ require (
 	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
-	github.com/superoo7/go-gecko v1.0.0
 )
 
 require (

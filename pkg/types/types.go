@@ -15,6 +15,7 @@ import (
 )
 
 type ValidatorResponse struct {
+	Code      int       `json:"code"`
 	Validator Validator `json:"validator"`
 }
 
@@ -148,6 +149,7 @@ type ValidatorQuery struct {
 }
 
 type PaginationResponse struct {
+	Code       int        `json:"code"`
 	Pagination Pagination `json:"pagination"`
 }
 
@@ -218,6 +220,7 @@ type SlashingParams struct {
 }
 
 type SingleDelegationResponse struct {
+	Code               int                `json:"code"`
 	DelegationResponse DelegationResponse `json:"delegation_response"`
 }
 
