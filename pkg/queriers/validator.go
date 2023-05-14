@@ -54,6 +54,14 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 		[]string{"chain", "address"},
 	)
 
+	isActiveGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_active",
+			Help: "Whether a validator is active (1 if yes, 0 if no)",
+		},
+		[]string{"chain", "address"},
+	)
+
 	commissionGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_commission",
@@ -263,6 +271,11 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 						"address": validator,
 					}).Set(utils.BoolToFloat64(validatorInfo.Validator.Jailed))
 
+					isActiveGauge.With(prometheus.Labels{
+						"chain":   chain.Name,
+						"address": validator,
+					}).Set(utils.BoolToFloat64(validatorInfo.Validator.Status == "BOND_STATUS_BONDED"))
+
 					commissionGauge.With(prometheus.Labels{
 						"chain":   chain.Name,
 						"address": validator,
@@ -360,6 +373,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 	return []prometheus.Collector{
 		validatorInfoGauge,
 		isJailedGauge,
+		isActiveGauge,
 		commissionGauge,
 		commissionMaxGauge,
 		commissionMaxChangeGauge,
