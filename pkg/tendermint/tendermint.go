@@ -233,6 +233,10 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*types.SigningInfoResponse, *typ
 		return nil, &info, err
 	}
 
+	if response.Code != 0 {
+		return &types.SigningInfoResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return response, &info, nil
 }
 

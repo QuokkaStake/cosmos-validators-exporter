@@ -199,6 +199,7 @@ type BalanceInResponse struct {
 }
 
 type SigningInfoResponse struct {
+	Code           int                  `json:"code"`
 	ValSigningInfo ValidatorSigningInfo `json:"val_signing_info"`
 }
 

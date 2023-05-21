@@ -8,19 +8,31 @@ import (
 	"github.com/mcuadros/go-defaults"
 )
 
+type Validator struct {
+	Address          string `toml:"address"`
+	ConsensusAddress string `toml:"consensus-address"`
+}
+
+func (v *Validator) Validate() error {
+	if v.Address == "" {
+		return fmt.Errorf("validator address is expected!")
+	}
+
+	return nil
+}
+
 type Chain struct {
-	Name                string          `toml:"name"`
-	LCDEndpoint         string          `toml:"lcd-endpoint"`
-	CoingeckoCurrency   string          `toml:"coingecko-currency"`
-	DexScreenerChainID  string          `toml:"dex-screener-chain-id"`
-	DexScreenerPair     string          `toml:"dex-screener-pair"`
-	BaseDenom           string          `toml:"base-denom"`
-	Denom               string          `toml:"denom"`
-	DenomCoefficient    int64           `toml:"denom-coefficient" default:"1000000"`
-	BechWalletPrefix    string          `toml:"bech-wallet-prefix"`
-	BechConsensusPrefix string          `toml:"bech-consensus-prefix"`
-	Validators          []string        `toml:"validators"`
-	Queries             map[string]bool `toml:"queries"`
+	Name               string          `toml:"name"`
+	LCDEndpoint        string          `toml:"lcd-endpoint"`
+	CoingeckoCurrency  string          `toml:"coingecko-currency"`
+	DexScreenerChainID string          `toml:"dex-screener-chain-id"`
+	DexScreenerPair    string          `toml:"dex-screener-pair"`
+	BaseDenom          string          `toml:"base-denom"`
+	Denom              string          `toml:"denom"`
+	DenomCoefficient   int64           `toml:"denom-coefficient" default:"1000000"`
+	BechWalletPrefix   string          `toml:"bech-wallet-prefix"`
+	Validators         []Validator     `toml:"validators"`
+	Queries            map[string]bool `toml:"queries"`
 }
 
 func (c *Chain) Validate() error {
@@ -34,6 +46,12 @@ func (c *Chain) Validate() error {
 
 	if len(c.Validators) == 0 {
 		return fmt.Errorf("no validators provided")
+	}
+
+	for index, validator := range c.Validators {
+		if err := validator.Validate(); err != nil {
+			return fmt.Errorf("error in validator #%d: %s", index, err)
+		}
 	}
 
 	return nil

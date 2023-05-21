@@ -94,14 +94,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 		[]string{"chain", "address"},
 	)
 
-	missedBlocksGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_missed_blocks",
-			Help: "Validator's missed blocks",
-		},
-		[]string{"chain", "address"},
-	)
-
 	activeSetSizeGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_active_set_size",
@@ -157,10 +149,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 					allValidatorsQueryInfo  *types.QueryInfo
 					allValidatorsQueryError error
 
-					signingInfo           *types.SigningInfoResponse
-					signingInfoQuery      *types.QueryInfo
-					signingInfoQueryError error
-
 					stakingParams           *types.StakingParamsResponse
 					stakingParamsQuery      *types.QueryInfo
 					stakingParamsQueryError error
@@ -179,31 +167,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 							Str("chain", chain.Name).
 							Str("address", validator).
 							Msg("Error querying for validator info")
-						return
-					}
-
-					if chain.BechConsensusPrefix == "" || validatorInfo == nil {
-						return
-					}
-
-					valConsAddress, err := validatorInfo.Validator.ConsensusPubkey.GetValConsAddress(chain.BechConsensusPrefix)
-					if err != nil {
-						q.Logger.Error().
-							Err(validatorQueryError).
-							Str("chain", chain.Name).
-							Str("address", validator).
-							Msg("Error getting validator consensus address")
-						signingInfoQueryError = err
-					} else {
-						signingInfo, signingInfoQuery, signingInfoQueryError = rpc.GetSigningInfo(valConsAddress)
-
-						if signingInfoQueryError != nil {
-							q.Logger.Error().
-								Err(validatorQueryError).
-								Str("chain", chain.Name).
-								Str("address", validator).
-								Msg("Error getting validator signing info")
-						}
 					}
 				}()
 
@@ -243,9 +206,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 
 				if validatorQueryInfo != nil {
 					queryInfos = append(queryInfos, validatorQueryInfo)
-				}
-				if signingInfoQuery != nil {
-					queryInfos = append(queryInfos, signingInfoQuery)
 				}
 				if stakingParamsQuery != nil {
 					queryInfos = append(queryInfos, stakingParamsQuery)
@@ -295,16 +255,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 						"chain":   chain.Name,
 						"address": validator,
 					}).Set(utils.StrToFloat64(validatorInfo.Validator.DelegatorShares))
-				}
-
-				if signingInfo != nil {
-					missedBlocksCounter := utils.StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
-					if missedBlocksCounter >= 0 {
-						missedBlocksGauge.With(prometheus.Labels{
-							"chain":   chain.Name,
-							"address": validator,
-						}).Set(float64(missedBlocksCounter))
-					}
 				}
 
 				if stakingParams != nil {
@@ -364,7 +314,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 				}
 
 				wg.Done()
-			}(validator, rpc, chain)
+			}(validator.Address, rpc, chain)
 		}
 	}
 
@@ -378,7 +328,6 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 		commissionMaxGauge,
 		commissionMaxChangeGauge,
 		delegationsGauge,
-		missedBlocksGauge,
 		activeSetSizeGauge,
 		validatorRankGauge,
 		validatorsCountGauge,

@@ -43,12 +43,13 @@ denom-coefficient = 1000000
 # Bech32 prefix for a wallet address (example: "cosmos" for a Cosmos wallet). If omitted,
 # the self-delegation metric will not be present.
 bech-wallet-prefix = "bitsong"
-# Bech32 prefix for a consensus address (example: "cosmosvalcons" for a Cosmos network).
-# If omitted, the missed blocks counter will not be present.
-bech-consensus-prefix = "bitsongvalcons"
 # List of validators to monitor.
+# Address is required, consensus-address is optional but will result in omitting
+# signing-infos metrics (like missed blocks counter).
+# You can get your consensus-address by running "<appd> tendermint show-address" on your validator node,
+# if you are not using KMS solutions.
 validators = [
-    "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge"
+    { address = "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge", consensus-address = "bitsongvalcons16ktzzs4ra4kcw668demahue52zh2xjllwdd6n3" }
 ]
 # List of queries to enable/disable.
 # If the list is not provided, or the value for query is not specified,
@@ -87,7 +88,6 @@ coingecko-currency = "e-money"
 base-denom = "ungm"
 denom = "ngm"
 bech-wallet-prefix = "emoney"
-bech-consensus-prefix = "emoneyvalcons"
 validators = [
-    "emoneyvaloper1jk4n79c5gv36972ptnly3rvx5nvn3hl3hgly9g"
+    { address = "emoneyvaloper1jk4n79c5gv36972ptnly3rvx5nvn3hl3hgly9g" }
 ]

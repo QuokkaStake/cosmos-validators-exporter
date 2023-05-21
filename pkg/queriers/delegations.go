@@ -70,7 +70,7 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Quer
 					"chain":   chain.Name,
 					"address": validator,
 				}).Set(float64(utils.StrToInt64(delegatorsResponse.Pagination.Total)))
-			}(validator, rpc, chain)
+			}(validator.Address, rpc, chain)
 		}
 	}
 

@@ -88,7 +88,7 @@ func (q *RewardsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 						"denom":   balance.Denom,
 					}).Set(balance.Amount)
 				}
-			}(validator, rpc, chain)
+			}(validator.Address, rpc, chain)
 		}
 	}
 
