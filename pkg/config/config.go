@@ -22,18 +22,17 @@ func (v *Validator) Validate() error {
 }
 
 type Chain struct {
-	Name                string          `toml:"name"`
-	LCDEndpoint         string          `toml:"lcd-endpoint"`
-	CoingeckoCurrency   string          `toml:"coingecko-currency"`
-	DexScreenerChainID  string          `toml:"dex-screener-chain-id"`
-	DexScreenerPair     string          `toml:"dex-screener-pair"`
-	BaseDenom           string          `toml:"base-denom"`
-	Denom               string          `toml:"denom"`
-	DenomCoefficient    int64           `toml:"denom-coefficient" default:"1000000"`
-	BechWalletPrefix    string          `toml:"bech-wallet-prefix"`
-	BechConsensusPrefix string          `toml:"bech-consensus-prefix"`
-	Validators          []Validator     `toml:"validators"`
-	Queries             map[string]bool `toml:"queries"`
+	Name               string          `toml:"name"`
+	LCDEndpoint        string          `toml:"lcd-endpoint"`
+	CoingeckoCurrency  string          `toml:"coingecko-currency"`
+	DexScreenerChainID string          `toml:"dex-screener-chain-id"`
+	DexScreenerPair    string          `toml:"dex-screener-pair"`
+	BaseDenom          string          `toml:"base-denom"`
+	Denom              string          `toml:"denom"`
+	DenomCoefficient   int64           `toml:"denom-coefficient" default:"1000000"`
+	BechWalletPrefix   string          `toml:"bech-wallet-prefix"`
+	Validators         []Validator     `toml:"validators"`
+	Queries            map[string]bool `toml:"queries"`
 }
 
 func (c *Chain) Validate() error {
