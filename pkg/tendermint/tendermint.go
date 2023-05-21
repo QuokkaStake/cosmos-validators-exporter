@@ -56,6 +56,10 @@ func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.Q
 }
 
 func (rpc *RPC) GetProviderValidator(address string) (*types.ValidatorResponse, *types.QueryInfo, error) {
+	if rpc.Chain.ProviderChainBechValidatorPrefix == "" {
+		return nil, nil, nil
+	}
+
 	providerAddress, err := utils.ChangeBech32Prefix(address, rpc.Chain.ProviderChainBechValidatorPrefix)
 	if err != nil {
 		return nil, nil, err
