@@ -50,6 +50,7 @@ func NewApp(configPath string) *App {
 		queriersPkg.NewSlashingParamsQuerier(log, appConfig),
 		queriersPkg.NewValidatorQuerier(log, appConfig),
 		queriersPkg.NewDenomCoefficientsQuerier(log, appConfig),
+		queriersPkg.NewSigningInfoQuerier(log, appConfig),
 	}
 
 	return &App{

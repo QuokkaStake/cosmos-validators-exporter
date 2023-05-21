@@ -88,7 +88,7 @@ func (q *SelfDelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.
 						"denom":   balance.Denom,
 					}).Set(balance.Amount)
 				}
-			}(validator, rpc, chain)
+			}(validator.Address, rpc, chain)
 		}
 	}
 

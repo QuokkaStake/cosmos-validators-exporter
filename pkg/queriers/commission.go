@@ -72,7 +72,7 @@ func (q *CommissionQuerier) GetMetrics() ([]prometheus.Collector, []*types.Query
 						"denom":   balance.Denom,
 					}).Set(balance.Amount)
 				}
-			}(validator, rpc, chain)
+			}(validator.Address, rpc, chain)
 		}
 	}
 

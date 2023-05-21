@@ -70,7 +70,7 @@ func (q *UnbondsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 					"chain":   chain.Name,
 					"address": validator,
 				}).Set(float64(utils.StrToInt64(unbondsResponse.Pagination.Total)))
-			}(validator, rpc, chain)
+			}(validator.Address, rpc, chain)
 		}
 	}
 
