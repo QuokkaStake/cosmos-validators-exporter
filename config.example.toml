@@ -45,7 +45,9 @@ denom-coefficient = 1000000
 bech-wallet-prefix = "bitsong"
 # List of validators to monitor.
 # Address is required, consensus-address is optional but will result in omitting
-# signing-infos metrics.
+# signing-infos metrics (like missed blocks counter).
+# You can get your consensus-address by running "<appd> tendermint show-address" on your validator node,
+# if you are not using KMS solutions.
 validators = [
     { address = "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge", consensus-address = "bitsongvalcons16ktzzs4ra4kcw668demahue52zh2xjllwdd6n3" }
 ]
