@@ -25,7 +25,7 @@ func (v *Validator) Validate() error {
 
 type DenomInfo struct {
 	Denom              string `toml:"denom"`
-	DenomCoefficient   int64  `default:"1000000"            toml:"denom-coefficient "`
+	DenomCoefficient   int64  `default:"1000000"            toml:"denom-coefficient"`
 	DisplayDenom       string `toml:"display-denom"`
 	CoingeckoCurrency  string `toml:"coingecko-currency"`
 	DexScreenerChainID string `toml:"dex-screener-chain-id"`
