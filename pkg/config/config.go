@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/mcuadros/go-defaults"
+	"github.com/creasty/defaults"
 )
 
 type Validator struct {
@@ -24,7 +24,7 @@ func (v *Validator) Validate() error {
 
 type DenomInfo struct {
 	Denom              string `toml:"denom"`
-	DenomCoefficient   int64  `default:"1000000"`
+	DenomCoefficient   int64  `toml:"denom-coefficient "default:"1000000"`
 	DisplayDenom       string `toml:"display-denom"`
 	CoingeckoCurrency  string `toml:"coingecko-currency"`
 	DexScreenerChainID string `toml:"dex-screener-chain-id"`
@@ -144,6 +144,9 @@ func GetConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
-	defaults.SetDefaults(&configStruct)
+	if err = defaults.Set(&configStruct); err != nil {
+		return nil, err
+	}
+
 	return &configStruct, nil
 }

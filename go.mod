@@ -6,8 +6,8 @@ require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce
 	github.com/cosmos/cosmos-sdk v0.46.0
+	github.com/creasty/defaults v1.7.0
 	github.com/google/uuid v1.3.0
-	github.com/mcuadros/go-defaults v1.2.0
 	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
