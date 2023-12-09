@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -21,18 +22,43 @@ func (v *Validator) Validate() error {
 	return nil
 }
 
+type DenomInfo struct {
+	Denom              string `toml:"denom"`
+	DenomCoefficient   int64  `default:"1000000"`
+	DisplayDenom       string `toml:"display-denom"`
+	CoingeckoCurrency  string `toml:"coingecko-currency"`
+	DexScreenerChainID string `toml:"dex-screener-chain-id"`
+	DexScreenerPair    string `toml:"dex-screener-pair"`
+}
+
+func (d *DenomInfo) DisplayWarnings(chain *Chain, logger *zerolog.Logger) {
+	if d.CoingeckoCurrency == "" {
+		logger.Warn().
+			Str("chain", chain.Name).
+			Str("denom", d.Denom).
+			Msg("Coingecko currency not set, denoms won't be displayed correctly.")
+	}
+}
+
+type DenomInfos []*DenomInfo
+
+func (d DenomInfos) Find(denom string) *DenomInfo {
+	for _, info := range d {
+		if denom == info.Denom {
+			return info
+		}
+	}
+
+	return nil
+}
+
 type Chain struct {
-	Name               string          `toml:"name"`
-	LCDEndpoint        string          `toml:"lcd-endpoint"`
-	CoingeckoCurrency  string          `toml:"coingecko-currency"`
-	DexScreenerChainID string          `toml:"dex-screener-chain-id"`
-	DexScreenerPair    string          `toml:"dex-screener-pair"`
-	BaseDenom          string          `toml:"base-denom"`
-	Denom              string          `toml:"denom"`
-	DenomCoefficient   int64           `toml:"denom-coefficient" default:"1000000"`
-	BechWalletPrefix   string          `toml:"bech-wallet-prefix"`
-	Validators         []Validator     `toml:"validators"`
-	Queries            map[string]bool `toml:"queries"`
+	Name             string          `toml:"name"`
+	LCDEndpoint      string          `toml:"lcd-endpoint"`
+	Denoms           DenomInfos      `toml:"denoms"`
+	BechWalletPrefix string          `toml:"bech-wallet-prefix"`
+	Validators       []Validator     `toml:"validators"`
+	Queries          map[string]bool `toml:"queries"`
 }
 
 func (c *Chain) Validate() error {
@@ -95,8 +121,10 @@ func (c *Config) GetCoingeckoCurrencies() []string {
 	currencies := []string{}
 
 	for _, chain := range c.Chains {
-		if chain.CoingeckoCurrency != "" {
-			currencies = append(currencies, chain.CoingeckoCurrency)
+		for _, denom := range chain.Denoms {
+			if denom.CoingeckoCurrency != "" {
+				currencies = append(currencies, denom.CoingeckoCurrency)
+			}
 		}
 	}
 

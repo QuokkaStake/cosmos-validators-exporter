@@ -33,11 +33,13 @@ func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []*type
 	)
 
 	for _, chain := range q.Config.Chains {
-		denomCoefficientGauge.With(prometheus.Labels{
-			"chain":         chain.Name,
-			"display_denom": chain.Denom,
-			"denom":         chain.BaseDenom,
-		}).Set(float64(chain.DenomCoefficient))
+		for _, denom := range chain.Denoms {
+			denomCoefficientGauge.With(prometheus.Labels{
+				"chain":         chain.Name,
+				"display_denom": denom.DisplayDenom,
+				"denom":         denom.Denom,
+			}).Set(float64(denom.DenomCoefficient))
+		}
 	}
 
 	return []prometheus.Collector{denomCoefficientGauge}, []*types.QueryInfo{}
