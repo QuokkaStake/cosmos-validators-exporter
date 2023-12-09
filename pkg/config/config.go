@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/rs/zerolog"
 	"os"
+
+	"github.com/rs/zerolog"
 
 	"github.com/BurntSushi/toml"
 	"github.com/creasty/defaults"
@@ -24,7 +25,7 @@ func (v *Validator) Validate() error {
 
 type DenomInfo struct {
 	Denom              string `toml:"denom"`
-	DenomCoefficient   int64  `toml:"denom-coefficient "default:"1000000"`
+	DenomCoefficient   int64  `default:"1000000"            toml:"denom-coefficient "`
 	DisplayDenom       string `toml:"display-denom"`
 	CoingeckoCurrency  string `toml:"coingecko-currency"`
 	DexScreenerChainID string `toml:"dex-screener-chain-id"`
@@ -93,14 +94,14 @@ func (c *Chain) QueryEnabled(query string) bool {
 
 type Config struct {
 	LogConfig     LogConfig `toml:"log"`
-	ListenAddress string    `toml:"listen-address" default:":9550"`
-	Timeout       int       `toml:"timeout" default:"10"`
+	ListenAddress string    `default:":9550" toml:"listen-address"`
+	Timeout       int       `default:"10"    toml:"timeout"`
 	Chains        []Chain   `toml:"chains"`
 }
 
 type LogConfig struct {
-	LogLevel   string `toml:"level" default:"info"`
-	JSONOutput bool   `toml:"json" default:"false"`
+	LogLevel   string `default:"info"  toml:"level"`
+	JSONOutput bool   `default:"false" toml:"json"`
 }
 
 func (c *Config) Validate() error {
