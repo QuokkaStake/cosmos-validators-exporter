@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"main/pkg/config"
-	"main/pkg/logger"
+	loggerPkg "main/pkg/logger"
 	queriersPkg "main/pkg/queriers"
 
 	"github.com/google/uuid"
@@ -27,34 +27,35 @@ type App struct {
 func NewApp(configPath string) *App {
 	appConfig, err := config.GetConfig(configPath)
 	if err != nil {
-		logger.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
+		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}
 
 	if err = appConfig.Validate(); err != nil {
-		logger.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
+		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
 	}
 
-	log := logger.GetLogger(appConfig.LogConfig)
+	logger := loggerPkg.GetLogger(appConfig.LogConfig)
+	appConfig.DisplayWarnings(logger)
 
-	coingecko := coingeckoPkg.NewCoingecko(appConfig, log)
-	dexScreener := dexScreenerPkg.NewDexScreener(log)
+	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger)
+	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
 	queriers := []types.Querier{
-		queriersPkg.NewCommissionQuerier(log, appConfig),
-		queriersPkg.NewDelegationsQuerier(log, appConfig),
-		queriersPkg.NewUnbondsQuerier(log, appConfig),
-		queriersPkg.NewSelfDelegationsQuerier(log, appConfig),
-		queriersPkg.NewPriceQuerier(log, appConfig, coingecko, dexScreener),
-		queriersPkg.NewRewardsQuerier(log, appConfig),
-		queriersPkg.NewWalletQuerier(log, appConfig),
-		queriersPkg.NewSlashingParamsQuerier(log, appConfig),
-		queriersPkg.NewValidatorQuerier(log, appConfig),
-		queriersPkg.NewDenomCoefficientsQuerier(log, appConfig),
-		queriersPkg.NewSigningInfoQuerier(log, appConfig),
+		queriersPkg.NewCommissionQuerier(logger, appConfig),
+		queriersPkg.NewDelegationsQuerier(logger, appConfig),
+		queriersPkg.NewUnbondsQuerier(logger, appConfig),
+		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig),
+		queriersPkg.NewPriceQuerier(logger, appConfig, coingecko, dexScreener),
+		queriersPkg.NewRewardsQuerier(logger, appConfig),
+		queriersPkg.NewWalletQuerier(logger, appConfig),
+		queriersPkg.NewSlashingParamsQuerier(logger, appConfig),
+		queriersPkg.NewValidatorQuerier(logger, appConfig),
+		queriersPkg.NewDenomCoefficientsQuerier(logger, appConfig),
+		queriersPkg.NewSigningInfoQuerier(logger, appConfig),
 	}
 
 	return &App{
-		Logger:   log,
+		Logger:   logger,
 		Config:   appConfig,
 		Queriers: queriers,
 	}

@@ -32,12 +32,24 @@ type DenomInfo struct {
 	DexScreenerPair    string `toml:"dex-screener-pair"`
 }
 
+func (d *DenomInfo) Validate() error {
+	if d.Denom == "" {
+		return fmt.Errorf("empty denom name")
+	}
+
+	if d.Denom == "" {
+		return fmt.Errorf("empty display denom name")
+	}
+
+	return nil
+}
+
 func (d *DenomInfo) DisplayWarnings(chain *Chain, logger *zerolog.Logger) {
-	if d.CoingeckoCurrency == "" {
+	if d.CoingeckoCurrency == "" && (d.DexScreenerPair == "" || d.DexScreenerChainID == "") {
 		logger.Warn().
 			Str("chain", chain.Name).
 			Str("denom", d.Denom).
-			Msg("Coingecko currency not set, denoms won't be displayed correctly.")
+			Msg("Currency code not set, not fetching exchange rate.")
 	}
 }
 
@@ -82,7 +94,25 @@ func (c *Chain) Validate() error {
 		}
 	}
 
+	for index, denomInfo := range c.Denoms {
+		if err := denomInfo.Validate(); err != nil {
+			return fmt.Errorf("error in denom #%d: %s", index, err)
+		}
+	}
+
 	return nil
+}
+
+func (c *Chain) DisplayWarnings(logger *zerolog.Logger) {
+	if c.BaseDenom == "" {
+		logger.Warn().
+			Str("chain", c.Name).
+			Msg("Base denom is not set")
+	}
+
+	for _, denom := range c.Denoms {
+		denom.DisplayWarnings(c, logger)
+	}
 }
 
 func (c *Chain) QueryEnabled(query string) bool {
@@ -117,6 +147,12 @@ func (c *Config) Validate() error {
 	}
 
 	return nil
+}
+
+func (c *Config) DisplayWarnings(logger *zerolog.Logger) {
+	for _, chain := range c.Chains {
+		chain.DisplayWarnings(logger)
+	}
 }
 
 func (c *Config) GetCoingeckoCurrencies() []string {
