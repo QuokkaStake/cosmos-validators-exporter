@@ -56,6 +56,7 @@ func (d DenomInfos) Find(denom string) *DenomInfo {
 type Chain struct {
 	Name             string          `toml:"name"`
 	LCDEndpoint      string          `toml:"lcd-endpoint"`
+	BaseDenom        string          `json:"base-denom"`
 	Denoms           DenomInfos      `toml:"denoms"`
 	BechWalletPrefix string          `toml:"bech-wallet-prefix"`
 	Validators       []Validator     `toml:"validators"`

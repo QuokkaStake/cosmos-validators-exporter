@@ -32,7 +32,22 @@ func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []*type
 		[]string{"chain", "denom", "display_denom"},
 	)
 
+	baseDenomGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "cosmos_validators_exporter_base_denom",
+			Help: "Base denom info",
+		},
+		[]string{"chain", "denom"},
+	)
+
 	for _, chain := range q.Config.Chains {
+		if chain.BaseDenom != "" {
+			baseDenomGauge.With(prometheus.Labels{
+				"chain": chain.Name,
+				"denom": chain.BaseDenom,
+			}).Set(float64(1))
+		}
+
 		for _, denom := range chain.Denoms {
 			denomCoefficientGauge.With(prometheus.Labels{
 				"chain":         chain.Name,
@@ -42,5 +57,5 @@ func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []*type
 		}
 	}
 
-	return []prometheus.Collector{denomCoefficientGauge}, []*types.QueryInfo{}
+	return []prometheus.Collector{denomCoefficientGauge, baseDenomGauge}, []*types.QueryInfo{}
 }
