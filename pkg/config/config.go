@@ -73,6 +73,14 @@ type Chain struct {
 	BechWalletPrefix string          `toml:"bech-wallet-prefix"`
 	Validators       []Validator     `toml:"validators"`
 	Queries          map[string]bool `toml:"queries"`
+
+	ProviderChainLCD                 string `toml:"provider-lcd-endpoint"`
+	ProviderChainBechValidatorPrefix string `toml:"provider-bech-validator-prefix"`
+	ProviderChainBechWalletPrefix    string `toml:"provider-bech-wallet-prefix"`
+}
+
+func (c *Chain) IsConsumer() bool {
+	return c.ProviderChainLCD != ""
 }
 
 func (c *Chain) Validate() error {

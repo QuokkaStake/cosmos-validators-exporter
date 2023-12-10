@@ -31,10 +31,44 @@ func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.Q
 		return nil, nil, nil
 	}
 
+	if rpc.Chain.IsConsumer() {
+		return rpc.GetProviderValidator(address)
+	}
+
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s",
 		rpc.Chain.LCDEndpoint,
 		address,
+	)
+
+	var response *types.ValidatorResponse
+	info, err := rpc.Client.Get(url, &response)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.ValidatorResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
+func (rpc *RPC) GetProviderValidator(address string) (*types.ValidatorResponse, *types.QueryInfo, error) {
+	if rpc.Chain.ProviderChainBechValidatorPrefix == "" {
+		return nil, nil, nil
+	}
+
+	providerAddress, err := utils.ChangeBech32Prefix(address, rpc.Chain.ProviderChainBechValidatorPrefix)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	url := fmt.Sprintf(
+		"%s/cosmos/staking/v1beta1/validators/%s",
+		rpc.Chain.ProviderChainLCD,
+		providerAddress,
 	)
 
 	var response *types.ValidatorResponse
@@ -133,7 +167,15 @@ func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo,
 		return nil, nil, nil
 	}
 
-	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000", rpc.Chain.LCDEndpoint)
+	host := rpc.Chain.LCDEndpoint
+	if rpc.Chain.IsConsumer() {
+		host = rpc.Chain.ProviderChainLCD
+	}
+
+	url := fmt.Sprintf(
+		"%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000",
+		host,
+	)
 
 	var response *types.ValidatorsResponse
 	info, err := rpc.Client.Get(url, &response)
@@ -263,7 +305,12 @@ func (rpc *RPC) GetStakingParams() (*types.StakingParamsResponse, *types.QueryIn
 		return nil, nil, nil
 	}
 
-	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", rpc.Chain.LCDEndpoint)
+	host := rpc.Chain.LCDEndpoint
+	if rpc.Chain.IsConsumer() {
+		host = rpc.Chain.ProviderChainLCD
+	}
+
+	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", host)
 
 	var response *types.StakingParamsResponse
 	info, err := rpc.Client.Get(url, &response)
