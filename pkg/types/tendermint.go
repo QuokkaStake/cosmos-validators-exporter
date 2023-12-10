@@ -17,56 +17,35 @@ type ValidatorResponse struct {
 }
 
 type Validator struct {
-	OperatorAddress   string               `json:"operator_address"`
-	ConsensusPubkey   ConsensusPubkey      `json:"consensus_pubkey"`
-	Jailed            bool                 `json:"jailed"`
-	Status            string               `json:"status"`
-	Tokens            string               `json:"tokens"`
-	DelegatorShares   string               `json:"delegator_shares"`
-	Description       ValidatorDescription `json:"description"`
-	UnbondingHeight   string               `json:"unbonding_height"`
-	UnbondingTime     time.Time            `json:"unbonding_time"`
-	Commission        ValidatorCommission  `json:"commission"`
-	MinSelfDelegation string               `json:"min_self_delegation"`
+	OperatorAddress string          `json:"operator_address"`
+	ConsensusPubkey ConsensusPubkey `json:"consensus_pubkey"`
+	Jailed          bool            `json:"jailed"`
+	Status          string          `json:"status"`
+	Tokens          string          `json:"tokens"`
+	DelegatorShares string          `json:"delegator_shares"`
+	Description     struct {
+		Moniker         string `json:"moniker"`
+		Identity        string `json:"identity"`
+		Website         string `json:"website"`
+		SecurityContact string `json:"security_contact"`
+		Details         string `json:"details"`
+	} `json:"description"`
+	UnbondingHeight string    `json:"unbonding_height"`
+	UnbondingTime   time.Time `json:"unbonding_time"`
+	Commission      struct {
+		CommissionRates struct {
+			Rate          string `json:"rate"`
+			MaxRate       string `json:"max_rate"`
+			MaxChangeRate string `json:"max_change_rate"`
+		} `json:"commission_rates"`
+		UpdateTime time.Time `json:"update_time"`
+	} `json:"commission"`
+	MinSelfDelegation string `json:"min_self_delegation"`
 }
 
 type ConsensusPubkey struct {
 	Type string `json:"@type"`
 	Key  string `json:"key"`
-}
-
-type ValidatorDescription struct {
-	Moniker         string `json:"moniker"`
-	Identity        string `json:"identity"`
-	Website         string `json:"website"`
-	SecurityContact string `json:"security_contact"`
-	Details         string `json:"details"`
-}
-
-type ValidatorCommission struct {
-	CommissionRates ValidatorCommissionRates `json:"commission_rates"`
-	UpdateTime      time.Time                `json:"update_time"`
-}
-
-type ValidatorCommissionRates struct {
-	Rate          string `json:"rate"`
-	MaxRate       string `json:"max_rate"`
-	MaxChangeRate string `json:"max_change_rate"`
-}
-
-type ValidatorInfo struct {
-	Address                 string
-	Moniker                 string
-	Identity                string
-	Website                 string
-	SecurityContact         string
-	Details                 string
-	Tokens                  float64
-	Jailed                  bool
-	Status                  string
-	CommissionRate          float64
-	CommissionMaxRate       float64
-	CommissionMaxChangeRate float64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
@@ -91,13 +70,6 @@ func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
 	}
 
 	return properValCons, nil
-}
-
-type ValidatorQuery struct {
-	Chain   string
-	Address string
-	Queries []QueryInfo
-	Info    ValidatorInfo
 }
 
 type PaginationResponse struct {
@@ -131,25 +103,21 @@ func (a ResponseAmount) ToAmount() Amount {
 }
 
 type SigningInfoResponse struct {
-	Code           int                  `json:"code"`
-	ValSigningInfo ValidatorSigningInfo `json:"val_signing_info"`
-}
-
-type ValidatorSigningInfo struct {
-	Address             string    `json:"address"`
-	StartHeight         string    `json:"start_height"`
-	IndexOffset         string    `json:"index_offset"`
-	JailedUntil         time.Time `json:"jailed_until"`
-	Tombstoned          bool      `json:"tombstoned"`
-	MissedBlocksCounter string    `json:"missed_blocks_counter"`
+	Code           int `json:"code"`
+	ValSigningInfo struct {
+		Address             string    `json:"address"`
+		StartHeight         string    `json:"start_height"`
+		IndexOffset         string    `json:"index_offset"`
+		JailedUntil         time.Time `json:"jailed_until"`
+		Tombstoned          bool      `json:"tombstoned"`
+		MissedBlocksCounter string    `json:"missed_blocks_counter"`
+	} `json:"val_signing_info"`
 }
 
 type SlashingParamsResponse struct {
-	SlashingParams SlashingParams `json:"params"`
-}
-
-type SlashingParams struct {
-	SignedBlocksWindow string `json:"signed_blocks_window"`
+	SlashingParams struct {
+		SignedBlocksWindow string `json:"signed_blocks_window"`
+	} `json:"params"`
 }
 
 type SingleDelegationResponse struct {
