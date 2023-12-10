@@ -7,8 +7,6 @@ import (
 	"main/pkg/types"
 	"main/pkg/utils"
 
-	cosmosTypes "github.com/cosmos/cosmos-sdk/types"
-	distributionTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/rs/zerolog"
 )
 
@@ -126,10 +124,8 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Amount, *t
 		return &types.Amount{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
-	return &types.Amount{
-		Amount: utils.StrToFloat64(response.DelegationResponse.Balance.Amount),
-		Denom:  response.DelegationResponse.Balance.Denom,
-	}, &info, nil
+	amount := response.DelegationResponse.Balance.ToAmount()
+	return &amount, &info, nil
 }
 
 func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo, error) {
@@ -164,17 +160,14 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types.Amount, *types.Q
 		address,
 	)
 
-	var response *distributionTypes.QueryValidatorCommissionResponse
+	var response *types.CommissionResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
 
-	return utils.Map(response.Commission.Commission, func(balance cosmosTypes.DecCoin) types.Amount {
-		return types.Amount{
-			Amount: balance.Amount.MustFloat64(),
-			Denom:  balance.Denom,
-		}
+	return utils.Map(response.Commission.Commission, func(amount types.ResponseAmount) types.Amount {
+		return amount.ToAmount()
 	}), &info, nil
 }
 

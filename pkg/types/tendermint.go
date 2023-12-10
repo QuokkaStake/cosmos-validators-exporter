@@ -172,3 +172,10 @@ type RewardsResponse struct {
 	Code    int              `json:"code"`
 	Rewards []ResponseAmount `json:"rewards"`
 }
+
+type CommissionResponse struct {
+	Code       int `json:"code"`
+	Commission struct {
+		Commission []ResponseAmount `json:"commission"`
+	} `json:"commission"`
+}
