@@ -70,27 +70,6 @@ type ValidatorInfo struct {
 	CommissionRate          float64
 	CommissionMaxRate       float64
 	CommissionMaxChangeRate float64
-	CommissionUpdateTime    time.Time
-	UnbondingHeight         int64
-	UnbondingTime           time.Time
-	MinSelfDelegation       int64
-	DelegatorsCount         int64
-	SelfDelegation          Balance
-	Rank                    uint64
-	TotalValidators         int
-	TotalStake              float64
-	Commission              []Balance
-	SelfDelegationRewards   []Balance
-	WalletBalance           []Balance
-	MissedBlocksCount       int64
-	IsTombstoned            bool
-	JailedUntil             time.Time
-	StartHeight             int64
-	IndexOffset             int64
-	SignedBlocksWindow      int64
-	UnbondsCount            int64
-	ActiveValidatorsCount   int64
-	LastValidatorStake      float64
 }
 
 func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
@@ -115,30 +94,6 @@ func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
 	}
 
 	return properValCons, nil
-}
-
-func NewValidatorInfo(validator Validator) ValidatorInfo {
-	return ValidatorInfo{
-		Address:                 validator.OperatorAddress,
-		Moniker:                 validator.Description.Moniker,
-		Identity:                validator.Description.Identity,
-		Website:                 validator.Description.Website,
-		SecurityContact:         validator.Description.SecurityContact,
-		Details:                 validator.Description.Details,
-		Tokens:                  utils.StrToFloat64(validator.Tokens),
-		Jailed:                  validator.Jailed,
-		Status:                  validator.Status,
-		CommissionRate:          utils.StrToFloat64(validator.Commission.CommissionRates.Rate),
-		CommissionMaxRate:       utils.StrToFloat64(validator.Commission.CommissionRates.MaxRate),
-		CommissionMaxChangeRate: utils.StrToFloat64(validator.Commission.CommissionRates.MaxChangeRate),
-		CommissionUpdateTime:    validator.Commission.UpdateTime,
-		UnbondingHeight:         utils.StrToInt64(validator.UnbondingHeight),
-		UnbondingTime:           validator.UnbondingTime,
-		MinSelfDelegation:       utils.StrToInt64(validator.MinSelfDelegation),
-		MissedBlocksCount:       -1,
-		UnbondsCount:            -1,
-		TotalValidators:         -1,
-	}
 }
 
 type ValidatorQuery struct {
