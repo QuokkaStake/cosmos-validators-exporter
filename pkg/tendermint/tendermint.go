@@ -271,5 +271,10 @@ func (rpc *RPC) GetStakingParams() (*types.StakingParamsResponse, *types.QueryIn
 		return nil, &info, err
 	}
 
+	if response.Code != 0 {
+		info.Success = false
+		return &types.StakingParamsResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return response, &info, nil
 }

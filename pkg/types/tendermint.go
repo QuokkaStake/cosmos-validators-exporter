@@ -161,17 +161,16 @@ type DelegationResponse struct {
 	Balance ResponseAmount `json:"balance"`
 }
 
-type StakingParams struct {
-	MaxValidators int `json:"max_validators"`
-}
-
-type StakingParamsResponse struct {
-	StakingParams StakingParams `json:"params"`
-}
-
 type RewardsResponse struct {
 	Code    int              `json:"code"`
 	Rewards []ResponseAmount `json:"rewards"`
+}
+
+type StakingParamsResponse struct {
+	Code          int `json:"code"`
+	StakingParams struct {
+		MaxValidators int `json:"max_validators"`
+	} `json:"params"`
 }
 
 type CommissionResponse struct {
