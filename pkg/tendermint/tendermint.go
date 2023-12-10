@@ -190,17 +190,19 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Balance, 
 		validator,
 	)
 
-	var response *distributionTypes.QueryDelegationRewardsResponse
+	var response *types.RewardsResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return []types.Balance{}, &info, err
 	}
 
-	return utils.Map(response.Rewards, func(balance cosmosTypes.DecCoin) types.Balance {
-		return types.Balance{
-			Amount: balance.Amount.MustFloat64(),
-			Denom:  balance.Denom,
-		}
+	if response.Code != 0 {
+		info.Success = false
+		return []types.Balance{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return utils.Map(response.Rewards, func(amount types.ResponseAmount) types.Balance {
+		return amount.ToAmount()
 	}), &info, nil
 }
 
@@ -221,11 +223,8 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Balance, *types.QueryIn
 		return []types.Balance{}, &info, err
 	}
 
-	return utils.Map(response.Balances, func(balance types.BalanceInResponse) types.Balance {
-		return types.Balance{
-			Amount: utils.StrToFloat64(balance.Amount),
-			Denom:  balance.Denom,
-		}
+	return utils.Map(response.Balances, func(amount types.ResponseAmount) types.Balance {
+		return amount.ToAmount()
 	}), &info, nil
 }
 

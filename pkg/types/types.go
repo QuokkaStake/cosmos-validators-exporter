@@ -191,12 +191,19 @@ type Balance struct {
 }
 
 type BalancesResponse struct {
-	Balances []BalanceInResponse `json:"balances"`
+	Balances []ResponseAmount `json:"balances"`
 }
 
-type BalanceInResponse struct {
-	Amount string
-	Denom  string
+type ResponseAmount struct {
+	Amount string `json:"amount"`
+	Denom  string `json:"denom"`
+}
+
+func (a ResponseAmount) ToAmount() Balance {
+	return Balance{
+		Amount: utils.StrToFloat64(a.Amount),
+		Denom:  a.Denom,
+	}
 }
 
 type SigningInfoResponse struct {
@@ -227,7 +234,7 @@ type SingleDelegationResponse struct {
 }
 
 type DelegationResponse struct {
-	Balance BalanceInResponse `json:"balance"`
+	Balance ResponseAmount `json:"balance"`
 }
 
 type StakingParams struct {
@@ -236,6 +243,11 @@ type StakingParams struct {
 
 type StakingParamsResponse struct {
 	StakingParams StakingParams `json:"params"`
+}
+
+type RewardsResponse struct {
+	Code    int              `json:"code"`
+	Rewards []ResponseAmount `json:"rewards"`
 }
 
 type Querier interface {
