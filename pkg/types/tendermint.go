@@ -2,12 +2,13 @@ package types
 
 import (
 	b64 "encoding/base64"
+	"main/pkg/utils"
+	"time"
+
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/types"
-	"main/pkg/utils"
-	"time"
 )
 
 type ValidatorResponse struct {
