@@ -185,7 +185,7 @@ type ValidatorsResponse struct {
 	Validators []Validator `json:"validators"`
 }
 
-type Balance struct {
+type Amount struct {
 	Amount float64
 	Denom  string
 }
@@ -199,8 +199,8 @@ type ResponseAmount struct {
 	Denom  string `json:"denom"`
 }
 
-func (a ResponseAmount) ToAmount() Balance {
-	return Balance{
+func (a ResponseAmount) ToAmount() Amount {
+	return Amount{
 		Amount: utils.StrToFloat64(a.Amount),
 		Denom:  a.Denom,
 	}

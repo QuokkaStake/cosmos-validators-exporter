@@ -103,7 +103,7 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *typ
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Balance, *types.QueryInfo, error) {
+func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("self-delegation") {
 		return nil, nil, nil
 	}
@@ -118,15 +118,15 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Balance, *
 	var response types.SingleDelegationResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return &types.Balance{}, &info, err
+		return &types.Amount{}, &info, err
 	}
 
 	if response.Code != 0 {
 		info.Success = false
-		return &types.Balance{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+		return &types.Amount{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
-	return &types.Balance{
+	return &types.Amount{
 		Amount: utils.StrToFloat64(response.DelegationResponse.Balance.Amount),
 		Denom:  response.DelegationResponse.Balance.Denom,
 	}, &info, nil
@@ -153,7 +153,7 @@ func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo,
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetValidatorCommission(address string) ([]types.Balance, *types.QueryInfo, error) {
+func (rpc *RPC) GetValidatorCommission(address string) ([]types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("commission") {
 		return nil, nil, nil
 	}
@@ -167,18 +167,18 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types.Balance, *types.
 	var response *distributionTypes.QueryValidatorCommissionResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return []types.Balance{}, &info, err
+		return []types.Amount{}, &info, err
 	}
 
-	return utils.Map(response.Commission.Commission, func(balance cosmosTypes.DecCoin) types.Balance {
-		return types.Balance{
+	return utils.Map(response.Commission.Commission, func(balance cosmosTypes.DecCoin) types.Amount {
+		return types.Amount{
 			Amount: balance.Amount.MustFloat64(),
 			Denom:  balance.Denom,
 		}
 	}), &info, nil
 }
 
-func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Balance, *types.QueryInfo, error) {
+func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("rewards") {
 		return nil, nil, nil
 	}
@@ -193,20 +193,20 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Balance, 
 	var response *types.RewardsResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return []types.Balance{}, &info, err
+		return []types.Amount{}, &info, err
 	}
 
 	if response.Code != 0 {
 		info.Success = false
-		return []types.Balance{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+		return []types.Amount{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
-	return utils.Map(response.Rewards, func(amount types.ResponseAmount) types.Balance {
+	return utils.Map(response.Rewards, func(amount types.ResponseAmount) types.Amount {
 		return amount.ToAmount()
 	}), &info, nil
 }
 
-func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Balance, *types.QueryInfo, error) {
+func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("balance") {
 		return nil, nil, nil
 	}
@@ -220,10 +220,10 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Balance, *types.QueryIn
 	var response types.BalancesResponse
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
-		return []types.Balance{}, &info, err
+		return []types.Amount{}, &info, err
 	}
 
-	return utils.Map(response.Balances, func(amount types.ResponseAmount) types.Balance {
+	return utils.Map(response.Balances, func(amount types.ResponseAmount) types.Amount {
 		return amount.ToAmount()
 	}), &info, nil
 }
