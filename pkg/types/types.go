@@ -181,6 +181,7 @@ func (q *ValidatorQuery) GetFailedQueriesCount() float64 {
 }
 
 type ValidatorsResponse struct {
+	Code       int         `json:"code"`
 	Validators []Validator `json:"validators"`
 }
 

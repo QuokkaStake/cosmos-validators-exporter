@@ -46,6 +46,7 @@ func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.Q
 	}
 
 	if response.Code != 0 {
+		info.Success = false
 		return &types.ValidatorResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
@@ -70,6 +71,7 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types.PaginationResponse, 
 	}
 
 	if response.Code != 0 {
+		info.Success = false
 		return &types.PaginationResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
@@ -94,6 +96,7 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *typ
 	}
 
 	if response.Code != 0 {
+		info.Success = false
 		return &types.PaginationResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
@@ -119,6 +122,7 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Balance, *
 	}
 
 	if response.Code != 0 {
+		info.Success = false
 		return &types.Balance{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
@@ -139,6 +143,11 @@ func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo,
 	info, err := rpc.Client.Get(url, &response)
 	if err != nil {
 		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.ValidatorsResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
 	return response, &info, nil
@@ -234,6 +243,7 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*types.SigningInfoResponse, *typ
 	}
 
 	if response.Code != 0 {
+		info.Success = false
 		return &types.SigningInfoResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
