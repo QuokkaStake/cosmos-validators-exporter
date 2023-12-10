@@ -8,7 +8,7 @@ listen-address = ":9560"
 # Log level. Change it to "debug" or even trace for more verbosity and debugging. Defaults to "info".
 level = "debug"
 # Whether all the logs should be written in JSON instead of a pretty-printed text. Useful if you have
-# logging solutions, like ELK. Defaults to false.
+# logging solutions, like Elastic stack. Defaults to false.
 json = false
 
 # Per-chain config.
@@ -17,29 +17,47 @@ json = false
 name = "bitsong"
 # LCD endpoint to query data from. Required.
 lcd-endpoint = "https://api.bitsong.quokkastake.io"
+# Chain's base denom.
+# This value is quite useless by itself, but it's exposed in `cosmos_validators_exporter_base_denom` metric,
+# which later can be joined with other metrics (such as, total delegated tokens)
+# and the price can be calculated based on that.
+base-denom = "ubtsg"
+# Denoms info.
+# Used to 1) be exposed as a standalone metric, and 2) when calculating metric for token price.
+# This is an an array of objects with following values:
+# 1. coingecko-currency
 # Coingecko currency, specify it if you want to also get the wallet balance
-# in total in USD.
-coingecko-currency = "bitsong"
+# in total in USD. Optional.
+# 2. dex-screener-chain-id and dex-screener-pair.
 # dexscreener.com's chain ID (usually ""osmosis") and pair (usually pool ID).
 # Won't be used if coingecko-currency is provided.
 # Either coingecko-currency or these two params are required for getting token price.
-dex-screener-chain-id = "osmosis"
-dex-screener-pair = "832"
-# The chain's base denom. Only balances with this denom will be used
-# to calculate wallet's USD price.
-base-denom = "ubtsg"
-# The chain's display denom.
-denom = "btsg"
-# The coefficient you need to multiply base denom to to get 1 token on Coingecko.
-# Example: on Cosmos network the base denom is uatom, 1 atom = 1_000_000 uatom
-# and 1 atom on Coingecko = $10, and your wallet has 10 atom, or 10_000_000 uatom.
-# Then you need to specify the following parameters:
-# coingecko-currency = "cosmos-hub"
-# base-denom = "uatom"
-# denom-coefficient = 1000000
-# and after that, the /metrics endpoint will return your total balance as $100.
-# Defaults to 1000000
-denom-coefficient = 1000000
+# 3. denom
+# The actual denom value (such as "uatom" for Cosmos Hub or "ibc/xxxxx" for IBC denoms). Required.
+# 4. display-denom
+# The denom that'll be returned in labels. Required.
+# 5. denom-coefficient
+# The coefficient you need to multiply base denom to to get 1 token on Coingecko/DexScreener.
+# Is exposed by `cosmos_validators_exporter_denom_coefficient` metric.
+# Optional, defaults to 1_000_000.
+# You can calculate the actual price of something by doing the following:
+# 1) taking the actual metric (either with "denom" label, like commission, or joining it with "base-denom" label
+# of `cosmos_validators_exporter_base_denom` metric for the chain, which will add the label)
+# 2) divide and join it with `cosmos_validators_exporter_denom_coefficient` metric for this chain for this denom
+# 3) multiply it with `cosmos_validators_exporter_price` metric for this denom/chain.
+# For example, with denom = "uatom", display-denom = "atom", "coingecko-currency" = "cosmos",
+# if you have 10 ATOM unclaimed commission, and $ATOM price = 10, here's what'll happen on each step:
+# 1) will return a metric with labels/values like this:
+# {chain="cosmos",address="cosmosvaloperxxxx",denom="uatom"} 10000000
+# 2) will return a metric like this
+# {chain="cosmos",address="cosmosvaloperxxxx",denom="uatom",display-denom="atom"} 10
+# 3) will return a metric like this:
+# {chain="cosmos",address="cosmosvaloperxxxx",denom="uatom",display-denom="atom"} 100
+# which you can use to display a worthwhile of your unclaimed commission and use display-denom
+# label for legend.
+denoms = [
+    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-coefficient = 1000000, dex-screener-chain-id = "osmosis", dex-screener-pair-id = "1" },
+]
 # Bech32 prefix for a wallet address (example: "cosmos" for a Cosmos wallet). If omitted,
 # the self-delegation metric will not be present.
 bech-wallet-prefix = "bitsong"
@@ -48,6 +66,8 @@ bech-wallet-prefix = "bitsong"
 # signing-infos metrics (like missed blocks counter).
 # You can get your consensus-address by running "<appd> tendermint show-address" on your validator node,
 # if you are not using KMS solutions.
+# If you are using it to track a consumer chain validator and if you are using the assigned key,
+# please make sure to use the consensus address of this chain and not the provider chain one.
 validators = [
     { address = "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge", consensus-address = "bitsongvalcons16ktzzs4ra4kcw668demahue52zh2xjllwdd6n3" }
 ]
@@ -84,10 +104,10 @@ staking-params = true
 [[chains]]
 name = "emoney"
 lcd-endpoint = "https://api.emoney.quokkastake.io"
-coingecko-currency = "e-money"
 base-denom = "ungm"
-denom = "ngm"
-bech-wallet-prefix = "emoney"
+denoms = [
+    { denom = "ungm", display-denom = "ngm", coingecko-currency = "emoney" }
+]
 validators = [
     { address = "emoneyvaloper1jk4n79c5gv36972ptnly3rvx5nvn3hl3hgly9g" }
 ]

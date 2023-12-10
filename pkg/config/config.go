@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rs/zerolog"
+
 	"github.com/BurntSushi/toml"
-	"github.com/mcuadros/go-defaults"
+	"github.com/creasty/defaults"
 )
 
 type Validator struct {
@@ -21,18 +23,56 @@ func (v *Validator) Validate() error {
 	return nil
 }
 
+type DenomInfo struct {
+	Denom              string `toml:"denom"`
+	DenomCoefficient   int64  `default:"1000000"            toml:"denom-coefficient"`
+	DisplayDenom       string `toml:"display-denom"`
+	CoingeckoCurrency  string `toml:"coingecko-currency"`
+	DexScreenerChainID string `toml:"dex-screener-chain-id"`
+	DexScreenerPair    string `toml:"dex-screener-pair"`
+}
+
+func (d *DenomInfo) Validate() error {
+	if d.Denom == "" {
+		return fmt.Errorf("empty denom name")
+	}
+
+	if d.Denom == "" {
+		return fmt.Errorf("empty display denom name")
+	}
+
+	return nil
+}
+
+func (d *DenomInfo) DisplayWarnings(chain *Chain, logger *zerolog.Logger) {
+	if d.CoingeckoCurrency == "" && (d.DexScreenerPair == "" || d.DexScreenerChainID == "") {
+		logger.Warn().
+			Str("chain", chain.Name).
+			Str("denom", d.Denom).
+			Msg("Currency code not set, not fetching exchange rate.")
+	}
+}
+
+type DenomInfos []*DenomInfo
+
+func (d DenomInfos) Find(denom string) *DenomInfo {
+	for _, info := range d {
+		if denom == info.Denom {
+			return info
+		}
+	}
+
+	return nil
+}
+
 type Chain struct {
-	Name               string          `toml:"name"`
-	LCDEndpoint        string          `toml:"lcd-endpoint"`
-	CoingeckoCurrency  string          `toml:"coingecko-currency"`
-	DexScreenerChainID string          `toml:"dex-screener-chain-id"`
-	DexScreenerPair    string          `toml:"dex-screener-pair"`
-	BaseDenom          string          `toml:"base-denom"`
-	Denom              string          `toml:"denom"`
-	DenomCoefficient   int64           `toml:"denom-coefficient" default:"1000000"`
-	BechWalletPrefix   string          `toml:"bech-wallet-prefix"`
-	Validators         []Validator     `toml:"validators"`
-	Queries            map[string]bool `toml:"queries"`
+	Name             string          `toml:"name"`
+	LCDEndpoint      string          `toml:"lcd-endpoint"`
+	BaseDenom        string          `toml:"base-denom"`
+	Denoms           DenomInfos      `toml:"denoms"`
+	BechWalletPrefix string          `toml:"bech-wallet-prefix"`
+	Validators       []Validator     `toml:"validators"`
+	Queries          map[string]bool `toml:"queries"`
 }
 
 func (c *Chain) Validate() error {
@@ -54,7 +94,25 @@ func (c *Chain) Validate() error {
 		}
 	}
 
+	for index, denomInfo := range c.Denoms {
+		if err := denomInfo.Validate(); err != nil {
+			return fmt.Errorf("error in denom #%d: %s", index, err)
+		}
+	}
+
 	return nil
+}
+
+func (c *Chain) DisplayWarnings(logger *zerolog.Logger) {
+	if c.BaseDenom == "" {
+		logger.Warn().
+			Str("chain", c.Name).
+			Msg("Base denom is not set")
+	}
+
+	for _, denom := range c.Denoms {
+		denom.DisplayWarnings(c, logger)
+	}
 }
 
 func (c *Chain) QueryEnabled(query string) bool {
@@ -67,14 +125,14 @@ func (c *Chain) QueryEnabled(query string) bool {
 
 type Config struct {
 	LogConfig     LogConfig `toml:"log"`
-	ListenAddress string    `toml:"listen-address" default:":9550"`
-	Timeout       int       `toml:"timeout" default:"10"`
+	ListenAddress string    `default:":9550" toml:"listen-address"`
+	Timeout       int       `default:"10"    toml:"timeout"`
 	Chains        []Chain   `toml:"chains"`
 }
 
 type LogConfig struct {
-	LogLevel   string `toml:"level" default:"info"`
-	JSONOutput bool   `toml:"json" default:"false"`
+	LogLevel   string `default:"info"  toml:"level"`
+	JSONOutput bool   `default:"false" toml:"json"`
 }
 
 func (c *Config) Validate() error {
@@ -91,12 +149,20 @@ func (c *Config) Validate() error {
 	return nil
 }
 
+func (c *Config) DisplayWarnings(logger *zerolog.Logger) {
+	for _, chain := range c.Chains {
+		chain.DisplayWarnings(logger)
+	}
+}
+
 func (c *Config) GetCoingeckoCurrencies() []string {
 	currencies := []string{}
 
 	for _, chain := range c.Chains {
-		if chain.CoingeckoCurrency != "" {
-			currencies = append(currencies, chain.CoingeckoCurrency)
+		for _, denom := range chain.Denoms {
+			if denom.CoingeckoCurrency != "" {
+				currencies = append(currencies, denom.CoingeckoCurrency)
+			}
 		}
 	}
 
@@ -116,6 +182,9 @@ func GetConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
-	defaults.SetDefaults(&configStruct)
+	if err = defaults.Set(&configStruct); err != nil {
+		return nil, err
+	}
+
 	return &configStruct, nil
 }

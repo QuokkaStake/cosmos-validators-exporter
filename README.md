@@ -2,7 +2,6 @@
 
 ![Latest release](https://img.shields.io/github/v/release/QuokkaStake/cosmos-validators-exporter)
 [![Actions Status](https://github.com/QuokkaStake/cosmos-validators-exporter/workflows/test/badge.svg)](https://github.com/QuokkaStake/cosmos-validators-exporter/actions)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter?ref=badge_shield)
 
 cosmos-validators-exporter is a Prometheus scraper that fetches validators stats from an LCD server exposed by a fullnode.
 
@@ -108,7 +107,7 @@ All the metrics provided by cosmos-validators-exporter have the `cosmos_validato
 When developing, we aimed to only return metrics that are required, and avoid creating metrics that can be computed on Grafana/Prometheus side. This decreases the amount of time series that this exporter will return, but will make writing queries more complex. Here are some examples of queries that we consider useful:
 
 - `count(cosmos_validators_exporter_info)` - number of validators monitored
-- `sum ((cosmos_validators_exporter_total_delegations) / on (chain) cosmos_validators_exporter_denom_coefficient * on (chain) cosmos_validators_exporter_price)` - total delegated tokens in $
+- `sum((cosmos_validators_exporter_total_delegations) * on (chain) group_left(denom) cosmos_validators_exporter_base_denom / on (chain, denom) cosmos_validators_exporter_denom_coefficient * on (chain, denom) cosmos_validators_exporter_price)` - total delegated tokens in $
 - `sum(cosmos_validators_exporter_delegations_count)` - total delegators count
 - `cosmos_validators_exporter_total_delegations / on (chain) cosmos_validators_exporter_tokens_bonded_total` - voting power percent of your validator
 - `1 - (cosmos_validators_exporter_missed_blocks / on (chain) cosmos_validators_exporter_missed_blocks_window)` - validator's uptime in %
@@ -120,7 +119,3 @@ All configuration is done via the .toml config file, which is passed to the appl
 ## How can I contribute?
 
 Bug reports and feature requests are always welcome! If you want to contribute, feel free to open issues or PRs.
-
-
-## License
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FQuokkaStake%2Fcosmos-validators-exporter?ref=badge_large)

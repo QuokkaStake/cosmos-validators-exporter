@@ -35,19 +35,23 @@ func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo)
 	currenciesList := q.Config.GetCoingeckoCurrencies()
 	currenciesRates, query := q.Coingecko.FetchPrices(currenciesList)
 
-	currenciesRatesToChains := map[string]float64{}
+	currenciesRatesToChains := map[string]map[string]float64{}
 	for _, chain := range q.Config.Chains {
-		// using coingecko response
-		if rate, ok := currenciesRates[chain.CoingeckoCurrency]; ok {
-			currenciesRatesToChains[chain.Name] = rate
-			continue
-		}
+		currenciesRatesToChains[chain.Name] = make(map[string]float64)
 
-		// using dexscreener response
-		if chain.DexScreenerChainID != "" && chain.DexScreenerPair != "" {
-			rate, err := q.DexScreener.GetCurrency(chain.DexScreenerChainID, chain.DexScreenerPair)
-			if err == nil {
-				currenciesRatesToChains[chain.Name] = rate
+		for _, denom := range chain.Denoms {
+			// using coingecko response
+			if rate, ok := currenciesRates[denom.CoingeckoCurrency]; ok {
+				currenciesRatesToChains[chain.Name][denom.Denom] = rate
+				continue
+			}
+
+			// using dexscreener response
+			if denom.DexScreenerChainID != "" && denom.DexScreenerPair != "" {
+				rate, err := q.DexScreener.GetCurrency(denom.DexScreenerChainID, denom.DexScreenerPair)
+				if err == nil {
+					currenciesRatesToChains[chain.Name][denom.Denom] = rate
+				}
 			}
 		}
 	}
@@ -57,13 +61,16 @@ func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo)
 			Name: "cosmos_validators_exporter_price",
 			Help: "Price of 1 token in display denom in USD",
 		},
-		[]string{"chain"},
+		[]string{"chain", "denom"},
 	)
 
-	for chain, price := range currenciesRatesToChains {
-		tokenPriceGauge.With(prometheus.Labels{
-			"chain": chain,
-		}).Set(price)
+	for chainName, chainPrices := range currenciesRatesToChains {
+		for denom, price := range chainPrices {
+			tokenPriceGauge.With(prometheus.Labels{
+				"chain": chainName,
+				"denom": denom,
+			}).Set(price)
+		}
 	}
 
 	return []prometheus.Collector{tokenPriceGauge}, []*types.QueryInfo{&query}
