@@ -52,6 +52,7 @@ func NewApp(configPath string) *App {
 		queriersPkg.NewValidatorQuerier(logger, appConfig),
 		queriersPkg.NewDenomCoefficientsQuerier(logger, appConfig),
 		queriersPkg.NewSigningInfoQuerier(logger, appConfig),
+		queriersPkg.NewUptimeQuerier(),
 	}
 
 	return &App{
