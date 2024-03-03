@@ -172,10 +172,7 @@ func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo,
 		host = rpc.Chain.ProviderChainLCD
 	}
 
-	url := fmt.Sprintf(
-		"%s/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000",
-		host,
-	)
+	url := host + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000"
 
 	var response *types.ValidatorsResponse
 	info, err := rpc.Client.Get(url, &response)
@@ -289,7 +286,7 @@ func (rpc *RPC) GetSlashingParams() (*types.SlashingParamsResponse, *types.Query
 		return nil, nil, nil
 	}
 
-	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/params", rpc.Chain.LCDEndpoint)
+	url := rpc.Chain.LCDEndpoint + "/cosmos/slashing/v1beta1/params"
 
 	var response *types.SlashingParamsResponse
 	info, err := rpc.Client.Get(url, &response)
@@ -310,7 +307,7 @@ func (rpc *RPC) GetStakingParams() (*types.StakingParamsResponse, *types.QueryIn
 		host = rpc.Chain.ProviderChainLCD
 	}
 
-	url := fmt.Sprintf("%s/cosmos/staking/v1beta1/params", host)
+	url := host + "/cosmos/staking/v1beta1/params"
 
 	var response *types.StakingParamsResponse
 	info, err := rpc.Client.Get(url, &response)
