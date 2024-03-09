@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -17,7 +18,7 @@ type Validator struct {
 
 func (v *Validator) Validate() error {
 	if v.Address == "" {
-		return fmt.Errorf("validator address is expected!")
+		return errors.New("validator address is expected!")
 	}
 
 	return nil
@@ -34,11 +35,11 @@ type DenomInfo struct {
 
 func (d *DenomInfo) Validate() error {
 	if d.Denom == "" {
-		return fmt.Errorf("empty denom name")
+		return errors.New("empty denom name")
 	}
 
 	if d.Denom == "" {
-		return fmt.Errorf("empty display denom name")
+		return errors.New("empty display denom name")
 	}
 
 	return nil
@@ -85,15 +86,15 @@ func (c *Chain) IsConsumer() bool {
 
 func (c *Chain) Validate() error {
 	if c.Name == "" {
-		return fmt.Errorf("empty chain name")
+		return errors.New("empty chain name")
 	}
 
 	if c.LCDEndpoint == "" {
-		return fmt.Errorf("no LCD endpoint provided")
+		return errors.New("no LCD endpoint provided")
 	}
 
 	if len(c.Validators) == 0 {
-		return fmt.Errorf("no validators provided")
+		return errors.New("no validators provided")
 	}
 
 	for index, validator := range c.Validators {
@@ -145,7 +146,7 @@ type LogConfig struct {
 
 func (c *Config) Validate() error {
 	if len(c.Chains) == 0 {
-		return fmt.Errorf("no chains provided")
+		return errors.New("no chains provided")
 	}
 
 	for index, chain := range c.Chains {

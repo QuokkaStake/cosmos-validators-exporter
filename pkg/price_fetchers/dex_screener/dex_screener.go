@@ -2,6 +2,7 @@ package dex_screener
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -66,7 +67,7 @@ func (d *DexScreener) GetCurrency(chainID string, pair string) (float64, error) 
 			Err(err).
 			Int("status", res.StatusCode).
 			Msg("Got no pairs in response")
-		return 0, fmt.Errorf("malformed response")
+		return 0, errors.New("malformed response")
 	}
 
 	return utils.StrToFloat64(response.Pairs[0].PriceUSD), err
