@@ -1,11 +1,14 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -14,16 +17,18 @@ import (
 type DelegationsQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	Tracer trace.Tracer
 }
 
-func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config) *DelegationsQuerier {
+func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config, tracer trace.Tracer) *DelegationsQuerier {
 	return &DelegationsQuerier{
 		Logger: logger.With().Str("component", "delegations_querier").Logger(),
 		Config: config,
+		Tracer: tracer,
 	}
 }
 
-func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *DelegationsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	delegationsCountGauge := prometheus.NewGaugeVec(
@@ -38,13 +43,13 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Quer
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger)
+		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
 			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
 				defer wg.Done()
-				delegatorsResponse, query, err := rpc.GetDelegationsCount(validator)
+				delegatorsResponse, query, err := rpc.GetDelegationsCount(validator, ctx)
 
 				mutex.Lock()
 				defer mutex.Unlock()
@@ -77,4 +82,8 @@ func (q *DelegationsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Quer
 	wg.Wait()
 
 	return []prometheus.Collector{delegationsCountGauge}, queryInfos
+}
+
+func (q *DelegationsQuerier) Name() string {
+	return "delegations-querier"
 }

@@ -1,10 +1,13 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
 	"main/pkg/types"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -15,11 +18,13 @@ type PriceQuerier struct {
 	Config      *config.Config
 	Coingecko   *coingeckoPkg.Coingecko
 	DexScreener *dexScreenerPkg.DexScreener
+	Tracer      trace.Tracer
 }
 
 func NewPriceQuerier(
 	logger *zerolog.Logger,
 	config *config.Config,
+	tracer trace.Tracer,
 	coingecko *coingeckoPkg.Coingecko,
 	dexScreener *dexScreenerPkg.DexScreener,
 ) *PriceQuerier {
@@ -28,10 +33,11 @@ func NewPriceQuerier(
 		Config:      config,
 		Coingecko:   coingecko,
 		DexScreener: dexScreener,
+		Tracer:      tracer,
 	}
 }
 
-func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *PriceQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	currenciesList := q.Config.GetCoingeckoCurrencies()
 
 	var currenciesRates map[string]float64
@@ -40,7 +46,7 @@ func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo)
 	var queries []*types.QueryInfo
 
 	if len(currenciesList) > 0 {
-		currenciesRates, currenciesQuery = q.Coingecko.FetchPrices(currenciesList)
+		currenciesRates, currenciesQuery = q.Coingecko.FetchPrices(currenciesList, ctx)
 	}
 
 	if currenciesQuery != nil {
@@ -86,4 +92,8 @@ func (q *PriceQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo)
 	}
 
 	return []prometheus.Collector{tokenPriceGauge}, queries
+}
+
+func (q *PriceQuerier) Name() string {
+	return "price-querier"
 }

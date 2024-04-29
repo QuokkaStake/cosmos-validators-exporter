@@ -1,11 +1,14 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -14,16 +17,22 @@ import (
 type WalletQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	Tracer trace.Tracer
 }
 
-func NewWalletQuerier(logger *zerolog.Logger, config *config.Config) *WalletQuerier {
+func NewWalletQuerier(
+	logger *zerolog.Logger,
+	config *config.Config,
+	tracer trace.Tracer,
+) *WalletQuerier {
 	return &WalletQuerier{
 		Logger: logger.With().Str("component", "wallet_querier").Logger(),
 		Config: config,
+		Tracer: tracer,
 	}
 }
 
-func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *WalletQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
@@ -38,7 +47,7 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo
 	)
 
 	for _, chain := range q.Config.Chains {
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger)
+		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
@@ -59,7 +68,7 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo
 					return
 				}
 
-				balances, query, err := rpc.GetWalletBalance(wallet)
+				balances, query, err := rpc.GetWalletBalance(wallet, ctx)
 
 				mutex.Lock()
 				defer mutex.Unlock()
@@ -95,4 +104,8 @@ func (q *WalletQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo
 	wg.Wait()
 
 	return []prometheus.Collector{walletBalanceTokens}, queryInfos
+}
+
+func (q *WalletQuerier) Name() string {
+	return "wallet-querier"
 }

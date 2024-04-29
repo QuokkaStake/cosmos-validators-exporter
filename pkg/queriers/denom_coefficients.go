@@ -1,6 +1,7 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	"main/pkg/types"
 
@@ -23,7 +24,7 @@ func NewDenomCoefficientsQuerier(
 	}
 }
 
-func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *DenomCoefficientsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	denomCoefficientGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_denom_coefficient",
@@ -58,4 +59,8 @@ func (q *DenomCoefficientsQuerier) GetMetrics() ([]prometheus.Collector, []*type
 	}
 
 	return []prometheus.Collector{denomCoefficientGauge, baseDenomGauge}, []*types.QueryInfo{}
+}
+
+func (q *DenomCoefficientsQuerier) Name() string {
+	return "denom-coefficients-querier"
 }

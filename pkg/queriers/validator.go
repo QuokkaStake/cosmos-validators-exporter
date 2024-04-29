@@ -1,12 +1,15 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
 	"sync"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -15,16 +18,22 @@ import (
 type ValidatorQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	Tracer trace.Tracer
 }
 
-func NewValidatorQuerier(logger *zerolog.Logger, config *config.Config) *ValidatorQuerier {
+func NewValidatorQuerier(
+	logger *zerolog.Logger,
+	config *config.Config,
+	tracer trace.Tracer,
+) *ValidatorQuerier {
 	return &ValidatorQuerier{
 		Logger: logger.With().Str("component", "validator_querier").Logger(),
 		Config: config,
+		Tracer: tracer,
 	}
 }
 
-func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *ValidatorQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
@@ -135,7 +144,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 	)
 
 	for _, chain := range q.Config.Chains {
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger)
+		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
@@ -160,7 +169,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 
 				go func() {
 					defer internalWg.Done()
-					validatorInfo, validatorQueryInfo, validatorQueryError = rpc.GetValidator(validator)
+					validatorInfo, validatorQueryInfo, validatorQueryError = rpc.GetValidator(validator, ctx)
 					if validatorQueryError != nil {
 						q.Logger.Error().
 							Err(validatorQueryError).
@@ -174,7 +183,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 				go func() {
 					defer internalWg.Done()
 
-					stakingParams, stakingParamsQuery, stakingParamsQueryError = rpc.GetStakingParams()
+					stakingParams, stakingParamsQuery, stakingParamsQueryError = rpc.GetStakingParams(ctx)
 
 					if stakingParamsQueryError != nil {
 						q.Logger.Error().
@@ -187,7 +196,7 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 
 				internalWg.Add(1)
 				go func() {
-					allValidators, allValidatorsQueryInfo, allValidatorsQueryError = rpc.GetAllValidators()
+					allValidators, allValidatorsQueryInfo, allValidatorsQueryError = rpc.GetAllValidators(ctx)
 
 					if allValidatorsQueryError != nil {
 						q.Logger.Error().
@@ -334,4 +343,8 @@ func (q *ValidatorQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryI
 		activeSetTokensGauge,
 		totalBondedTokensGauge,
 	}, queryInfos
+}
+
+func (q *ValidatorQuerier) Name() string {
+	return "validator-querier"
 }

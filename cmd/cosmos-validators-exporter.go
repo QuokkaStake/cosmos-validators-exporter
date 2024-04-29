@@ -12,7 +12,7 @@ var (
 )
 
 func Execute(configPath string) {
-	app := pkg.NewApp(configPath)
+	app := pkg.NewApp(configPath, version)
 	app.Start()
 }
 

@@ -3,10 +3,14 @@ package pkg
 import (
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
+	"main/pkg/tracing"
 	"main/pkg/types"
 	"net/http"
 	"sync"
 	"time"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
 
 	"main/pkg/config"
 	loggerPkg "main/pkg/logger"
@@ -16,15 +20,17 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type App struct {
+	Tracer   trace.Tracer
 	Config   *config.Config
 	Logger   *zerolog.Logger
 	Queriers []types.Querier
 }
 
-func NewApp(configPath string) *App {
+func NewApp(configPath string, version string) *App {
 	appConfig, err := config.GetConfig(configPath)
 	if err != nil {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
@@ -37,21 +43,26 @@ func NewApp(configPath string) *App {
 	logger := loggerPkg.GetLogger(appConfig.LogConfig)
 	appConfig.DisplayWarnings(logger)
 
-	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger)
+	tracer, err := tracing.InitTracer(appConfig.TracingConfig, version)
+	if err != nil {
+		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Error setting up tracing")
+	}
+
+	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
 	queriers := []types.Querier{
-		queriersPkg.NewCommissionQuerier(logger, appConfig),
-		queriersPkg.NewDelegationsQuerier(logger, appConfig),
-		queriersPkg.NewUnbondsQuerier(logger, appConfig),
-		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig),
-		queriersPkg.NewPriceQuerier(logger, appConfig, coingecko, dexScreener),
-		queriersPkg.NewRewardsQuerier(logger, appConfig),
-		queriersPkg.NewWalletQuerier(logger, appConfig),
-		queriersPkg.NewSlashingParamsQuerier(logger, appConfig),
-		queriersPkg.NewValidatorQuerier(logger, appConfig),
+		queriersPkg.NewCommissionQuerier(logger, appConfig, tracer),
+		queriersPkg.NewDelegationsQuerier(logger, appConfig, tracer),
+		queriersPkg.NewUnbondsQuerier(logger, appConfig, tracer),
+		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig, tracer),
+		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
+		queriersPkg.NewRewardsQuerier(logger, appConfig, tracer),
+		queriersPkg.NewWalletQuerier(logger, appConfig, tracer),
+		queriersPkg.NewSlashingParamsQuerier(logger, appConfig, tracer),
+		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
 		queriersPkg.NewDenomCoefficientsQuerier(logger, appConfig),
-		queriersPkg.NewSigningInfoQuerier(logger, appConfig),
+		queriersPkg.NewSigningInfoQuerier(logger, appConfig, tracer),
 		queriersPkg.NewUptimeQuerier(),
 	}
 
@@ -59,13 +70,13 @@ func NewApp(configPath string) *App {
 		Logger:   logger,
 		Config:   appConfig,
 		Queriers: queriers,
+		Tracer:   tracer,
 	}
 }
 
 func (a *App) Start() {
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, r *http.Request) {
-		a.Handler(w, r)
-	})
+	otelHandler := otelhttp.NewHandler(http.HandlerFunc(a.Handler), "prometheus")
+	http.Handle("/metrics", otelHandler)
 
 	a.Logger.Info().Str("addr", a.Config.ListenAddress).Msg("Listening")
 	err := http.ListenAndServe(a.Config.ListenAddress, nil)
@@ -75,10 +86,18 @@ func (a *App) Start() {
 }
 
 func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
+	requestID := uuid.New().String()
+
+	span := trace.SpanFromContext(r.Context())
+	span.SetAttributes(attribute.String("request-id", requestID))
+	rootSpanCtx := r.Context()
+
+	defer span.End()
+
 	requestStart := time.Now()
 
 	sublogger := a.Logger.With().
-		Str("request-id", uuid.New().String()).
+		Str("request-id", requestID).
 		Logger()
 
 	registry := prometheus.NewRegistry()
@@ -92,8 +111,15 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		wg.Add(1)
 
 		go func(querier types.Querier) {
+			childQuerierCtx, querierSpan := a.Tracer.Start(
+				rootSpanCtx,
+				"Querier "+querier.Name(),
+				trace.WithAttributes(attribute.String("querier", querier.Name())),
+			)
+			defer querierSpan.End()
+
 			defer wg.Done()
-			collectors, querierQueryInfos := querier.GetMetrics()
+			collectors, querierQueryInfos := querier.GetMetrics(childQuerierCtx)
 
 			mutex.Lock()
 			defer mutex.Unlock()
@@ -109,7 +135,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 	wg.Wait()
 
 	queriesQuerier := queriersPkg.NewQueriesQuerier(a.Config, queryInfos)
-	queriesMetrics, _ := queriesQuerier.GetMetrics()
+	queriesMetrics, _ := queriesQuerier.GetMetrics(rootSpanCtx)
 
 	for _, metric := range queriesMetrics {
 		registry.MustRegister(metric)

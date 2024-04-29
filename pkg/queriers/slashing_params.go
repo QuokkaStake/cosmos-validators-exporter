@@ -1,11 +1,14 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
+
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -14,16 +17,22 @@ import (
 type SlashingParamsQuerier struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	Tracer trace.Tracer
 }
 
-func NewSlashingParamsQuerier(logger *zerolog.Logger, config *config.Config) *SlashingParamsQuerier {
+func NewSlashingParamsQuerier(
+	logger *zerolog.Logger,
+	config *config.Config,
+	tracer trace.Tracer,
+) *SlashingParamsQuerier {
 	return &SlashingParamsQuerier{
 		Logger: logger.With().Str("component", "slashing_params_querier").Logger(),
 		Config: config,
+		Tracer: tracer,
 	}
 }
 
-func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *SlashingParamsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	var wg sync.WaitGroup
@@ -38,14 +47,14 @@ func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Q
 	)
 
 	for _, chain := range q.Config.Chains {
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger)
+		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		wg.Add(1)
 
 		go func(chain config.Chain, rpc *tendermint.RPC) {
 			defer wg.Done()
 
-			params, query, err := rpc.GetSlashingParams()
+			params, query, err := rpc.GetSlashingParams(ctx)
 
 			mutex.Lock()
 			defer mutex.Unlock()
@@ -82,4 +91,8 @@ func (q *SlashingParamsQuerier) GetMetrics() ([]prometheus.Collector, []*types.Q
 	wg.Wait()
 
 	return []prometheus.Collector{blocksWindowGauge}, queryInfos
+}
+
+func (q *SlashingParamsQuerier) Name() string {
+	return "slashing-params-querier"
 }

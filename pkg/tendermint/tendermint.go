@@ -1,11 +1,15 @@
 package tendermint
 
 import (
+	"context"
 	"fmt"
 	"main/pkg/config"
 	"main/pkg/http"
 	"main/pkg/types"
 	"main/pkg/utils"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/rs/zerolog"
 )
@@ -15,24 +19,36 @@ type RPC struct {
 	Client  *http.Client
 	Timeout int
 	Logger  zerolog.Logger
+	Tracer  trace.Tracer
 }
 
-func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger) *RPC {
+func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace.Tracer) *RPC {
 	return &RPC{
 		Chain:   chain,
-		Client:  http.NewClient(&logger, chain.Name),
+		Client:  http.NewClient(&logger, chain.Name, tracer),
 		Timeout: timeout,
 		Logger:  logger.With().Str("component", "rpc").Logger(),
+		Tracer:  tracer,
 	}
 }
 
-func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetValidator(
+	address string,
+	ctx context.Context,
+) (*types.ValidatorResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("validator") {
 		return nil, nil, nil
 	}
 
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator",
+		trace.WithAttributes(attribute.String("address", address)),
+	)
+	defer span.End()
+
 	if rpc.Chain.IsConsumer() {
-		return rpc.GetProviderValidator(address)
+		return rpc.GetProviderValidator(address, childQuerierCtx)
 	}
 
 	url := fmt.Sprintf(
@@ -42,7 +58,7 @@ func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.Q
 	)
 
 	var response *types.ValidatorResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, ctx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -55,10 +71,20 @@ func (rpc *RPC) GetValidator(address string) (*types.ValidatorResponse, *types.Q
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetProviderValidator(address string) (*types.ValidatorResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetProviderValidator(
+	address string,
+	ctx context.Context,
+) (*types.ValidatorResponse, *types.QueryInfo, error) {
 	if rpc.Chain.ProviderChainBechValidatorPrefix == "" {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching provider validator",
+		trace.WithAttributes(attribute.String("address", address)),
+	)
+	defer span.End()
 
 	providerAddress, err := utils.ChangeBech32Prefix(address, rpc.Chain.ProviderChainBechValidatorPrefix)
 	if err != nil {
@@ -72,7 +98,7 @@ func (rpc *RPC) GetProviderValidator(address string) (*types.ValidatorResponse, 
 	)
 
 	var response *types.ValidatorResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -85,10 +111,20 @@ func (rpc *RPC) GetProviderValidator(address string) (*types.ValidatorResponse, 
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetDelegationsCount(address string) (*types.PaginationResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetDelegationsCount(
+	address string,
+	ctx context.Context,
+) (*types.PaginationResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("delegations") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator delegations",
+		trace.WithAttributes(attribute.String("address", address)),
+	)
+	defer span.End()
 
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations?pagination.count_total=true&pagination.limit=1",
@@ -97,7 +133,7 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types.PaginationResponse, 
 	)
 
 	var response *types.PaginationResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -110,10 +146,20 @@ func (rpc *RPC) GetDelegationsCount(address string) (*types.PaginationResponse, 
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetUnbondsCount(
+	address string,
+	ctx context.Context,
+) (*types.PaginationResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("unbonds") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator unbonds",
+		trace.WithAttributes(attribute.String("address", address)),
+	)
+	defer span.End()
 
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations?pagination.count_total=true&pagination.limit=1",
@@ -122,7 +168,7 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *typ
 	)
 
 	var response *types.PaginationResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -135,10 +181,23 @@ func (rpc *RPC) GetUnbondsCount(address string) (*types.PaginationResponse, *typ
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Amount, *types.QueryInfo, error) {
+func (rpc *RPC) GetSingleDelegation(
+	validator, wallet string,
+	ctx context.Context,
+) (*types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("self-delegation") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching single delegation",
+		trace.WithAttributes(
+			attribute.String("validator", validator),
+			attribute.String("wallet", wallet),
+		),
+	)
+	defer span.End()
 
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
@@ -148,7 +207,7 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Amount, *t
 	)
 
 	var response types.SingleDelegationResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return &types.Amount{}, &info, err
 	}
@@ -162,10 +221,18 @@ func (rpc *RPC) GetSingleDelegation(validator, wallet string) (*types.Amount, *t
 	return &amount, &info, nil
 }
 
-func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetAllValidators(
+	ctx context.Context,
+) (*types.ValidatorsResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("validators") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validators list",
+	)
+	defer span.End()
 
 	host := rpc.Chain.LCDEndpoint
 	if rpc.Chain.IsConsumer() {
@@ -175,7 +242,7 @@ func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo,
 	url := host + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000"
 
 	var response *types.ValidatorsResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -188,10 +255,20 @@ func (rpc *RPC) GetAllValidators() (*types.ValidatorsResponse, *types.QueryInfo,
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetValidatorCommission(address string) ([]types.Amount, *types.QueryInfo, error) {
+func (rpc *RPC) GetValidatorCommission(
+	address string,
+	ctx context.Context,
+) ([]types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("commission") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator commission",
+		trace.WithAttributes(attribute.String("address", address)),
+	)
+	defer span.End()
 
 	url := fmt.Sprintf(
 		"%s/cosmos/distribution/v1beta1/validators/%s/commission",
@@ -200,7 +277,7 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types.Amount, *types.Q
 	)
 
 	var response *types.CommissionResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
@@ -210,10 +287,23 @@ func (rpc *RPC) GetValidatorCommission(address string) ([]types.Amount, *types.Q
 	}), &info, nil
 }
 
-func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Amount, *types.QueryInfo, error) {
+func (rpc *RPC) GetDelegatorRewards(
+	validator, wallet string,
+	ctx context.Context,
+) ([]types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("rewards") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching delegator rewards",
+		trace.WithAttributes(
+			attribute.String("validator", validator),
+			attribute.String("wallet", wallet),
+		),
+	)
+	defer span.End()
 
 	url := fmt.Sprintf(
 		"%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s",
@@ -223,7 +313,7 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Amount, *
 	)
 
 	var response *types.RewardsResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
@@ -238,10 +328,20 @@ func (rpc *RPC) GetDelegatorRewards(validator, wallet string) ([]types.Amount, *
 	}), &info, nil
 }
 
-func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Amount, *types.QueryInfo, error) {
+func (rpc *RPC) GetWalletBalance(
+	wallet string,
+	ctx context.Context,
+) ([]types.Amount, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("balance") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching wallet balance",
+		trace.WithAttributes(attribute.String("wallet", wallet)),
+	)
+	defer span.End()
 
 	url := fmt.Sprintf(
 		"%s/cosmos/bank/v1beta1/balances/%s",
@@ -250,7 +350,7 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Amount, *types.QueryInf
 	)
 
 	var response types.BalancesResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
@@ -260,15 +360,25 @@ func (rpc *RPC) GetWalletBalance(wallet string) ([]types.Amount, *types.QueryInf
 	}), &info, nil
 }
 
-func (rpc *RPC) GetSigningInfo(valcons string) (*types.SigningInfoResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetSigningInfo(
+	valcons string,
+	ctx context.Context,
+) (*types.SigningInfoResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("signing-info") {
 		return nil, nil, nil
 	}
 
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator signing info",
+		trace.WithAttributes(attribute.String("valcons", valcons)),
+	)
+	defer span.End()
+
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
 	var response *types.SigningInfoResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -281,15 +391,23 @@ func (rpc *RPC) GetSigningInfo(valcons string) (*types.SigningInfoResponse, *typ
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetSlashingParams() (*types.SlashingParamsResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetSlashingParams(
+	ctx context.Context,
+) (*types.SlashingParamsResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("slashing-params") {
 		return nil, nil, nil
 	}
 
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching slashing params",
+	)
+	defer span.End()
+
 	url := rpc.Chain.LCDEndpoint + "/cosmos/slashing/v1beta1/params"
 
 	var response *types.SlashingParamsResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -297,10 +415,18 @@ func (rpc *RPC) GetSlashingParams() (*types.SlashingParamsResponse, *types.Query
 	return response, &info, nil
 }
 
-func (rpc *RPC) GetStakingParams() (*types.StakingParamsResponse, *types.QueryInfo, error) {
+func (rpc *RPC) GetStakingParams(
+	ctx context.Context,
+) (*types.StakingParamsResponse, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("staking-params") {
 		return nil, nil, nil
 	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching staking params",
+	)
+	defer span.End()
 
 	host := rpc.Chain.LCDEndpoint
 	if rpc.Chain.IsConsumer() {
@@ -310,7 +436,7 @@ func (rpc *RPC) GetStakingParams() (*types.StakingParamsResponse, *types.QueryIn
 	url := host + "/cosmos/staking/v1beta1/params"
 
 	var response *types.StakingParamsResponse
-	info, err := rpc.Client.Get(url, &response)
+	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}

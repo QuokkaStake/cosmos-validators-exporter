@@ -52,3 +52,5 @@ linters:
     - maintidx
     - deadcode
     - depguard
+    - structcheck
+    - varcheck
