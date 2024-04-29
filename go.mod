@@ -1,6 +1,8 @@
 module main
 
-go 1.21
+go 1.21.4
+
+toolchain go1.22.1
 
 require (
 	github.com/BurntSushi/toml v1.1.0
