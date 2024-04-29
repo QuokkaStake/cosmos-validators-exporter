@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,5 +20,6 @@ type Amount struct {
 }
 
 type Querier interface {
-	GetMetrics() ([]prometheus.Collector, []*QueryInfo)
+	GetMetrics(ctx context.Context) ([]prometheus.Collector, []*QueryInfo)
+	Name() string
 }

@@ -1,6 +1,7 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/config"
 	"main/pkg/types"
 
@@ -19,7 +20,7 @@ func NewQueriesQuerier(appConfig *config.Config, queryInfos []*types.QueryInfo) 
 	}
 }
 
-func (q *QueriesQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *QueriesQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	queriesCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_queries_total",
@@ -94,4 +95,8 @@ func (q *QueriesQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInf
 		queriesFailedGauge,
 		timingsGauge,
 	}, []*types.QueryInfo{}
+}
+
+func (q *QueriesQuerier) Name() string {
+	return "queries-querier"
 }

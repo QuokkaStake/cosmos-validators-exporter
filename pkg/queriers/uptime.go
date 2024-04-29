@@ -1,6 +1,7 @@
 package queriers
 
 import (
+	"context"
 	"main/pkg/types"
 	"time"
 
@@ -17,7 +18,7 @@ func NewUptimeQuerier() *UptimeQuerier {
 	}
 }
 
-func (u *UptimeQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo) {
+func (u *UptimeQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
 	uptimeMetricsGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_start_time",
@@ -28,4 +29,8 @@ func (u *UptimeQuerier) GetMetrics() ([]prometheus.Collector, []*types.QueryInfo
 
 	uptimeMetricsGauge.With(prometheus.Labels{}).Set(float64(u.StartTime.Unix()))
 	return []prometheus.Collector{uptimeMetricsGauge}, []*types.QueryInfo{}
+}
+
+func (q *UptimeQuerier) Name() string {
+	return "uptime-querier"
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/creasty/defaults"
+	"github.com/guregu/null/v5"
 )
 
 type Validator struct {
@@ -133,10 +134,11 @@ func (c *Chain) QueryEnabled(query string) bool {
 }
 
 type Config struct {
-	LogConfig     LogConfig `toml:"log"`
-	ListenAddress string    `default:":9550" toml:"listen-address"`
-	Timeout       int       `default:"10"    toml:"timeout"`
-	Chains        []Chain   `toml:"chains"`
+	LogConfig     LogConfig     `toml:"log"`
+	TracingConfig TracingConfig `toml:"tracing"`
+	ListenAddress string        `default:":9550" toml:"listen-address"`
+	Timeout       int           `default:"10"    toml:"timeout"`
+	Chains        []Chain       `toml:"chains"`
 }
 
 type LogConfig struct {
@@ -144,7 +146,27 @@ type LogConfig struct {
 	JSONOutput bool   `default:"false" toml:"json"`
 }
 
+type TracingConfig struct {
+	Enabled                   null.Bool `default:"false"                     toml:"enabled"`
+	OpenTelemetryHTTPHost     string    `toml:"open-telemetry-http-host"`
+	OpenTelemetryHTTPInsecure null.Bool `default:"true"                      toml:"open-telemetry-http-insecure"`
+	OpenTelemetryHTTPUser     string    `toml:"open-telemetry-http-user"`
+	OpenTelemetryHTTPPassword string    `toml:"open-telemetry-http-password"`
+}
+
+func (c *TracingConfig) Validate() error {
+	if c.Enabled.Bool && c.OpenTelemetryHTTPHost == "" {
+		return errors.New("tracing is enabled, but open-telemetry-http-host is not provided")
+	}
+
+	return nil
+}
+
 func (c *Config) Validate() error {
+	if err := c.TracingConfig.Validate(); err != nil {
+		return fmt.Errorf("error in tracing config: %s", err)
+	}
+
 	if len(c.Chains) == 0 {
 		return errors.New("no chains provided")
 	}

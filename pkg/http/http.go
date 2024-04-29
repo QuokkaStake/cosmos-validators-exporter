@@ -1,10 +1,14 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"main/pkg/types"
 	"net/http"
 	"time"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/rs/zerolog"
 )
@@ -12,20 +16,32 @@ import (
 type Client struct {
 	logger zerolog.Logger
 	chain  string
+	tracer trace.Tracer
 }
 
-func NewClient(logger *zerolog.Logger, chain string) *Client {
+func NewClient(logger *zerolog.Logger, chain string, tracer trace.Tracer) *Client {
 	return &Client{
 		logger: logger.With().
 			Str("component", "http").
 			Str("chain", chain).
 			Logger(),
-		chain: chain,
+		chain:  chain,
+		tracer: tracer,
 	}
 }
 
-func (c *Client) Get(url string, target interface{}) (types.QueryInfo, error) {
-	client := &http.Client{Timeout: 10 * 1000000000}
+func (c *Client) Get(
+	url string,
+	target interface{},
+	ctx context.Context,
+) (types.QueryInfo, error) {
+	childCtx, span := c.tracer.Start(ctx, "HTTP request")
+	defer span.End()
+
+	client := &http.Client{
+		Timeout:   10 * 1000000000,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
 	start := time.Now()
 
 	queryInfo := types.QueryInfo{
@@ -34,8 +50,10 @@ func (c *Client) Get(url string, target interface{}) (types.QueryInfo, error) {
 		URL:     url,
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(childCtx, http.MethodGet, url, nil)
+
 	if err != nil {
+		span.RecordError(err)
 		return queryInfo, err
 	}
 
