@@ -2,6 +2,7 @@ package generators
 
 import (
 	"main/pkg/config"
+	"main/pkg/constants"
 	statePkg "main/pkg/state"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,7 +19,7 @@ func NewDenomCoefficientGenerator(chains []config.Chain) *DenomCoefficientGenera
 func (g *DenomCoefficientGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	denomCoefficientGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_denom_coefficient",
+			Name: constants.MetricsPrefix + "denom_coefficient",
 			Help: "Denom coefficient info",
 		},
 		[]string{"chain", "denom", "display_denom"},
@@ -26,7 +27,7 @@ func (g *DenomCoefficientGenerator) Generate(state *statePkg.State) []prometheus
 
 	baseDenomGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_base_denom",
+			Name: constants.MetricsPrefix + "base_denom",
 			Help: "Base denom info",
 		},
 		[]string{"chain", "denom"},

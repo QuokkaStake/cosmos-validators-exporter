@@ -67,7 +67,6 @@ func NewApp(configPath string, version string) *App {
 		queriersPkg.NewWalletQuerier(logger, appConfig, tracer),
 		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
 		queriersPkg.NewSigningInfoQuerier(logger, appConfig, tracer),
-		queriersPkg.NewUptimeQuerier(),
 	}
 
 	fetchers := []fetchersPkg.Fetcher{
@@ -80,6 +79,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewSoftOptOutThresholdGenerator(),
 		generatorsPkg.NewIsConsumerGenerator(appConfig.Chains),
 		generatorsPkg.NewDenomCoefficientGenerator(appConfig.Chains),
+		generatorsPkg.NewUptimeGenerator(),
 	}
 
 	return &App{
