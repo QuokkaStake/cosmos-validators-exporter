@@ -74,10 +74,12 @@ func NewApp(configPath string, version string) *App {
 
 	fetchers := []fetchersPkg.Fetcher{
 		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
 		generatorsPkg.NewSlashingParamsGenerator(),
+		generatorsPkg.NewSoftOptOutThresholdGenerator(),
 	}
 
 	return &App{
