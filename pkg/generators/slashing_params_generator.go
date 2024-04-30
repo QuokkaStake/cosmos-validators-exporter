@@ -24,7 +24,7 @@ func (g *SlashingParamsGenerator) Generate(state *statePkg.State) []prometheus.C
 
 	blocksWindowGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_missed_blocks_window",
+			Name: constants.MetricsPrefix + "missed_blocks_window",
 			Help: "Missed blocks window in network",
 		},
 		[]string{"chain"},

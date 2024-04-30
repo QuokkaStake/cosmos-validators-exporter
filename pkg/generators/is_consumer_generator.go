@@ -2,6 +2,7 @@ package generators
 
 import (
 	"main/pkg/config"
+	"main/pkg/constants"
 	statePkg "main/pkg/state"
 	"main/pkg/utils"
 
@@ -19,7 +20,7 @@ func NewIsConsumerGenerator(chains []config.Chain) *IsConsumerGenerator {
 func (g *IsConsumerGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	isConsumerGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_is_consumer",
+			Name: constants.MetricsPrefix + "is_consumer",
 			Help: "Whether the chain is consumer (1 if yes, 0 if no)",
 		},
 		[]string{"chain"},

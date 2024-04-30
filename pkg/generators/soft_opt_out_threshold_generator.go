@@ -23,7 +23,7 @@ func (g *SoftOptOutThresholdGenerator) Generate(state *statePkg.State) []prometh
 
 	softOptOutThresholdGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_soft_opt_out_threshold",
+			Name: constants.MetricsPrefix + "soft_opt_out_threshold",
 			Help: "Consumer chain's soft opt-out threshold",
 		},
 		[]string{"chain"},
