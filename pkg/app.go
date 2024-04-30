@@ -1,8 +1,11 @@
 package pkg
 
 import (
+	fetchersPkg "main/pkg/fetchers"
+	generatorsPkg "main/pkg/generators"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
+	statePkg "main/pkg/state"
 	"main/pkg/tracing"
 	"main/pkg/types"
 	"net/http"
@@ -28,6 +31,9 @@ type App struct {
 	Config   *config.Config
 	Logger   *zerolog.Logger
 	Queriers []types.Querier
+
+	Fetchers   []fetchersPkg.Fetcher
+	Generators []generatorsPkg.Generator
 }
 
 func NewApp(configPath string, version string) *App {
@@ -59,7 +65,6 @@ func NewApp(configPath string, version string) *App {
 		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
 		queriersPkg.NewRewardsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewWalletQuerier(logger, appConfig, tracer),
-		queriersPkg.NewSlashingParamsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
 		queriersPkg.NewDenomCoefficientsQuerier(logger, appConfig),
 		queriersPkg.NewSigningInfoQuerier(logger, appConfig, tracer),
@@ -67,11 +72,21 @@ func NewApp(configPath string, version string) *App {
 		queriersPkg.NewUptimeQuerier(),
 	}
 
+	fetchers := []fetchersPkg.Fetcher{
+		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, tracer),
+	}
+
+	generators := []generatorsPkg.Generator{
+		generatorsPkg.NewSlashingParamsGenerator(),
+	}
+
 	return &App{
-		Logger:   logger,
-		Config:   appConfig,
-		Queriers: queriers,
-		Tracer:   tracer,
+		Logger:     logger,
+		Config:     appConfig,
+		Queriers:   queriers,
+		Tracer:     tracer,
+		Fetchers:   fetchers,
+		Generators: generators,
 	}
 }
 
@@ -133,10 +148,38 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		}(querierExt)
 	}
 
+	state := statePkg.NewState()
+
+	for _, fetchersExt := range a.Fetchers {
+		wg.Add(1)
+
+		go func(fetcher fetchersPkg.Fetcher) {
+			childQuerierCtx, fetcherSpan := a.Tracer.Start(
+				rootSpanCtx,
+				"Fetcher "+string(fetcher.Name()),
+				trace.WithAttributes(attribute.String("fetcher", string(fetcher.Name()))),
+			)
+			defer fetcherSpan.End()
+
+			defer wg.Done()
+			data, fetcherQueryInfos := fetcher.Fetch(childQuerierCtx)
+
+			mutex.Lock()
+			state.Set(fetcher.Name(), data)
+			queryInfos = append(queryInfos, fetcherQueryInfos...)
+			mutex.Unlock()
+		}(fetchersExt)
+	}
+
 	wg.Wait()
 
 	queriesQuerier := queriersPkg.NewQueriesQuerier(a.Config, queryInfos)
 	queriesMetrics, _ := queriesQuerier.GetMetrics(rootSpanCtx)
+
+	for _, generator := range a.Generators {
+		metrics := generator.Generate(state)
+		registry.MustRegister(metrics...)
+	}
 
 	for _, metric := range queriesMetrics {
 		registry.MustRegister(metric)
