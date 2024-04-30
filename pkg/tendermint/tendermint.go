@@ -7,6 +7,8 @@ import (
 	"main/pkg/http"
 	"main/pkg/types"
 	"main/pkg/utils"
+	"strconv"
+	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -413,6 +415,44 @@ func (rpc *RPC) GetSlashingParams(
 	}
 
 	return response, &info, nil
+}
+
+func (rpc *RPC) GetConsumerSoftOutOutThreshold(
+	ctx context.Context,
+) (float64, *types.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("params") {
+		return 0, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching soft opt-out threshold params",
+	)
+	defer span.End()
+
+	var response *types.ParamsResponse
+	info, err := rpc.Client.Get(
+		rpc.Chain.LCDEndpoint+"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
+		&response,
+		childQuerierCtx,
+	)
+	if err != nil {
+		return 0, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return 0, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	valueStripped := strings.ReplaceAll(response.Param.Value, "\"", "")
+	value, err := strconv.ParseFloat(valueStripped, 64)
+	if err != nil {
+		info.Success = false
+		return 0, &info, err
+	}
+
+	return value, &info, nil
 }
 
 func (rpc *RPC) GetStakingParams(

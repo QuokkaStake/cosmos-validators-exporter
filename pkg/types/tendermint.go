@@ -147,3 +147,12 @@ type CommissionResponse struct {
 		Commission []ResponseAmount `json:"commission"`
 	} `json:"commission"`
 }
+
+type ParamsResponse struct {
+	Code  int `json:"code"`
+	Param struct {
+		Subspace string `json:"subspace"`
+		Key      string `json:"key"`
+		Value    string `json:"value"`
+	} `json:"param"`
+}
