@@ -66,7 +66,6 @@ func NewApp(configPath string, version string) *App {
 		queriersPkg.NewRewardsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewWalletQuerier(logger, appConfig, tracer),
 		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
-		queriersPkg.NewDenomCoefficientsQuerier(logger, appConfig),
 		queriersPkg.NewSigningInfoQuerier(logger, appConfig, tracer),
 		queriersPkg.NewUptimeQuerier(),
 	}
@@ -80,6 +79,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewSlashingParamsGenerator(),
 		generatorsPkg.NewSoftOptOutThresholdGenerator(),
 		generatorsPkg.NewIsConsumerGenerator(appConfig.Chains),
+		generatorsPkg.NewDenomCoefficientGenerator(appConfig.Chains),
 	}
 
 	return &App{

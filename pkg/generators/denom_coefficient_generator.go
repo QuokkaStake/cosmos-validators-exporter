@@ -1,30 +1,21 @@
-package queriers
+package generators
 
 import (
-	"context"
 	"main/pkg/config"
-	"main/pkg/types"
+	statePkg "main/pkg/state"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 )
 
-type DenomCoefficientsQuerier struct {
-	Logger zerolog.Logger
-	Config *config.Config
+type DenomCoefficientGenerator struct {
+	Chains []config.Chain
 }
 
-func NewDenomCoefficientsQuerier(
-	logger *zerolog.Logger,
-	config *config.Config,
-) *DenomCoefficientsQuerier {
-	return &DenomCoefficientsQuerier{
-		Logger: logger.With().Str("component", "denom_coefficients_querier").Logger(),
-		Config: config,
-	}
+func NewDenomCoefficientGenerator(chains []config.Chain) *DenomCoefficientGenerator {
+	return &DenomCoefficientGenerator{Chains: chains}
 }
 
-func (q *DenomCoefficientsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (g *DenomCoefficientGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	denomCoefficientGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_denom_coefficient",
@@ -41,7 +32,7 @@ func (q *DenomCoefficientsQuerier) GetMetrics(ctx context.Context) ([]prometheus
 		[]string{"chain", "denom"},
 	)
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range g.Chains {
 		if chain.BaseDenom != "" {
 			baseDenomGauge.With(prometheus.Labels{
 				"chain": chain.Name,
@@ -58,9 +49,5 @@ func (q *DenomCoefficientsQuerier) GetMetrics(ctx context.Context) ([]prometheus
 		}
 	}
 
-	return []prometheus.Collector{denomCoefficientGauge, baseDenomGauge}, []*types.QueryInfo{}
-}
-
-func (q *DenomCoefficientsQuerier) Name() string {
-	return "denom-coefficients-querier"
+	return []prometheus.Collector{denomCoefficientGauge, baseDenomGauge}
 }
