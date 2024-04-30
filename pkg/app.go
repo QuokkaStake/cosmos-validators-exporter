@@ -58,7 +58,6 @@ func NewApp(configPath string, version string) *App {
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
 	queriers := []types.Querier{
-		queriersPkg.NewCommissionQuerier(logger, appConfig, tracer),
 		queriersPkg.NewDelegationsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewUnbondsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig, tracer),
@@ -72,6 +71,7 @@ func NewApp(configPath string, version string) *App {
 	fetchers := []fetchersPkg.Fetcher{
 		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewCommissionFetcher(logger, appConfig, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -80,6 +80,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewIsConsumerGenerator(appConfig.Chains),
 		generatorsPkg.NewDenomCoefficientGenerator(appConfig.Chains),
 		generatorsPkg.NewUptimeGenerator(),
+		generatorsPkg.NewCommissionGenerator(),
 	}
 
 	return &App{
