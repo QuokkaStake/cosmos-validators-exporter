@@ -1,8 +1,9 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	statePkg "main/pkg/state"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Generator interface {

@@ -2,13 +2,14 @@ package fetchers
 
 import (
 	"context"
-	"github.com/rs/zerolog"
-	"go.opentelemetry.io/otel/trace"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"sync"
+
+	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type SlashingParamsFetcher struct {
@@ -71,7 +72,6 @@ func (q *SlashingParamsFetcher) Fetch(
 			if params != nil {
 				allParams[chain.Name] = params
 			}
-
 		}(chain, rpc)
 	}
 

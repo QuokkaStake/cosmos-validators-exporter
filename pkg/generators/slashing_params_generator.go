@@ -1,11 +1,12 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
 	"main/pkg/utils"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SlashingParamsGenerator struct {
@@ -29,7 +30,7 @@ func (g *SlashingParamsGenerator) Generate(state *statePkg.State) []prometheus.C
 		[]string{"chain"},
 	)
 
-	data := dataRaw.(fetchersPkg.SlashingParamsData)
+	data, _ := dataRaw.(fetchersPkg.SlashingParamsData)
 
 	for chain, params := range data.Params {
 		blocksWindowGauge.With(prometheus.Labels{
