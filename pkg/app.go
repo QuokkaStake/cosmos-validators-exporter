@@ -58,7 +58,6 @@ func NewApp(configPath string, version string) *App {
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
 	queriers := []types.Querier{
-		queriersPkg.NewUnbondsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
 		queriersPkg.NewRewardsQuerier(logger, appConfig, tracer),
@@ -72,6 +71,7 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewCommissionFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewDelegationsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewUnbondsFetcher(logger, appConfig, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -82,6 +82,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewUptimeGenerator(),
 		generatorsPkg.NewCommissionGenerator(),
 		generatorsPkg.NewDelegationsGenerator(),
+		generatorsPkg.NewUnbondsGenerator(),
 	}
 
 	return &App{
