@@ -1,48 +1,55 @@
-package queriers
+package fetchers
 
 import (
 	"context"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type DelegationsQuerier struct {
+type DelegationsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
 	Tracer trace.Tracer
 }
 
-func NewDelegationsQuerier(logger *zerolog.Logger, config *config.Config, tracer trace.Tracer) *DelegationsQuerier {
-	return &DelegationsQuerier{
-		Logger: logger.With().Str("component", "delegations_querier").Logger(),
+type DelegationsData struct {
+	Delegations map[string]map[string]int64
+}
+
+func NewDelegationsFetcher(
+	logger *zerolog.Logger,
+	config *config.Config,
+	tracer trace.Tracer,
+) *DelegationsFetcher {
+	return &DelegationsFetcher{
+		Logger: logger.With().Str("component", "slashing_params_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}
 }
 
-func (q *DelegationsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *DelegationsFetcher) Fetch(
+	ctx context.Context,
+) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	delegationsCountGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_delegations_count",
-			Help: "Validator delegations count",
-		},
-		[]string{"chain", "address"},
-	)
+	allDelegations := map[string]map[string]int64{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
+		mutex.Lock()
+		allDelegations[chain.Name] = map[string]int64{}
+		mutex.Unlock()
+
 		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
@@ -71,19 +78,16 @@ func (q *DelegationsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Colle
 					return
 				}
 
-				delegationsCountGauge.With(prometheus.Labels{
-					"chain":   chain.Name,
-					"address": validator,
-				}).Set(float64(utils.StrToInt64(delegatorsResponse.Pagination.Total)))
+				allDelegations[chain.Name][validator] = utils.StrToInt64(delegatorsResponse.Pagination.Total)
 			}(validator.Address, rpc, chain)
 		}
 	}
 
 	wg.Wait()
 
-	return []prometheus.Collector{delegationsCountGauge}, queryInfos
+	return DelegationsData{Delegations: allDelegations}, queryInfos
 }
 
-func (q *DelegationsQuerier) Name() string {
-	return "delegations-querier"
+func (q *DelegationsFetcher) Name() constants.FetcherName {
+	return constants.FetcherNameDelegations
 }
