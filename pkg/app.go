@@ -108,6 +108,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewNodeInfoGenerator(),
 		generatorsPkg.NewStakingParamsGenerator(),
 		generatorsPkg.NewPriceGenerator(),
+		generatorsPkg.NewConsumerNeedsToSignGenerator(appConfig.Chains, logger),
 	}
 
 	return &App{
