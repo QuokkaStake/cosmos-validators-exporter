@@ -1,8 +1,6 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
@@ -10,6 +8,10 @@ import (
 	"main/pkg/types"
 	"main/pkg/utils"
 	"math/big"
+	"sort"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type ConsumerNeedsToSignGenerator struct {
@@ -75,6 +77,10 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 		// sort ascending
 		activeValidators := utils.Filter(chainValidators.Validators, func(v types.Validator) bool {
 			return v.Active()
+		})
+
+		sort.Slice(activeValidators, func(i, j int) bool {
+			return utils.StrToFloat64(activeValidators[i].DelegatorShares) < utils.StrToFloat64(activeValidators[j].DelegatorShares)
 		})
 
 		// get total VP
@@ -163,7 +169,6 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 				}).
 				Set(utils.BoolToFloat64(compare >= 0))
 		}
-
 	}
 
 	return []prometheus.Collector{minStakeGauge, needsToSignGauge}
