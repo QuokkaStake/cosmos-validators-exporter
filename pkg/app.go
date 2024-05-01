@@ -6,6 +6,7 @@ import (
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
 	statePkg "main/pkg/state"
+	"main/pkg/tendermint"
 	"main/pkg/tracing"
 	"main/pkg/types"
 	"net/http"
@@ -29,6 +30,8 @@ type App struct {
 	Tracer trace.Tracer
 	Config *config.Config
 	Logger *zerolog.Logger
+
+	RPCs map[string]*tendermint.RPC
 
 	// Fetcher is a class that fetch data and is later stored in state.
 	// It doesn't provide any metrics, only data to generate them later.
@@ -63,18 +66,24 @@ func NewApp(configPath string, version string) *App {
 	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
+	rpcs := make(map[string]*tendermint.RPC, len(appConfig.Chains))
+
+	for _, chain := range appConfig.Chains {
+		rpcs[chain.Name] = tendermint.NewRPC(chain, appConfig.Timeout, *logger, tracer)
+	}
+
 	fetchers := []fetchersPkg.Fetcher{
-		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewCommissionFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewDelegationsFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewUnbondsFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewRewardsFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewBalanceFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewValidatorsFetcher(logger, appConfig, tracer),
-		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewCommissionFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewDelegationsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewUnbondsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewRewardsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewBalanceFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewValidatorsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
 	}
 
@@ -103,6 +112,7 @@ func NewApp(configPath string, version string) *App {
 		Logger:     logger,
 		Config:     appConfig,
 		Tracer:     tracer,
+		RPCs:       rpcs,
 		Fetchers:   fetchers,
 		Generators: generators,
 	}

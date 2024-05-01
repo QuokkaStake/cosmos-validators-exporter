@@ -16,6 +16,7 @@ import (
 type RewardsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	RPCs   map[string]*tendermint.RPC
 	Tracer trace.Tracer
 }
 
@@ -26,11 +27,13 @@ type RewardsData struct {
 func NewRewardsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
+	rpcs map[string]*tendermint.RPC,
 	tracer trace.Tracer,
 ) *RewardsFetcher {
 	return &RewardsFetcher{
 		Logger: logger.With().Str("component", "rewards_fetcher").Logger(),
 		Config: config,
+		RPCs:   rpcs,
 		Tracer: tracer,
 	}
 }
@@ -50,7 +53,7 @@ func (q *RewardsFetcher) Fetch(
 		allRewards[chain.Name] = map[string][]types.Amount{}
 		mutex.Unlock()
 
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
+		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)

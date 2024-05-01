@@ -15,6 +15,7 @@ import (
 type CommissionFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	RPCs   map[string]*tendermint.RPC
 	Tracer trace.Tracer
 }
 
@@ -25,11 +26,13 @@ type CommissionData struct {
 func NewCommissionFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
+	rpcs map[string]*tendermint.RPC,
 	tracer trace.Tracer,
 ) *CommissionFetcher {
 	return &CommissionFetcher{
 		Logger: logger.With().Str("component", "commission_fetcher").Logger(),
 		Config: config,
+		RPCs:   rpcs,
 		Tracer: tracer,
 	}
 }
@@ -49,7 +52,7 @@ func (q *CommissionFetcher) Fetch(
 		allCommissions[chain.Name] = map[string][]types.Amount{}
 		mutex.Unlock()
 
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
+		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)

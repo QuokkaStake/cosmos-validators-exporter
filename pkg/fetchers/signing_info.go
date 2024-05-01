@@ -15,6 +15,7 @@ import (
 type SigningInfoFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	RPCs   map[string]*tendermint.RPC
 	Tracer trace.Tracer
 }
 
@@ -25,11 +26,13 @@ type SigningInfoData struct {
 func NewSigningInfoFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
+	rpcs map[string]*tendermint.RPC,
 	tracer trace.Tracer,
 ) *SigningInfoFetcher {
 	return &SigningInfoFetcher{
 		Logger: logger.With().Str("component", "signing_infos").Logger(),
 		Config: config,
+		RPCs:   rpcs,
 		Tracer: tracer,
 	}
 }
@@ -49,7 +52,7 @@ func (q *SigningInfoFetcher) Fetch(
 		allSigningInfos[chain.Name] = map[string]*types.SigningInfoResponse{}
 		mutex.Unlock()
 
-		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
+		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
