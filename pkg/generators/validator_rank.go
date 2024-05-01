@@ -1,7 +1,6 @@
 package generators
 
 import (
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
@@ -9,6 +8,8 @@ import (
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
+
+	"github.com/rs/zerolog"
 
 	"github.com/prometheus/client_golang/prometheus"
 )

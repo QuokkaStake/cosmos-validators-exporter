@@ -1,13 +1,14 @@
 package generators
 
 import (
-	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
+
+	"github.com/rs/zerolog"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
