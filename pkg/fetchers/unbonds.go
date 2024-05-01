@@ -29,7 +29,7 @@ func NewUnbondsFetcher(
 	tracer trace.Tracer,
 ) *UnbondsFetcher {
 	return &UnbondsFetcher{
-		Logger: logger.With().Str("component", "slashing_params_fetcher").Logger(),
+		Logger: logger.With().Str("component", "unbonds_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}

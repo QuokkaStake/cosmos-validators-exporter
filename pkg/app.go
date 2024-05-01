@@ -63,7 +63,6 @@ func NewApp(configPath string, version string) *App {
 		queriersPkg.NewRewardsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewWalletQuerier(logger, appConfig, tracer),
 		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
-		queriersPkg.NewSigningInfoQuerier(logger, appConfig, tracer),
 	}
 
 	fetchers := []fetchersPkg.Fetcher{
@@ -72,6 +71,7 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewCommissionFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewDelegationsFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewUnbondsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -83,6 +83,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewCommissionGenerator(),
 		generatorsPkg.NewDelegationsGenerator(),
 		generatorsPkg.NewUnbondsGenerator(),
+		generatorsPkg.NewSigningInfoGenerator(),
 	}
 
 	return &App{

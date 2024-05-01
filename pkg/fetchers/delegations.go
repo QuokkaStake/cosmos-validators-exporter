@@ -29,7 +29,7 @@ func NewDelegationsFetcher(
 	tracer trace.Tracer,
 ) *DelegationsFetcher {
 	return &DelegationsFetcher{
-		Logger: logger.With().Str("component", "slashing_params_fetcher").Logger(),
+		Logger: logger.With().Str("component", "delegations_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}

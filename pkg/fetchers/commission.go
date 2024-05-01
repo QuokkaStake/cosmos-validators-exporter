@@ -28,7 +28,7 @@ func NewCommissionFetcher(
 	tracer trace.Tracer,
 ) *CommissionFetcher {
 	return &CommissionFetcher{
-		Logger: logger.With().Str("component", "slashing_params_fetcher").Logger(),
+		Logger: logger.With().Str("component", "commission_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}

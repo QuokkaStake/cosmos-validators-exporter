@@ -28,7 +28,7 @@ func NewSoftOptOutThresholdFetcher(
 	tracer trace.Tracer,
 ) *SoftOptOutThresholdFetcher {
 	return &SoftOptOutThresholdFetcher{
-		Logger: logger.With().Str("component", "slashing_params_fetcher").Logger(),
+		Logger: logger.With().Str("component", "soft_opt_out_threshold_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}

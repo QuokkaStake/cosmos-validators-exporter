@@ -31,8 +31,8 @@ func (g *DelegationsGenerator) Generate(state *statePkg.State) []prometheus.Coll
 
 	data, _ := dataRaw.(fetchersPkg.DelegationsData)
 
-	for chain, commissions := range data.Delegations {
-		for validator, delegations := range commissions {
+	for chain, allDelegations := range data.Delegations {
+		for validator, delegations := range allDelegations {
 			delegationsCountGauge.With(prometheus.Labels{
 				"chain":   chain,
 				"address": validator,
