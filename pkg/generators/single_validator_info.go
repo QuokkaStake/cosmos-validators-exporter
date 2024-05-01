@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"github.com/rs/zerolog"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
@@ -13,10 +14,17 @@ import (
 
 type SingleValidatorInfoGenerator struct {
 	Chains []configPkg.Chain
+	Logger zerolog.Logger
 }
 
-func NewSingleValidatorInfoGenerator(chains []configPkg.Chain) *SingleValidatorInfoGenerator {
-	return &SingleValidatorInfoGenerator{Chains: chains}
+func NewSingleValidatorInfoGenerator(
+	chains []configPkg.Chain,
+	logger *zerolog.Logger,
+) *SingleValidatorInfoGenerator {
+	return &SingleValidatorInfoGenerator{
+		Chains: chains,
+		Logger: logger.With().Str("component", "single_validator_info_generator").Logger(),
+	}
 }
 
 func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -94,15 +102,32 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 	for _, chain := range g.Chains {
 		chainValidators, ok := data.Validators[chain.Name]
 		if !ok {
+			g.Logger.Warn().
+				Str("chain", chain.Name).
+				Msg("Could not find validators list")
 			continue
 		}
 
 		for _, validatorAddr := range chain.Validators {
 			validator, ok := utils.Find(chainValidators.Validators, func(v types.Validator) bool {
-				return v.OperatorAddress == validatorAddr.Address
+				equal, err := utils.CompareTwoBech32(v.OperatorAddress, validatorAddr.Address)
+				if err != nil {
+					g.Logger.Error().
+						Err(err).
+						Str("chain", chain.Name).
+						Str("validator", validatorAddr.Address).
+						Msg("Error comparing two validators' bech32 addresses")
+					return false
+				}
+
+				return equal
 			})
 
 			if !ok {
+				g.Logger.Warn().
+					Str("chain", chain.Name).
+					Str("validator", validatorAddr.Address).
+					Msg("Could not find validator")
 				continue
 			}
 
