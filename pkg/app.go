@@ -1,8 +1,11 @@
 package pkg
 
 import (
+	fetchersPkg "main/pkg/fetchers"
+	generatorsPkg "main/pkg/generators"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
+	statePkg "main/pkg/state"
 	"main/pkg/tracing"
 	"main/pkg/types"
 	"net/http"
@@ -14,7 +17,6 @@ import (
 
 	"main/pkg/config"
 	loggerPkg "main/pkg/logger"
-	queriersPkg "main/pkg/queriers"
 
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,10 +26,20 @@ import (
 )
 
 type App struct {
-	Tracer   trace.Tracer
-	Config   *config.Config
-	Logger   *zerolog.Logger
-	Queriers []types.Querier
+	Tracer trace.Tracer
+	Config *config.Config
+	Logger *zerolog.Logger
+
+	// Fetcher is a class that fetch data and is later stored in state.
+	// It doesn't provide any metrics, only data to generate them later.
+	Fetchers []fetchersPkg.Fetcher
+
+	// Generator is a class that takes some metrics from the state
+	// that were fetcher by one or more Fetchers and generates one or more
+	// metrics based on this data.
+	// Example: ActiveSetTokenGenerator generates a metric
+	// based on ValidatorsFetcher and StakingParamsFetcher.
+	Generators []generatorsPkg.Generator
 }
 
 func NewApp(configPath string, version string) *App {
@@ -51,27 +63,48 @@ func NewApp(configPath string, version string) *App {
 	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
-	queriers := []types.Querier{
-		queriersPkg.NewCommissionQuerier(logger, appConfig, tracer),
-		queriersPkg.NewDelegationsQuerier(logger, appConfig, tracer),
-		queriersPkg.NewUnbondsQuerier(logger, appConfig, tracer),
-		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig, tracer),
-		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
-		queriersPkg.NewRewardsQuerier(logger, appConfig, tracer),
-		queriersPkg.NewWalletQuerier(logger, appConfig, tracer),
-		queriersPkg.NewSlashingParamsQuerier(logger, appConfig, tracer),
-		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
-		queriersPkg.NewDenomCoefficientsQuerier(logger, appConfig),
-		queriersPkg.NewSigningInfoQuerier(logger, appConfig, tracer),
-		queriersPkg.NewChainInfoQuerier(logger, appConfig, tracer),
-		queriersPkg.NewUptimeQuerier(),
+	fetchers := []fetchersPkg.Fetcher{
+		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewCommissionFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewDelegationsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewUnbondsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewRewardsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewBalanceFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewValidatorsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
+	}
+
+	generators := []generatorsPkg.Generator{
+		generatorsPkg.NewSlashingParamsGenerator(),
+		generatorsPkg.NewSoftOptOutThresholdGenerator(),
+		generatorsPkg.NewIsConsumerGenerator(appConfig.Chains),
+		generatorsPkg.NewDenomCoefficientGenerator(appConfig.Chains),
+		generatorsPkg.NewUptimeGenerator(),
+		generatorsPkg.NewCommissionGenerator(),
+		generatorsPkg.NewDelegationsGenerator(),
+		generatorsPkg.NewUnbondsGenerator(),
+		generatorsPkg.NewSigningInfoGenerator(),
+		generatorsPkg.NewRewardsGenerator(),
+		generatorsPkg.NewBalanceGenerator(),
+		generatorsPkg.NewSelfDelegationGenerator(),
+		generatorsPkg.NewValidatorsInfoGenerator(),
+		generatorsPkg.NewSingleValidatorInfoGenerator(appConfig.Chains, logger),
+		generatorsPkg.NewValidatorRankGenerator(appConfig.Chains, logger),
+		generatorsPkg.NewActiveSetTokensGenerator(appConfig.Chains),
+		generatorsPkg.NewStakingParamsGenerator(),
+		generatorsPkg.NewPriceGenerator(),
 	}
 
 	return &App{
-		Logger:   logger,
-		Config:   appConfig,
-		Queriers: queriers,
-		Tracer:   tracer,
+		Logger:     logger,
+		Config:     appConfig,
+		Tracer:     tracer,
+		Fetchers:   fetchers,
+		Generators: generators,
 	}
 }
 
@@ -108,38 +141,37 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 
 	var queryInfos []*types.QueryInfo
 
-	for _, querierExt := range a.Queriers {
+	state := statePkg.NewState()
+
+	for _, fetchersExt := range a.Fetchers {
 		wg.Add(1)
 
-		go func(querier types.Querier) {
-			childQuerierCtx, querierSpan := a.Tracer.Start(
+		go func(fetcher fetchersPkg.Fetcher) {
+			childQuerierCtx, fetcherSpan := a.Tracer.Start(
 				rootSpanCtx,
-				"Querier "+querier.Name(),
-				trace.WithAttributes(attribute.String("querier", querier.Name())),
+				"Fetcher "+string(fetcher.Name()),
+				trace.WithAttributes(attribute.String("fetcher", string(fetcher.Name()))),
 			)
-			defer querierSpan.End()
+			defer fetcherSpan.End()
 
 			defer wg.Done()
-			collectors, querierQueryInfos := querier.GetMetrics(childQuerierCtx)
+			data, fetcherQueryInfos := fetcher.Fetch(childQuerierCtx)
 
 			mutex.Lock()
-			defer mutex.Unlock()
-
-			for _, collector := range collectors {
-				registry.MustRegister(collector)
-			}
-
-			queryInfos = append(queryInfos, querierQueryInfos...)
-		}(querierExt)
+			state.Set(fetcher.Name(), data)
+			queryInfos = append(queryInfos, fetcherQueryInfos...)
+			mutex.Unlock()
+		}(fetchersExt)
 	}
 
 	wg.Wait()
 
-	queriesQuerier := queriersPkg.NewQueriesQuerier(a.Config, queryInfos)
-	queriesMetrics, _ := queriesQuerier.GetMetrics(rootSpanCtx)
+	queriesMetrics := NewQueriesMetrics(a.Config, queryInfos)
+	registry.MustRegister(queriesMetrics.GetMetrics(rootSpanCtx)...)
 
-	for _, metric := range queriesMetrics {
-		registry.MustRegister(metric)
+	for _, generator := range a.Generators {
+		metrics := generator.Generate(state)
+		registry.MustRegister(metrics...)
 	}
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})

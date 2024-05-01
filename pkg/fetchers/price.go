@@ -1,43 +1,48 @@
-package queriers
+package fetchers
 
 import (
 	"context"
 	"main/pkg/config"
+	"main/pkg/constants"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
 	"main/pkg/types"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type PriceQuerier struct {
+type PriceFetcher struct {
 	Logger      zerolog.Logger
 	Config      *config.Config
+	Tracer      trace.Tracer
 	Coingecko   *coingeckoPkg.Coingecko
 	DexScreener *dexScreenerPkg.DexScreener
-	Tracer      trace.Tracer
 }
 
-func NewPriceQuerier(
+type PriceData struct {
+	Prices map[string]map[string]float64
+}
+
+func NewPriceFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
 	tracer trace.Tracer,
 	coingecko *coingeckoPkg.Coingecko,
 	dexScreener *dexScreenerPkg.DexScreener,
-) *PriceQuerier {
-	return &PriceQuerier{
-		Logger:      logger.With().Str("component", "price_querier").Logger(),
+) *PriceFetcher {
+	return &PriceFetcher{
+		Logger:      logger.With().Str("component", "price_fetcher").Logger(),
 		Config:      config,
+		Tracer:      tracer,
 		Coingecko:   coingecko,
 		DexScreener: dexScreener,
-		Tracer:      tracer,
 	}
 }
 
-func (q *PriceQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *PriceFetcher) Fetch(
+	ctx context.Context,
+) (interface{}, []*types.QueryInfo) {
 	currenciesList := q.Config.GetCoingeckoCurrencies()
 
 	var currenciesRates map[string]float64
@@ -74,26 +79,9 @@ func (q *PriceQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, 
 		}
 	}
 
-	tokenPriceGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_price",
-			Help: "Price of 1 token in display denom in USD",
-		},
-		[]string{"chain", "denom"},
-	)
-
-	for chainName, chainPrices := range currenciesRatesToChains {
-		for denom, price := range chainPrices {
-			tokenPriceGauge.With(prometheus.Labels{
-				"chain": chainName,
-				"denom": denom,
-			}).Set(price)
-		}
-	}
-
-	return []prometheus.Collector{tokenPriceGauge}, queries
+	return PriceData{Prices: currenciesRatesToChains}, queries
 }
 
-func (q *PriceQuerier) Name() string {
-	return "price-querier"
+func (q *PriceFetcher) Name() constants.FetcherName {
+	return constants.FetcherNamePrice
 }

@@ -1,52 +1,55 @@
-package queriers
+package fetchers
 
 import (
 	"context"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type SelfDelegationsQuerier struct {
+type SelfDelegationFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
 	Tracer trace.Tracer
 }
 
-func NewSelfDelegationsQuerier(
+type SelfDelegationData struct {
+	Delegations map[string]map[string]*types.Amount
+}
+
+func NewSelfDelegationFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
 	tracer trace.Tracer,
-) *SelfDelegationsQuerier {
-	return &SelfDelegationsQuerier{
-		Logger: logger.With().Str("component", "self_delegations_querier").Logger(),
+) *SelfDelegationFetcher {
+	return &SelfDelegationFetcher{
+		Logger: logger.With().Str("component", "self_delegation_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}
 }
 
-func (q *SelfDelegationsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *SelfDelegationFetcher) Fetch(
+	ctx context.Context,
+) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	selfDelegatedTokensGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegated",
-			Help: "Validator's self delegated amount (in tokens)",
-		},
-		[]string{"chain", "address", "denom"},
-	)
+	allSelfDelegations := map[string]map[string]*types.Amount{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
+		mutex.Lock()
+		allSelfDelegations[chain.Name] = map[string]*types.Amount{}
+		mutex.Unlock()
+
 		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
@@ -90,22 +93,16 @@ func (q *SelfDelegationsQuerier) GetMetrics(ctx context.Context) ([]prometheus.C
 					return
 				}
 
-				if balance.Amount != 0 {
-					selfDelegatedTokensGauge.With(prometheus.Labels{
-						"chain":   chain.Name,
-						"address": validator,
-						"denom":   balance.Denom,
-					}).Set(balance.Amount)
-				}
+				allSelfDelegations[chain.Name][validator] = balance
 			}(validator.Address, rpc, chain)
 		}
 	}
 
 	wg.Wait()
 
-	return []prometheus.Collector{selfDelegatedTokensGauge}, queryInfos
+	return SelfDelegationData{Delegations: allSelfDelegations}, queryInfos
 }
 
-func (q *SelfDelegationsQuerier) Name() string {
-	return "self-delegation-querier"
+func (q *SelfDelegationFetcher) Name() constants.FetcherName {
+	return constants.FetcherNameSelfDelegation
 }

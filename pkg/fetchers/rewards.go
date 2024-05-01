@@ -1,52 +1,55 @@
-package queriers
+package fetchers
 
 import (
 	"context"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type RewardsQuerier struct {
+type RewardsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
 	Tracer trace.Tracer
 }
 
-func NewRewardsQuerier(
+type RewardsData struct {
+	Rewards map[string]map[string][]types.Amount
+}
+
+func NewRewardsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
 	tracer trace.Tracer,
-) *RewardsQuerier {
-	return &RewardsQuerier{
-		Logger: logger.With().Str("component", "rewards_querier").Logger(),
+) *RewardsFetcher {
+	return &RewardsFetcher{
+		Logger: logger.With().Str("component", "rewards_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}
 }
 
-func (q *RewardsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *RewardsFetcher) Fetch(
+	ctx context.Context,
+) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	selfDelegationRewardsTokens := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_self_delegation_rewards",
-			Help: "Validator's self-delegation rewards (in tokens)",
-		},
-		[]string{"chain", "address", "denom"},
-	)
+	allRewards := map[string]map[string][]types.Amount{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
+		mutex.Lock()
+		allRewards[chain.Name] = map[string][]types.Amount{}
+		mutex.Unlock()
+
 		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
@@ -90,22 +93,16 @@ func (q *RewardsQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector
 					return
 				}
 
-				for _, balance := range balances {
-					selfDelegationRewardsTokens.With(prometheus.Labels{
-						"chain":   chain.Name,
-						"address": validator,
-						"denom":   balance.Denom,
-					}).Set(balance.Amount)
-				}
+				allRewards[chain.Name][validator] = balances
 			}(validator.Address, rpc, chain)
 		}
 	}
 
 	wg.Wait()
 
-	return []prometheus.Collector{selfDelegationRewardsTokens}, queryInfos
+	return RewardsData{Rewards: allRewards}, queryInfos
 }
 
-func (q *RewardsQuerier) Name() string {
-	return "rewards-querier"
+func (q *RewardsFetcher) Name() constants.FetcherName {
+	return constants.FetcherNameRewards
 }

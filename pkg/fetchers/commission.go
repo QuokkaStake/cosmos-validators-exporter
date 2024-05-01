@@ -1,47 +1,54 @@
-package queriers
+package fetchers
 
 import (
 	"context"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"sync"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type CommissionQuerier struct {
+type CommissionFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
 	Tracer trace.Tracer
 }
 
-func NewCommissionQuerier(logger *zerolog.Logger, config *config.Config, tracer trace.Tracer) *CommissionQuerier {
-	return &CommissionQuerier{
-		Logger: logger.With().Str("component", "commission_querier").Logger(),
+type CommissionData struct {
+	Commissions map[string]map[string][]types.Amount
+}
+
+func NewCommissionFetcher(
+	logger *zerolog.Logger,
+	config *config.Config,
+	tracer trace.Tracer,
+) *CommissionFetcher {
+	return &CommissionFetcher{
+		Logger: logger.With().Str("component", "commission_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}
 }
 
-func (q *CommissionQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *CommissionFetcher) Fetch(
+	ctx context.Context,
+) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
+
+	allCommissions := map[string]map[string][]types.Amount{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	commissionUnclaimedTokens := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_unclaimed_commission",
-			Help: "Validator's unclaimed commission (in tokens)",
-		},
-		[]string{"chain", "address", "denom"},
-	)
-
 	for _, chain := range q.Config.Chains {
+		mutex.Lock()
+		allCommissions[chain.Name] = map[string][]types.Amount{}
+		mutex.Unlock()
+
 		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
@@ -70,22 +77,16 @@ func (q *CommissionQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collec
 					return
 				}
 
-				for _, balance := range commission {
-					commissionUnclaimedTokens.With(prometheus.Labels{
-						"chain":   chain.Name,
-						"address": validator,
-						"denom":   balance.Denom,
-					}).Set(balance.Amount)
-				}
+				allCommissions[chain.Name][validator] = commission
 			}(validator.Address, rpc, chain)
 		}
 	}
 
 	wg.Wait()
 
-	return []prometheus.Collector{commissionUnclaimedTokens}, queryInfos
+	return CommissionData{Commissions: allCommissions}, queryInfos
 }
 
-func (q *CommissionQuerier) Name() string {
-	return "commissions-querier"
+func (q *CommissionFetcher) Name() constants.FetcherName {
+	return constants.FetcherNameCommission
 }

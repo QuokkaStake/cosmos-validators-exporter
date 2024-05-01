@@ -1,52 +1,55 @@
-package queriers
+package fetchers
 
 import (
 	"context"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sync"
 
-	"go.opentelemetry.io/otel/trace"
-
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type WalletQuerier struct {
+type BalanceFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
 	Tracer trace.Tracer
 }
 
-func NewWalletQuerier(
+type BalanceData struct {
+	Balances map[string]map[string][]types.Amount
+}
+
+func NewBalanceFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
 	tracer trace.Tracer,
-) *WalletQuerier {
-	return &WalletQuerier{
-		Logger: logger.With().Str("component", "wallet_querier").Logger(),
+) *BalanceFetcher {
+	return &BalanceFetcher{
+		Logger: logger.With().Str("component", "balance_fetcher").Logger(),
 		Config: config,
 		Tracer: tracer,
 	}
 }
 
-func (q *WalletQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *BalanceFetcher) Fetch(
+	ctx context.Context,
+) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
+
+	allBalances := map[string]map[string][]types.Amount{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	walletBalanceTokens := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "cosmos_validators_exporter_wallet_balance",
-			Help: "Validator's wallet balance (in tokens)",
-		},
-		[]string{"chain", "address", "denom"},
-	)
-
 	for _, chain := range q.Config.Chains {
+		mutex.Lock()
+		allBalances[chain.Name] = map[string][]types.Amount{}
+		mutex.Unlock()
+
 		rpc := tendermint.NewRPC(chain, q.Config.Timeout, q.Logger, q.Tracer)
 
 		for _, validator := range chain.Validators {
@@ -90,22 +93,16 @@ func (q *WalletQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector,
 					return
 				}
 
-				for _, balance := range balances {
-					walletBalanceTokens.With(prometheus.Labels{
-						"chain":   chain.Name,
-						"address": validator,
-						"denom":   balance.Denom,
-					}).Set(balance.Amount)
-				}
+				allBalances[chain.Name][validator] = balances
 			}(validator.Address, rpc, chain)
 		}
 	}
 
 	wg.Wait()
 
-	return []prometheus.Collector{walletBalanceTokens}, queryInfos
+	return BalanceData{Balances: allBalances}, queryInfos
 }
 
-func (q *WalletQuerier) Name() string {
-	return "wallet-querier"
+func (q *BalanceFetcher) Name() constants.FetcherName {
+	return constants.FetcherNameBalance
 }

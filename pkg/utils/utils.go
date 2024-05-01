@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bytes"
 	"strconv"
 
 	"github.com/btcsuite/btcutil/bech32"
@@ -58,4 +59,36 @@ func Map[T any, V any](slice []T, f func(T) V) []V {
 		n[index] = f(e)
 	}
 	return n
+}
+
+func Find[T any](slice []T, predicate func(T) bool) (*T, bool) {
+	for _, elt := range slice {
+		if predicate(elt) {
+			return &elt, true
+		}
+	}
+	return nil, false
+}
+
+func FindIndex[T any](slice []T, predicate func(T) bool) (int, bool) {
+	for index, elt := range slice {
+		if predicate(elt) {
+			return index, true
+		}
+	}
+	return 0, false
+}
+
+func CompareTwoBech32(first, second string) (bool, error) {
+	_, firstBytes, err := bech32.Decode(first)
+	if err != nil {
+		return false, err
+	}
+
+	_, secondBytes, err := bech32.Decode(second)
+	if err != nil {
+		return false, err
+	}
+
+	return bytes.Equal(firstBytes, secondBytes), nil
 }

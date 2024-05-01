@@ -3,11 +3,14 @@
 ![Latest release](https://img.shields.io/github/v/release/QuokkaStake/cosmos-validators-exporter)
 [![Actions Status](https://github.com/QuokkaStake/cosmos-validators-exporter/workflows/test/badge.svg)](https://github.com/QuokkaStake/cosmos-validators-exporter/actions)
 
-cosmos-validators-exporter is a Prometheus scraper that fetches validators stats from an LCD server exposed by a fullnode.
+cosmos-validators-exporter is a Prometheus scraper that fetches validators stats from an LCD server
+exposed by a fullnode.
 
 ## What can I use it for?
 
-You can use it for building a validator(s) dashboard(s) to visualize your validators metrics (like total staked amount, delegators count, etc.) as well as building alerts for your validators' metrics (like validator status/ranking/total staked amount/etc.)
+You can use it for building a validator(s) dashboard(s) to visualize your validators metrics
+(like total staked amount, delegators count, etc.) as well as building alerts for your validators' metrics
+(like validator status/ranking/total staked amount/etc.)
 
 Here's an example of the dashboard we're using in production:
 
@@ -15,7 +18,8 @@ Here's an example of the dashboard we're using in production:
 
 ## How can I set it up?
 
-First, you need to download the latest release from [the releases page](https://github.com/QuokkaStake/cosmos-validators-exporter/releases/). After that, you should unzip it, and you are ready to go:
+First, you need to download the latest release from [the releases page](https://github.com/QuokkaStake/cosmos-validators-exporter/releases/).
+After that, you should unzip it, and you are ready to go:
 
 ```sh
 wget <the link from the releases page>
@@ -45,7 +49,8 @@ Then we need to create a systemd service for our app:
 sudo nano /etc/systemd/system/cosmos-validators-exporter.service
 ```
 
-You can use this template (change the user to whatever user you want this to be executed from. It's advised to create a separate user for that instead of running it from root):
+You can use this template (change the user to whatever user you want this to be executed from.
+It's advised to create a separate user for that instead of running it from root):
 
 ```
 [Unit]
@@ -98,13 +103,19 @@ scrape-configs:
 
 Then restart Prometheus and you're good to go!
 
-*Important: consider setting quite big intervals/timeouts, both in app config and in Prometheus config. This is due to some requests taking a lot of time, and with a shorter timeout there's a chance the whole scrape request will time out. If you face scrape errors, consider increasing the timeout.*
+*Important: consider setting quite big intervals/timeouts, both in app config and in Prometheus config.
+This is due to some requests taking a lot of time, and with a shorter timeout there's a chance
+the whole scrape request will time out. If you face scrape errors, consider increasing the timeout.*
 
-All the metrics provided by cosmos-validators-exporter have the `cosmos_validators_exporter_` as a prefix. For the full list of metrics, try running `curl localhost:9560/metrics` (or your host/port, if it's non-standard) and see the list of metrics there.
+All the metrics provided by cosmos-validators-exporter have the `cosmos_validators_exporter_` as a prefix.
+For the full list of metrics, try running `curl localhost:9560/metrics` (or your host/port, if it's non-standard)
+and see the list of metrics there.
 
 ## Queries examples
 
-When developing, we aimed to only return metrics that are required, and avoid creating metrics that can be computed on Grafana/Prometheus side. This decreases the amount of time series that this exporter will return, but will make writing queries more complex. Here are some examples of queries that we consider useful:
+When developing, we aimed to only return metrics that are required, and avoid creating metrics that can be computed
+on Grafana/Prometheus side. This decreases the amount of time series that this exporter will return, but will make
+writing queries more complex. Here are some examples of queries that we consider useful:
 
 - `count(cosmos_validators_exporter_info)` - number of validators monitored
 - `sum((cosmos_validators_exporter_total_delegations) * on (chain) group_left(denom) cosmos_validators_exporter_base_denom / on (chain, denom) cosmos_validators_exporter_denom_coefficient * on (chain, denom) cosmos_validators_exporter_price)` - total delegated tokens in $
@@ -114,7 +125,8 @@ When developing, we aimed to only return metrics that are required, and avoid cr
 
 ## How can I configure it?
 
-All configuration is done via the .toml config file, which is passed to the application via the `--config` app parameter. Check `config.example.toml` for a config reference.
+All configuration is done via the .toml config file, which is passed to the application
+via the `--config` app parameter. Check `config.example.toml` for a config reference.
 
 ## How can I contribute?
 
