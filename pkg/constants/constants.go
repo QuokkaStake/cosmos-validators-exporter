@@ -10,6 +10,7 @@ const (
 	FetcherNameUnbonds             FetcherName = "unbonds"
 	FetcherNameSigningInfo         FetcherName = "signing_info"
 	FetcherNameRewards             FetcherName = "rewards"
+	FetcherNameBalance             FetcherName = "balance"
 
 	MetricsPrefix string = "cosmos_validators_exporter_"
 )
