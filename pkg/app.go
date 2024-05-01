@@ -30,7 +30,15 @@ type App struct {
 	Config *config.Config
 	Logger *zerolog.Logger
 
-	Fetchers   []fetchersPkg.Fetcher
+	// Fetcher is a class that fetch data and is later stored in state.
+	// It doesn't provide any metrics, only data to generate them later.
+	Fetchers []fetchersPkg.Fetcher
+
+	// Generator is a class that takes some metrics from the state
+	// that were fetcher by one or more Fetchers and generates one or more
+	// metrics based on this data.
+	// Example: ActiveSetTokenGenerator generates a metric
+	// based on ValidatorsFetcher and StakingParamsFetcher.
 	Generators []generatorsPkg.Generator
 }
 
