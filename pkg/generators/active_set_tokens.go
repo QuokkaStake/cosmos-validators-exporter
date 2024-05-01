@@ -54,7 +54,7 @@ func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.
 		}
 
 		activeValidators := utils.Filter(chainValidators.Validators, func(v types.Validator) bool {
-			return v.Status == "BOND_STATUS_BONDED"
+			return v.Active()
 		})
 
 		sort.Slice(activeValidators, func(i, j int) bool {

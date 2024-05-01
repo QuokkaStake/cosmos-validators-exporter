@@ -1,13 +1,14 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SingleValidatorInfoGenerator struct {
@@ -123,7 +124,7 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 			isActiveGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
-			}).Set(utils.BoolToFloat64(validator.Status == "BOND_STATUS_BONDED"))
+			}).Set(utils.BoolToFloat64(validator.Active()))
 
 			commissionGauge.With(prometheus.Labels{
 				"chain":   chain.Name,

@@ -1,4 +1,4 @@
-package queriers
+package pkg
 
 import (
 	"context"
@@ -8,19 +8,19 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type QueriesQuerier struct {
+type QueriesMetrics struct {
 	Config *config.Config
 	Infos  []*types.QueryInfo
 }
 
-func NewQueriesQuerier(appConfig *config.Config, queryInfos []*types.QueryInfo) *QueriesQuerier {
-	return &QueriesQuerier{
+func NewQueriesMetrics(appConfig *config.Config, queryInfos []*types.QueryInfo) *QueriesMetrics {
+	return &QueriesMetrics{
 		Config: appConfig,
 		Infos:  queryInfos,
 	}
 }
 
-func (q *QueriesQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector, []*types.QueryInfo) {
+func (q *QueriesMetrics) GetMetrics(ctx context.Context) []prometheus.Collector {
 	queriesCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "cosmos_validators_exporter_queries_total",
@@ -94,9 +94,5 @@ func (q *QueriesQuerier) GetMetrics(ctx context.Context) ([]prometheus.Collector
 		queriesSuccessfulGauge,
 		queriesFailedGauge,
 		timingsGauge,
-	}, []*types.QueryInfo{}
-}
-
-func (q *QueriesQuerier) Name() string {
-	return "queries-querier"
+	}
 }

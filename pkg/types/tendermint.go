@@ -2,6 +2,7 @@ package types
 
 import (
 	b64 "encoding/base64"
+	"main/pkg/constants"
 	"main/pkg/utils"
 	"time"
 
@@ -41,6 +42,10 @@ type Validator struct {
 		UpdateTime time.Time `json:"update_time"`
 	} `json:"commission"`
 	MinSelfDelegation string `json:"min_self_delegation"`
+}
+
+func (v Validator) Active() bool {
+	return v.Status == constants.ValidatorStatusBonded
 }
 
 type ConsensusPubkey struct {

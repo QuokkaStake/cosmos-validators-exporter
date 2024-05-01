@@ -44,7 +44,7 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 
 	for chain, validators := range data.Validators {
 		activeValidators := utils.Filter(validators.Validators, func(v types.Validator) bool {
-			return v.Status == "BOND_STATUS_BONDED"
+			return v.Active()
 		})
 
 		sort.Slice(activeValidators, func(i, j int) bool {
@@ -64,7 +64,6 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 		totalBondedTokensGauge.With(prometheus.Labels{
 			"chain": chain,
 		}).Set(totalStake)
-
 	}
 
 	return []prometheus.Collector{validatorsCountGauge, totalBondedTokensGauge}

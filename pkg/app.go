@@ -17,7 +17,6 @@ import (
 
 	"main/pkg/config"
 	loggerPkg "main/pkg/logger"
-	queriersPkg "main/pkg/queriers"
 
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
@@ -27,10 +26,9 @@ import (
 )
 
 type App struct {
-	Tracer   trace.Tracer
-	Config   *config.Config
-	Logger   *zerolog.Logger
-	Queriers []types.Querier
+	Tracer trace.Tracer
+	Config *config.Config
+	Logger *zerolog.Logger
 
 	Fetchers   []fetchersPkg.Fetcher
 	Generators []generatorsPkg.Generator
@@ -57,10 +55,6 @@ func NewApp(configPath string, version string) *App {
 	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
-	queriers := []types.Querier{
-		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
-	}
-
 	fetchers := []fetchersPkg.Fetcher{
 		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, tracer),
@@ -73,6 +67,7 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewValidatorsFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -93,12 +88,12 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewValidatorRankGenerator(appConfig.Chains),
 		generatorsPkg.NewActiveSetTokensGenerator(appConfig.Chains),
 		generatorsPkg.NewStakingParamsGenerator(),
+		generatorsPkg.NewPriceGenerator(),
 	}
 
 	return &App{
 		Logger:     logger,
 		Config:     appConfig,
-		Queriers:   queriers,
 		Tracer:     tracer,
 		Fetchers:   fetchers,
 		Generators: generators,
@@ -138,31 +133,6 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 
 	var queryInfos []*types.QueryInfo
 
-	for _, querierExt := range a.Queriers {
-		wg.Add(1)
-
-		go func(querier types.Querier) {
-			childQuerierCtx, querierSpan := a.Tracer.Start(
-				rootSpanCtx,
-				"Querier "+querier.Name(),
-				trace.WithAttributes(attribute.String("querier", querier.Name())),
-			)
-			defer querierSpan.End()
-
-			defer wg.Done()
-			collectors, querierQueryInfos := querier.GetMetrics(childQuerierCtx)
-
-			mutex.Lock()
-			defer mutex.Unlock()
-
-			for _, collector := range collectors {
-				registry.MustRegister(collector)
-			}
-
-			queryInfos = append(queryInfos, querierQueryInfos...)
-		}(querierExt)
-	}
-
 	state := statePkg.NewState()
 
 	for _, fetchersExt := range a.Fetchers {
@@ -188,16 +158,12 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 
 	wg.Wait()
 
-	queriesQuerier := queriersPkg.NewQueriesQuerier(a.Config, queryInfos)
-	queriesMetrics, _ := queriesQuerier.GetMetrics(rootSpanCtx)
+	queriesMetrics := NewQueriesMetrics(a.Config, queryInfos)
+	registry.MustRegister(queriesMetrics.GetMetrics(rootSpanCtx)...)
 
 	for _, generator := range a.Generators {
 		metrics := generator.Generate(state)
 		registry.MustRegister(metrics...)
-	}
-
-	for _, metric := range queriesMetrics {
-		registry.MustRegister(metric)
 	}
 
 	h := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})

@@ -14,6 +14,9 @@ const (
 	FetcherNameSelfDelegation      FetcherName = "self-delegation"
 	FetcherNameValidators          FetcherName = "validators"
 	FetcherNameStakingParams       FetcherName = "staking_params"
+	FetcherNamePrice               FetcherName = "price"
 
 	MetricsPrefix string = "cosmos_validators_exporter_"
+
+	ValidatorStatusBonded = "BOND_STATUS_BONDED"
 )
