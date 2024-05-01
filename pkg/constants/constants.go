@@ -12,6 +12,8 @@ const (
 	FetcherNameRewards             FetcherName = "rewards"
 	FetcherNameBalance             FetcherName = "balance"
 	FetcherNameSelfDelegation      FetcherName = "self-delegation"
+	FetcherNameValidators          FetcherName = "validators"
+	FetcherNameStakingParams       FetcherName = "staking_params"
 
 	MetricsPrefix string = "cosmos_validators_exporter_"
 )

@@ -59,7 +59,6 @@ func NewApp(configPath string, version string) *App {
 
 	queriers := []types.Querier{
 		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
-		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
 	}
 
 	fetchers := []fetchersPkg.Fetcher{
@@ -72,6 +71,8 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewRewardsFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewBalanceFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewValidatorsFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -87,6 +88,11 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewRewardsGenerator(),
 		generatorsPkg.NewBalanceGenerator(),
 		generatorsPkg.NewSelfDelegationGenerator(),
+		generatorsPkg.NewValidatorsInfoGenerator(),
+		generatorsPkg.NewSingleValidatorInfoGenerator(appConfig.Chains),
+		generatorsPkg.NewValidatorRankGenerator(appConfig.Chains),
+		generatorsPkg.NewActiveSetTokensGenerator(appConfig.Chains),
+		generatorsPkg.NewStakingParamsGenerator(),
 	}
 
 	return &App{

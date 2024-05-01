@@ -59,3 +59,21 @@ func Map[T any, V any](slice []T, f func(T) V) []V {
 	}
 	return n
 }
+
+func Find[T any](slice []T, predicate func(T) bool) (*T, bool) {
+	for _, elt := range slice {
+		if predicate(elt) {
+			return &elt, true
+		}
+	}
+	return nil, false
+}
+
+func FindIndex[T any](slice []T, predicate func(T) bool) (int, bool) {
+	for index, elt := range slice {
+		if predicate(elt) {
+			return index, true
+		}
+	}
+	return 0, false
+}
