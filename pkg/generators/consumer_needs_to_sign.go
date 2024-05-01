@@ -100,6 +100,7 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 		}
 
 		thresholdVP := big.NewFloat(0)
+		minStake := big.NewFloat(0)
 
 		// calculate min stake for threshold
 		for _, validator := range activeValidators {
@@ -117,7 +118,8 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 			thresholdPercent := big.NewFloat(0).Quo(thresholdVP, totalVP)
 
 			if thresholdPercent.Cmp(big.NewFloat(chainSoftOptOutThreshold)) > 0 {
-				thresholdVPFloat, _ := thresholdVP.Float64()
+				minStake = validatorVP
+				thresholdVPFloat, _ := minStake.Float64()
 
 				minStakeGauge.
 					With(prometheus.Labels{"chain": chain.Name}).
@@ -160,7 +162,7 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 				continue
 			}
 
-			compare := validatorVP.Cmp(thresholdVP)
+			compare := validatorVP.Cmp(minStake)
 
 			needsToSignGauge.
 				With(prometheus.Labels{
