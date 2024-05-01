@@ -8,9 +8,10 @@ const (
 	FetcherNameCommission          FetcherName = "commission"
 	FetcherNameDelegations         FetcherName = "delegations"
 	FetcherNameUnbonds             FetcherName = "unbonds"
-	FetcherNameSigningInfo         FetcherName = "signing_info"
+	FetcherNameSigningInfo         FetcherName = "signing-info"
 	FetcherNameRewards             FetcherName = "rewards"
 	FetcherNameBalance             FetcherName = "balance"
+	FetcherNameSelfDelegation      FetcherName = "self-delegation"
 
 	MetricsPrefix string = "cosmos_validators_exporter_"
 )

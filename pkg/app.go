@@ -58,7 +58,6 @@ func NewApp(configPath string, version string) *App {
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
 	queriers := []types.Querier{
-		queriersPkg.NewSelfDelegationsQuerier(logger, appConfig, tracer),
 		queriersPkg.NewPriceQuerier(logger, appConfig, tracer, coingecko, dexScreener),
 		queriersPkg.NewValidatorQuerier(logger, appConfig, tracer),
 	}
@@ -72,6 +71,7 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewRewardsFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewBalanceFetcher(logger, appConfig, tracer),
+		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -86,6 +86,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewSigningInfoGenerator(),
 		generatorsPkg.NewRewardsGenerator(),
 		generatorsPkg.NewBalanceGenerator(),
+		generatorsPkg.NewSelfDelegationGenerator(),
 	}
 
 	return &App{
