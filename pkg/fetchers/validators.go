@@ -15,6 +15,7 @@ import (
 type ValidatorsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
+	RPCs   map[string]*tendermint.RPC
 	Tracer trace.Tracer
 }
 
@@ -25,11 +26,13 @@ type ValidatorsData struct {
 func NewValidatorsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
+	rpcs map[string]*tendermint.RPC,
 	tracer trace.Tracer,
 ) *ValidatorsFetcher {
 	return &ValidatorsFetcher{
 		Logger: logger.With().Str("component", "commission_fetcher").Logger(),
 		Config: config,
+		RPCs:   rpcs,
 		Tracer: tracer,
 	}
 }
@@ -45,7 +48,7 @@ func (f *ValidatorsFetcher) Fetch(
 	var mutex sync.Mutex
 
 	for _, chain := range f.Config.Chains {
-		rpc := tendermint.NewRPC(chain, f.Config.Timeout, f.Logger, f.Tracer)
+		rpc, _ := f.RPCs[chain.Name]
 
 		wg.Add(1)
 		go func(rpc *tendermint.RPC, chain config.Chain) {
