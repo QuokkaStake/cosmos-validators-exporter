@@ -2,6 +2,8 @@ package utils
 
 import (
 	"bytes"
+	"main/pkg/constants"
+	"net/http"
 	"strconv"
 
 	"github.com/btcsuite/btcutil/bech32"
@@ -91,4 +93,18 @@ func CompareTwoBech32(first, second string) (bool, error) {
 	}
 
 	return bytes.Equal(firstBytes, secondBytes), nil
+}
+
+func GetBlockHeightFromHeader(header http.Header) (int64, error) {
+	valueStr := header.Get(constants.HeaderBlockHeight)
+	if valueStr == "" {
+		return 0, nil
+	}
+
+	value, err := strconv.ParseInt(valueStr, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return value, nil
 }

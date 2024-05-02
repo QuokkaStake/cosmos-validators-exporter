@@ -19,4 +19,6 @@ const (
 	MetricsPrefix string = "cosmos_validators_exporter_"
 
 	ValidatorStatusBonded = "BOND_STATUS_BONDED"
+
+	HeaderBlockHeight = "Grpc-Metadata-X-Cosmos-Block-Height"
 )
