@@ -49,7 +49,7 @@ func (c *Coingecko) FetchPrices(
 	url := fmt.Sprintf("https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=usd", ids)
 
 	var response Response
-	queryInfo, _, err := c.Client.Get(url, &response, childCtx)
+	queryInfo, _, err := c.Client.Get(url, &response, types.HTTPPredicateAlwaysPass(), childCtx)
 
 	if err != nil {
 		c.Logger.Error().Err(err).Msg("Could not get rate")
