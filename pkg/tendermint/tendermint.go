@@ -9,6 +9,7 @@ import (
 	"main/pkg/utils"
 	"strconv"
 	"strings"
+	"sync"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -22,6 +23,9 @@ type RPC struct {
 	Timeout int
 	Logger  zerolog.Logger
 	Tracer  trace.Tracer
+
+	LastHeight map[string]int64
+	Mutex      sync.Mutex
 }
 
 func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace.Tracer) *RPC {
@@ -29,8 +33,12 @@ func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace
 		Chain:   chain,
 		Client:  http.NewClient(&logger, chain.Name, tracer),
 		Timeout: timeout,
-		Logger:  logger.With().Str("component", "rpc").Logger(),
-		Tracer:  tracer,
+		Logger: logger.With().
+			Str("component", "rpc").
+			Str("chain", chain.Name).
+			Logger(),
+		Tracer:     tracer,
+		LastHeight: map[string]int64{},
 	}
 }
 
@@ -60,7 +68,7 @@ func (rpc *RPC) GetValidator(
 	)
 
 	var response *types.ValidatorResponse
-	info, err := rpc.Client.Get(url, &response, ctx)
+	info, err := rpc.Get(url, &response, ctx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -100,7 +108,7 @@ func (rpc *RPC) GetProviderValidator(
 	)
 
 	var response *types.ValidatorResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -135,7 +143,7 @@ func (rpc *RPC) GetDelegationsCount(
 	)
 
 	var response *types.PaginationResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -170,7 +178,7 @@ func (rpc *RPC) GetUnbondsCount(
 	)
 
 	var response *types.PaginationResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -209,7 +217,7 @@ func (rpc *RPC) GetSingleDelegation(
 	)
 
 	var response types.SingleDelegationResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return &types.Amount{}, &info, err
 	}
@@ -244,7 +252,7 @@ func (rpc *RPC) GetAllValidators(
 	url := host + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000"
 
 	var response *types.ValidatorsResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -279,7 +287,7 @@ func (rpc *RPC) GetValidatorCommission(
 	)
 
 	var response *types.CommissionResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
@@ -315,7 +323,7 @@ func (rpc *RPC) GetDelegatorRewards(
 	)
 
 	var response *types.RewardsResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
@@ -352,7 +360,7 @@ func (rpc *RPC) GetWalletBalance(
 	)
 
 	var response types.BalancesResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
 	}
@@ -380,7 +388,7 @@ func (rpc *RPC) GetSigningInfo(
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
 	var response *types.SigningInfoResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -409,7 +417,7 @@ func (rpc *RPC) GetSlashingParams(
 	url := rpc.Chain.LCDEndpoint + "/cosmos/slashing/v1beta1/params"
 
 	var response *types.SlashingParamsResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -431,7 +439,7 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 	defer span.End()
 
 	var response *types.ParamsResponse
-	info, err := rpc.Client.Get(
+	info, err := rpc.Get(
 		rpc.Chain.LCDEndpoint+"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
 		&response,
 		childQuerierCtx,
@@ -476,7 +484,7 @@ func (rpc *RPC) GetStakingParams(
 	url := host + "/cosmos/staking/v1beta1/params"
 
 	var response *types.StakingParamsResponse
-	info, err := rpc.Client.Get(url, &response, childQuerierCtx)
+	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
@@ -487,4 +495,31 @@ func (rpc *RPC) GetStakingParams(
 	}
 
 	return response, &info, nil
+}
+
+func (rpc *RPC) Get(
+	url string,
+	target interface{},
+	ctx context.Context,
+) (types.QueryInfo, error) {
+	info, header, err := rpc.Client.Get(url, target, ctx)
+	if err != nil {
+		return info, err
+	}
+
+	height, err := utils.GetBlockHeightFromHeader(header)
+	if err != nil {
+		return info, err
+	}
+
+	rpc.Mutex.Lock()
+	rpc.LastHeight[url] = height
+	rpc.Mutex.Unlock()
+
+	rpc.Logger.Trace().
+		Str("url", url).
+		Int64("height", height).
+		Msg("Got response at height")
+
+	return info, err
 }

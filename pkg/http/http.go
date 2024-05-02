@@ -34,7 +34,7 @@ func (c *Client) Get(
 	url string,
 	target interface{},
 	ctx context.Context,
-) (types.QueryInfo, error) {
+) (types.QueryInfo, http.Header, error) {
 	childCtx, span := c.tracer.Start(ctx, "HTTP request")
 	defer span.End()
 
@@ -54,7 +54,7 @@ func (c *Client) Get(
 
 	if err != nil {
 		span.RecordError(err)
-		return queryInfo, err
+		return queryInfo, nil, err
 	}
 
 	req.Header.Set("User-Agent", "cosmos-validators-exporter")
@@ -65,7 +65,7 @@ func (c *Client) Get(
 	queryInfo.Duration = time.Since(start)
 	if err != nil {
 		c.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
-		return queryInfo, err
+		return queryInfo, nil, err
 	}
 	defer res.Body.Close()
 
@@ -74,5 +74,5 @@ func (c *Client) Get(
 	err = json.NewDecoder(res.Body).Decode(target)
 	queryInfo.Success = err == nil
 
-	return queryInfo, err
+	return queryInfo, res.Header, err
 }
