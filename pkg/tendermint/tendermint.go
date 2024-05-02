@@ -502,7 +502,20 @@ func (rpc *RPC) Get(
 	target interface{},
 	ctx context.Context,
 ) (types.QueryInfo, error) {
-	info, header, err := rpc.Client.Get(url, target, ctx)
+	rpc.Mutex.Lock()
+	previousHeight, found := rpc.LastHeight[url]
+	if !found {
+		previousHeight = 0
+	}
+	rpc.Mutex.Unlock()
+
+	info, header, err := rpc.Client.Get(
+		url,
+		target,
+		types.HTTPPredicateCheckHeightAfter(previousHeight),
+		ctx,
+	)
+
 	if err != nil {
 		return info, err
 	}
