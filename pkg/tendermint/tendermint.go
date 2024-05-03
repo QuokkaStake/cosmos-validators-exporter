@@ -16,6 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
@@ -382,19 +383,14 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 	)
 	defer span.End()
 
-	var response *types.ParamsResponse
-	info, err := rpc.Get(
+	var response paramsTypes.QueryParamsResponse
+	info, err := rpc.Get2(
 		rpc.Chain.LCDEndpoint+"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
 		&response,
 		childQuerierCtx,
 	)
 	if err != nil {
 		return 0, &info, err
-	}
-
-	if response.Code != 0 {
-		info.Success = false
-		return 0, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
 	valueStripped := strings.ReplaceAll(response.Param.Value, "\"", "")
