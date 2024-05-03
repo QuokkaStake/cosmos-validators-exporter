@@ -134,13 +134,6 @@ type RewardsResponse struct {
 	Rewards []ResponseAmount `json:"rewards"`
 }
 
-type StakingParamsResponse struct {
-	Code          int `json:"code"`
-	StakingParams struct {
-		MaxValidators int `json:"max_validators"`
-	} `json:"params"`
-}
-
 type CommissionResponse struct {
 	Code       int `json:"code"`
 	Commission struct {

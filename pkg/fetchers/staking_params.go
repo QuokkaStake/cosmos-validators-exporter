@@ -2,6 +2,7 @@ package fetchers
 
 import (
 	"context"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/tendermint"
@@ -20,7 +21,7 @@ type StakingParamsFetcher struct {
 }
 
 type StakingParamsData struct {
-	Params map[string]*types.StakingParamsResponse
+	Params map[string]*stakingTypes.Params
 }
 
 func NewStakingParamsFetcher(
@@ -42,7 +43,7 @@ func (q *StakingParamsFetcher) Fetch(
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	allParams := map[string]*types.StakingParamsResponse{}
+	allParams := map[string]*stakingTypes.Params{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex

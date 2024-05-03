@@ -63,7 +63,7 @@ func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.
 
 		lastValidatorStake := utils.StrToFloat64(activeValidators[len(activeValidators)-1].DelegatorShares)
 
-		if chainStakingParams != nil && len(activeValidators) >= chainStakingParams.StakingParams.MaxValidators {
+		if chainStakingParams != nil && uint32(len(activeValidators)) >= chainStakingParams.MaxValidators {
 			activeSetTokensGauge.With(prometheus.Labels{
 				"chain": chain.Name,
 			}).Set(lastValidatorStake)

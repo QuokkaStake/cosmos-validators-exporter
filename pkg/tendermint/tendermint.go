@@ -3,11 +3,13 @@ package tendermint
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/std"
 	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 	"main/pkg/config"
 	"main/pkg/http"
@@ -411,7 +413,7 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 
 func (rpc *RPC) GetStakingParams(
 	ctx context.Context,
-) (*types.StakingParamsResponse, *types.QueryInfo, error) {
+) (*stakingTypes.Params, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("staking-params") {
 		return nil, nil, nil
 	}
@@ -429,18 +431,13 @@ func (rpc *RPC) GetStakingParams(
 
 	url := host + "/cosmos/staking/v1beta1/params"
 
-	var response *types.StakingParamsResponse
-	info, err := rpc.Get(url, &response, childQuerierCtx)
+	var response stakingTypes.QueryParamsResponse
+	info, err := rpc.Get2(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
 
-	if response.Code != 0 {
-		info.Success = false
-		return &types.StakingParamsResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
-	}
-
-	return response, &info, nil
+	return &response.Params, &info, nil
 }
 
 func (rpc *RPC) Get(
@@ -507,6 +504,21 @@ func (rpc *RPC) Get2(
 
 	if err != nil {
 		return info, err
+	}
+
+	// check whether the response is error first
+	var errorResponse types.LCDError
+	if err := json.Unmarshal(body, &errorResponse); err == nil {
+		// if we successfully unmarshalled it into LCDError, so err == nil,
+		// that means the response is indeed an error.
+		if errorResponse.Code != 0 {
+			rpc.Logger.Warn().Str("url", url).
+				Err(err).
+				Int("code", errorResponse.Code).
+				Str("message", errorResponse.Message).
+				Msg("LCD request returned an error")
+			return info, errors.New(errorResponse.Message)
+		}
 	}
 
 	if unmarshalErr := rpc.ParseCodec.UnmarshalJSON(body, target); unmarshalErr != nil {
