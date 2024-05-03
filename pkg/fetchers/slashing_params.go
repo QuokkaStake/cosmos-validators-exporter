@@ -2,12 +2,13 @@ package fetchers
 
 import (
 	"context"
-	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"sync"
+
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"

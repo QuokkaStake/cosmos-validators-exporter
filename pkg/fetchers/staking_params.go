@@ -2,12 +2,13 @@ package fetchers
 
 import (
 	"context"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"sync"
+
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
