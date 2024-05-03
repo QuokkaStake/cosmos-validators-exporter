@@ -322,7 +322,7 @@ func (rpc *RPC) GetWalletBalance(
 func (rpc *RPC) GetSigningInfo(
 	valcons string,
 	ctx context.Context,
-) (*types.SigningInfoResponse, *types.QueryInfo, error) {
+) (*slashingTypes.ValidatorSigningInfo, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("signing-info") {
 		return nil, nil, nil
 	}
@@ -336,18 +336,13 @@ func (rpc *RPC) GetSigningInfo(
 
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
-	var response *types.SigningInfoResponse
-	info, err := rpc.Get(url, &response, childQuerierCtx)
+	var response slashingTypes.QuerySigningInfoResponse
+	info, err := rpc.Get2(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
 
-	if response.Code != 0 {
-		info.Success = false
-		return &types.SigningInfoResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
-	}
-
-	return response, &info, nil
+	return &response.ValSigningInfo, &info, nil
 }
 
 func (rpc *RPC) GetSlashingParams(
@@ -518,6 +513,7 @@ func (rpc *RPC) Get2(
 				Int("code", errorResponse.Code).
 				Str("message", errorResponse.Message).
 				Msg("LCD request returned an error")
+			info.Success = false
 			return info, errors.New(errorResponse.Message)
 		}
 	}
