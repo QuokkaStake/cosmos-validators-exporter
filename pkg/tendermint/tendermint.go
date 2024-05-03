@@ -2,7 +2,13 @@ package tendermint
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	"github.com/gogo/protobuf/proto"
 	"main/pkg/config"
 	"main/pkg/http"
 	"main/pkg/types"
@@ -24,11 +30,18 @@ type RPC struct {
 	Logger  zerolog.Logger
 	Tracer  trace.Tracer
 
+	Registry   codecTypes.InterfaceRegistry
+	ParseCodec *codec.ProtoCodec
+
 	LastHeight map[string]int64
 	Mutex      sync.Mutex
 }
 
 func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace.Tracer) *RPC {
+	interfaceRegistry := codecTypes.NewInterfaceRegistry()
+	std.RegisterInterfaces(interfaceRegistry)
+	parseCodec := codec.NewProtoCodec(interfaceRegistry)
+
 	return &RPC{
 		Chain:   chain,
 		Client:  http.NewClient(&logger, chain.Name, tracer),
@@ -39,6 +52,8 @@ func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace
 			Logger(),
 		Tracer:     tracer,
 		LastHeight: map[string]int64{},
+		Registry:   interfaceRegistry,
+		ParseCodec: parseCodec,
 	}
 }
 
@@ -334,7 +349,7 @@ func (rpc *RPC) GetSigningInfo(
 
 func (rpc *RPC) GetSlashingParams(
 	ctx context.Context,
-) (*types.SlashingParamsResponse, *types.QueryInfo, error) {
+) (*slashingTypes.Params, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("slashing-params") {
 		return nil, nil, nil
 	}
@@ -347,18 +362,13 @@ func (rpc *RPC) GetSlashingParams(
 
 	url := rpc.Chain.LCDEndpoint + "/cosmos/slashing/v1beta1/params"
 
-	var response *types.SlashingParamsResponse
-	info, err := rpc.Get(url, &response, childQuerierCtx)
+	var response slashingTypes.QueryParamsResponse
+	info, err := rpc.Get2(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
 
-	if response.Code != 0 {
-		info.Success = false
-		return nil, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
-	}
-
-	return response, &info, nil
+	return &response.Params, &info, nil
 }
 
 func (rpc *RPC) GetConsumerSoftOutOutThreshold(
@@ -445,15 +455,63 @@ func (rpc *RPC) Get(
 	}
 	rpc.Mutex.Unlock()
 
-	info, header, err := rpc.Client.Get(
+	body, header, info, err := rpc.Client.Get(
 		url,
-		target,
 		types.HTTPPredicateCheckHeightAfter(previousHeight),
 		ctx,
 	)
 
 	if err != nil {
 		return info, err
+	}
+
+	if unmarshalErr := json.Unmarshal(body, target); unmarshalErr != nil {
+		rpc.Logger.Warn().Str("url", url).Err(unmarshalErr).Msg("JSON unmarshalling failed")
+		return info, unmarshalErr
+	}
+
+	height, err := utils.GetBlockHeightFromHeader(header)
+	if err != nil {
+		return info, err
+	}
+
+	rpc.Mutex.Lock()
+	rpc.LastHeight[url] = height
+	rpc.Mutex.Unlock()
+
+	rpc.Logger.Trace().
+		Str("url", url).
+		Int64("height", height).
+		Msg("Got response at height")
+
+	return info, err
+}
+
+func (rpc *RPC) Get2(
+	url string,
+	target proto.Message,
+	ctx context.Context,
+) (types.QueryInfo, error) {
+	rpc.Mutex.Lock()
+	previousHeight, found := rpc.LastHeight[url]
+	if !found {
+		previousHeight = 0
+	}
+	rpc.Mutex.Unlock()
+
+	body, header, info, err := rpc.Client.Get(
+		url,
+		types.HTTPPredicateCheckHeightAfter(previousHeight),
+		ctx,
+	)
+
+	if err != nil {
+		return info, err
+	}
+
+	if unmarshalErr := rpc.ParseCodec.UnmarshalJSON(body, target); unmarshalErr != nil {
+		rpc.Logger.Warn().Str("url", url).Err(unmarshalErr).Msg("JSON unmarshalling failed")
+		return info, unmarshalErr
 	}
 
 	height, err := utils.GetBlockHeightFromHeader(header)

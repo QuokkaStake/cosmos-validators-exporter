@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	"encoding/json"
+	"io"
 	"main/pkg/types"
 	"net/http"
 	"time"
@@ -32,10 +32,9 @@ func NewClient(logger *zerolog.Logger, chain string, tracer trace.Tracer) *Clien
 
 func (c *Client) Get(
 	url string,
-	target interface{},
 	predicate types.HTTPPredicate,
 	ctx context.Context,
-) (types.QueryInfo, http.Header, error) {
+) ([]byte, http.Header, types.QueryInfo, error) {
 	childCtx, span := c.tracer.Start(ctx, "HTTP request")
 	defer span.End()
 
@@ -55,7 +54,7 @@ func (c *Client) Get(
 
 	if err != nil {
 		span.RecordError(err)
-		return queryInfo, nil, err
+		return []byte{}, nil, queryInfo, err
 	}
 
 	req.Header.Set("User-Agent", "cosmos-validators-exporter")
@@ -66,18 +65,23 @@ func (c *Client) Get(
 	queryInfo.Duration = time.Since(start)
 	if err != nil {
 		c.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
-		return queryInfo, nil, err
+		return []byte{}, nil, queryInfo, err
 	}
 	defer res.Body.Close()
 
 	c.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
 
 	if predicateErr := predicate(res); predicateErr != nil {
-		return queryInfo, res.Header, predicateErr
+		return []byte{}, res.Header, queryInfo, predicateErr
 	}
 
-	err = json.NewDecoder(res.Body).Decode(target)
+	bytes, err := io.ReadAll(res.Body)
 	queryInfo.Success = err == nil
 
-	return queryInfo, res.Header, err
+	if err != nil {
+		queryInfo.Success = false
+		return []byte{}, res.Header, queryInfo, err
+	}
+
+	return bytes, res.Header, queryInfo, nil
 }

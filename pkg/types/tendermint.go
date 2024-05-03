@@ -120,13 +120,6 @@ type SigningInfoResponse struct {
 	} `json:"val_signing_info"`
 }
 
-type SlashingParamsResponse struct {
-	Code           int `json:"code"`
-	SlashingParams struct {
-		SignedBlocksWindow string `json:"signed_blocks_window"`
-	} `json:"params"`
-}
-
 type SingleDelegationResponse struct {
 	Code               int                `json:"code"`
 	DelegationResponse DelegationResponse `json:"delegation_response"`
