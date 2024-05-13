@@ -76,9 +76,7 @@ type Chain struct {
 	Validators       []Validator     `toml:"validators"`
 	Queries          map[string]bool `toml:"queries"`
 
-	ProviderChainLCD                 string `toml:"provider-lcd-endpoint"`
-	ProviderChainBechValidatorPrefix string `toml:"provider-bech-validator-prefix"`
-	ProviderChainBechWalletPrefix    string `toml:"provider-bech-wallet-prefix"`
+	ProviderChainLCD string `toml:"provider-lcd-endpoint"`
 }
 
 func (c *Chain) IsConsumer() bool {

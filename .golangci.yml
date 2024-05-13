@@ -54,3 +54,4 @@ linters:
     - depguard
     - structcheck
     - varcheck
+    - mnd
