@@ -22,9 +22,15 @@ lcd-endpoint = "https://api.bitsong.quokkastake.io"
 # which later can be joined with other metrics (such as, total delegated tokens)
 # and the price can be calculated based on that.
 base-denom = "ubtsg"
+# Provider chain LCD endpoint to query data from, for Replicated Security.
+# If it's empty, we consider the chain a sovereign one.
+# Please do not set it for sovereign chains and set it for consumer chains, as otherwise
+# half of the queries won't work (for instance, everything related to staking).
+# Defaults to empty string, so basically not set (chain's treated as a sovereign one).
+provider-lcd-endpoint = ""
 # Denoms info.
 # Used to 1) be exposed as a standalone metric, and 2) when calculating metric for token price.
-# This is an an array of objects with following values:
+# This is an array of objects with following values:
 # 1. coingecko-currency
 # Coingecko currency, specify it if you want to also get the wallet balance
 # in total in USD. Optional.
