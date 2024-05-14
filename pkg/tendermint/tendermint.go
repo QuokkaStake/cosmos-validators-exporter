@@ -213,6 +213,11 @@ func (rpc *RPC) GetValidatorCommission(
 		return []types.Amount{}, &info, err
 	}
 
+	if response.Code != 0 {
+		info.Success = false
+		return []types.Amount{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return utils.Map(response.Commission.Commission, func(amount types.ResponseAmount) types.Amount {
 		return amount.ToAmount()
 	}), &info, nil
@@ -286,6 +291,11 @@ func (rpc *RPC) GetWalletBalance(
 		return []types.Amount{}, &info, err
 	}
 
+	if response.Code != 0 {
+		info.Success = false
+		return nil, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
 	return utils.Map(response.Balances, func(amount types.ResponseAmount) types.Amount {
 		return amount.ToAmount()
 	}), &info, nil
@@ -341,6 +351,11 @@ func (rpc *RPC) GetSlashingParams(
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return nil, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
 	return response, &info, nil

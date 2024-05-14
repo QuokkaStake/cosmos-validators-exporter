@@ -30,7 +30,7 @@ func NewValidatorsFetcher(
 	tracer trace.Tracer,
 ) *ValidatorsFetcher {
 	return &ValidatorsFetcher{
-		Logger: logger.With().Str("component", "commission_fetcher").Logger(),
+		Logger: logger.With().Str("component", "validators_fetcher").Logger(),
 		Config: config,
 		RPCs:   rpcs,
 		Tracer: tracer,

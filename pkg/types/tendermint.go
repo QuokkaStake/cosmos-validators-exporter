@@ -92,6 +92,7 @@ type ValidatorsResponse struct {
 }
 
 type BalancesResponse struct {
+	Code     int              `json:"code"`
 	Balances []ResponseAmount `json:"balances"`
 }
 
@@ -120,6 +121,7 @@ type SigningInfoResponse struct {
 }
 
 type SlashingParamsResponse struct {
+	Code           int `json:"code"`
 	SlashingParams struct {
 		SignedBlocksWindow string `json:"signed_blocks_window"`
 	} `json:"params"`
