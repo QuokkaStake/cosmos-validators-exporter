@@ -68,7 +68,7 @@ func (q *StakingParamsFetcher) Fetch(
 				q.Logger.Error().
 					Err(err).
 					Str("chain", chain.Name).
-					Msg("Error querying slashing params")
+					Msg("Error querying staking params")
 				return
 			}
 
