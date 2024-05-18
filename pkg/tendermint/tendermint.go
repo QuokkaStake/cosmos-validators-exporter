@@ -433,6 +433,35 @@ func (rpc *RPC) GetStakingParams(
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetNodeInfo(
+	ctx context.Context,
+) (*types.NodeInfoResponse, *types.QueryInfo, error) {
+	if !rpc.Chain.QueryEnabled("node-info") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching node info",
+	)
+	defer span.End()
+
+	url := rpc.Chain.LCDEndpoint + "/cosmos/base/tendermint/v1beta1/node_info"
+
+	var response *types.NodeInfoResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.NodeInfoResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) Get(
 	url string,
 	target interface{},

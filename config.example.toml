@@ -105,6 +105,8 @@ signing-info = true
 slashing-params = true
 # Query for chain staking params/max validators count
 staking-params = true
+# Query for node info (chain_id, app/cosmos-sdk/tendermint version, app name)
+node-info = true
 
 # There can be multiple chains.
 [[chains]]
