@@ -163,3 +163,17 @@ type ParamsResponse struct {
 		Value    string `json:"value"`
 	} `json:"param"`
 }
+
+type NodeInfoResponse struct {
+	Code            int `json:"code"`
+	DefaultNodeInfo struct {
+		Network string `json:"network"`
+		Version string `json:"version"`
+	} `json:"default_node_info"`
+	ApplicationVersion struct {
+		Name             string `json:"name"`
+		AppName          string `json:"app_name"`
+		Version          string `json:"version"`
+		CosmosSDKVersion string `json:"cosmos_sdk_version"`
+	} `json:"application_version"`
+}

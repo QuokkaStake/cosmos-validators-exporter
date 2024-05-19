@@ -15,6 +15,7 @@ const (
 	FetcherNameValidators          FetcherName = "validators"
 	FetcherNameStakingParams       FetcherName = "staking_params"
 	FetcherNamePrice               FetcherName = "price"
+	FetcherNameNodeInfo            FetcherName = "node_info"
 
 	MetricsPrefix string = "cosmos_validators_exporter_"
 
