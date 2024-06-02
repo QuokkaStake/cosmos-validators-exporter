@@ -32,7 +32,7 @@ func (g *StakingParamsGenerator) Generate(state *statePkg.State) []prometheus.Co
 	data, _ := dataRaw.(fetchersPkg.StakingParamsData)
 
 	for chain, params := range data.Params {
-		maxValidators := int64(params.StakingParams.MaxValidators)
+		maxValidators := int64(params.MaxValidators)
 		if maxValidators >= 0 {
 			activeSetSizeGauge.With(prometheus.Labels{
 				"chain": chain,

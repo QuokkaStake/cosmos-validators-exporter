@@ -8,6 +8,8 @@ import (
 	"main/pkg/types"
 	"sync"
 
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -20,7 +22,7 @@ type SigningInfoFetcher struct {
 }
 
 type SigningInfoData struct {
-	SigningInfos map[string]map[string]*types.SigningInfoResponse
+	SigningInfos map[string]map[string]*slashingTypes.ValidatorSigningInfo
 }
 
 func NewSigningInfoFetcher(
@@ -42,14 +44,14 @@ func (q *SigningInfoFetcher) Fetch(
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	allSigningInfos := map[string]map[string]*types.SigningInfoResponse{}
+	allSigningInfos := map[string]map[string]*slashingTypes.ValidatorSigningInfo{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
 		mutex.Lock()
-		allSigningInfos[chain.Name] = map[string]*types.SigningInfoResponse{}
+		allSigningInfos[chain.Name] = map[string]*slashingTypes.ValidatorSigningInfo{}
 		mutex.Unlock()
 
 		rpc, _ := q.RPCs[chain.Name]

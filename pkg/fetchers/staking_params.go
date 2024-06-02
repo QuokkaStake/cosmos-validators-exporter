@@ -8,6 +8,8 @@ import (
 	"main/pkg/types"
 	"sync"
 
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -20,7 +22,7 @@ type StakingParamsFetcher struct {
 }
 
 type StakingParamsData struct {
-	Params map[string]*types.StakingParamsResponse
+	Params map[string]*stakingTypes.Params
 }
 
 func NewStakingParamsFetcher(
@@ -42,7 +44,7 @@ func (q *StakingParamsFetcher) Fetch(
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	allParams := map[string]*types.StakingParamsResponse{}
+	allParams := map[string]*stakingTypes.Params{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex

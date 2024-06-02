@@ -2,6 +2,8 @@ package tendermint
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"main/pkg/config"
 	"main/pkg/http"
@@ -10,6 +12,14 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/std"
+	paramsTypes "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -24,11 +34,18 @@ type RPC struct {
 	Logger  zerolog.Logger
 	Tracer  trace.Tracer
 
+	Registry   codecTypes.InterfaceRegistry
+	ParseCodec *codec.ProtoCodec
+
 	LastHeight map[string]int64
 	Mutex      sync.Mutex
 }
 
 func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace.Tracer) *RPC {
+	interfaceRegistry := codecTypes.NewInterfaceRegistry()
+	std.RegisterInterfaces(interfaceRegistry)
+	parseCodec := codec.NewProtoCodec(interfaceRegistry)
+
 	return &RPC{
 		Chain:   chain,
 		Client:  http.NewClient(&logger, chain.Name, tracer),
@@ -39,6 +56,8 @@ func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace
 			Logger(),
 		Tracer:     tracer,
 		LastHeight: map[string]int64{},
+		Registry:   interfaceRegistry,
+		ParseCodec: parseCodec,
 	}
 }
 
@@ -304,7 +323,7 @@ func (rpc *RPC) GetWalletBalance(
 func (rpc *RPC) GetSigningInfo(
 	valcons string,
 	ctx context.Context,
-) (*types.SigningInfoResponse, *types.QueryInfo, error) {
+) (*slashingTypes.ValidatorSigningInfo, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("signing-info") {
 		return nil, nil, nil
 	}
@@ -318,23 +337,18 @@ func (rpc *RPC) GetSigningInfo(
 
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
 
-	var response *types.SigningInfoResponse
-	info, err := rpc.Get(url, &response, childQuerierCtx)
+	var response slashingTypes.QuerySigningInfoResponse
+	info, err := rpc.Get2(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
 
-	if response.Code != 0 {
-		info.Success = false
-		return &types.SigningInfoResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
-	}
-
-	return response, &info, nil
+	return &response.ValSigningInfo, &info, nil
 }
 
 func (rpc *RPC) GetSlashingParams(
 	ctx context.Context,
-) (*types.SlashingParamsResponse, *types.QueryInfo, error) {
+) (*slashingTypes.Params, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("slashing-params") {
 		return nil, nil, nil
 	}
@@ -347,18 +361,13 @@ func (rpc *RPC) GetSlashingParams(
 
 	url := rpc.Chain.LCDEndpoint + "/cosmos/slashing/v1beta1/params"
 
-	var response *types.SlashingParamsResponse
-	info, err := rpc.Get(url, &response, childQuerierCtx)
+	var response slashingTypes.QueryParamsResponse
+	info, err := rpc.Get2(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
 
-	if response.Code != 0 {
-		info.Success = false
-		return nil, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
-	}
-
-	return response, &info, nil
+	return &response.Params, &info, nil
 }
 
 func (rpc *RPC) GetConsumerSoftOutOutThreshold(
@@ -374,19 +383,14 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 	)
 	defer span.End()
 
-	var response *types.ParamsResponse
-	info, err := rpc.Get(
+	var response paramsTypes.QueryParamsResponse
+	info, err := rpc.Get2(
 		rpc.Chain.LCDEndpoint+"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
 		&response,
 		childQuerierCtx,
 	)
 	if err != nil {
 		return 0, &info, err
-	}
-
-	if response.Code != 0 {
-		info.Success = false
-		return 0, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
 	valueStripped := strings.ReplaceAll(response.Param.Value, "\"", "")
@@ -401,7 +405,7 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 
 func (rpc *RPC) GetStakingParams(
 	ctx context.Context,
-) (*types.StakingParamsResponse, *types.QueryInfo, error) {
+) (*stakingTypes.Params, *types.QueryInfo, error) {
 	if !rpc.Chain.QueryEnabled("staking-params") {
 		return nil, nil, nil
 	}
@@ -419,18 +423,13 @@ func (rpc *RPC) GetStakingParams(
 
 	url := host + "/cosmos/staking/v1beta1/params"
 
-	var response *types.StakingParamsResponse
-	info, err := rpc.Get(url, &response, childQuerierCtx)
+	var response stakingTypes.QueryParamsResponse
+	info, err := rpc.Get2(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
 	}
 
-	if response.Code != 0 {
-		info.Success = false
-		return &types.StakingParamsResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
-	}
-
-	return response, &info, nil
+	return &response.Params, &info, nil
 }
 
 func (rpc *RPC) GetNodeInfo(
@@ -474,15 +473,79 @@ func (rpc *RPC) Get(
 	}
 	rpc.Mutex.Unlock()
 
-	info, header, err := rpc.Client.Get(
+	body, header, info, err := rpc.Client.Get(
 		url,
-		target,
 		types.HTTPPredicateCheckHeightAfter(previousHeight),
 		ctx,
 	)
 
 	if err != nil {
 		return info, err
+	}
+
+	if unmarshalErr := json.Unmarshal(body, target); unmarshalErr != nil {
+		rpc.Logger.Warn().Str("url", url).Err(unmarshalErr).Msg("JSON unmarshalling failed")
+		return info, unmarshalErr
+	}
+
+	height, err := utils.GetBlockHeightFromHeader(header)
+	if err != nil {
+		return info, err
+	}
+
+	rpc.Mutex.Lock()
+	rpc.LastHeight[url] = height
+	rpc.Mutex.Unlock()
+
+	rpc.Logger.Trace().
+		Str("url", url).
+		Int64("height", height).
+		Msg("Got response at height")
+
+	return info, err
+}
+
+func (rpc *RPC) Get2(
+	url string,
+	target proto.Message,
+	ctx context.Context,
+) (types.QueryInfo, error) {
+	rpc.Mutex.Lock()
+	previousHeight, found := rpc.LastHeight[url]
+	if !found {
+		previousHeight = 0
+	}
+	rpc.Mutex.Unlock()
+
+	body, header, info, err := rpc.Client.Get(
+		url,
+		types.HTTPPredicateCheckHeightAfter(previousHeight),
+		ctx,
+	)
+
+	if err != nil {
+		return info, err
+	}
+
+	// check whether the response is error first
+	var errorResponse types.LCDError
+	if err := json.Unmarshal(body, &errorResponse); err == nil {
+		// if we successfully unmarshalled it into LCDError, so err == nil,
+		// that means the response is indeed an error.
+		if errorResponse.Code != 0 {
+			rpc.Logger.Warn().Str("url", url).
+				Err(err).
+				Int("code", errorResponse.Code).
+				Str("message", errorResponse.Message).
+				Msg("LCD request returned an error")
+			info.Success = false
+			return info, errors.New(errorResponse.Message)
+		}
+	}
+
+	if unmarshalErr := rpc.ParseCodec.UnmarshalJSON(body, target); unmarshalErr != nil {
+		rpc.Logger.Warn().Str("url", url).Err(unmarshalErr).Msg("JSON unmarshalling failed")
+		return info, unmarshalErr
 	}
 
 	height, err := utils.GetBlockHeightFromHeader(header)

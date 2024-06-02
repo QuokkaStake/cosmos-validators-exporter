@@ -2,6 +2,7 @@ package coingecko
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"main/pkg/config"
 	"main/pkg/http"
@@ -49,11 +50,16 @@ func (c *Coingecko) FetchPrices(
 	url := fmt.Sprintf("https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=usd", ids)
 
 	var response Response
-	queryInfo, _, err := c.Client.Get(url, &response, types.HTTPPredicateAlwaysPass(), childCtx)
+	bytes, _, queryInfo, err := c.Client.Get(url, types.HTTPPredicateAlwaysPass(), childCtx)
 
 	if err != nil {
 		c.Logger.Error().Err(err).Msg("Could not get rate")
 		querierSpan.RecordError(err)
+		return nil, &queryInfo
+	}
+
+	if unmarshalErr := json.Unmarshal(bytes, &response); unmarshalErr != nil {
+		c.Logger.Warn().Str("url", url).Err(unmarshalErr).Msg("JSON unmarshalling failed")
 		return nil, &queryInfo
 	}
 

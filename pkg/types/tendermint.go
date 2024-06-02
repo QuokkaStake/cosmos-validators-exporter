@@ -1,15 +1,9 @@
 package types
 
 import (
-	b64 "encoding/base64"
 	"main/pkg/constants"
 	"main/pkg/utils"
 	"time"
-
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/types"
 )
 
 type ValidatorResponse struct {
@@ -51,30 +45,6 @@ func (v Validator) Active() bool {
 type ConsensusPubkey struct {
 	Type string `json:"@type"`
 	Key  string `json:"key"`
-}
-
-func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	interfaceRegistry := encCfg.InterfaceRegistry
-
-	sDec, _ := b64.StdEncoding.DecodeString(key.Key)
-	pk := codecTypes.Any{
-		TypeUrl: key.Type,
-		Value:   append([]byte{10, 32}, sDec...),
-	}
-
-	var pkProto cryptoTypes.PubKey
-	if err := interfaceRegistry.UnpackAny(&pk, &pkProto); err != nil {
-		return "", err
-	}
-
-	cosmosValCons := types.ConsAddress(pkProto.Address()).String()
-	properValCons, err := utils.ChangeBech32Prefix(cosmosValCons, prefix)
-	if err != nil {
-		return "", err
-	}
-
-	return properValCons, nil
 }
 
 type PaginationResponse struct {
@@ -120,13 +90,6 @@ type SigningInfoResponse struct {
 	} `json:"val_signing_info"`
 }
 
-type SlashingParamsResponse struct {
-	Code           int `json:"code"`
-	SlashingParams struct {
-		SignedBlocksWindow string `json:"signed_blocks_window"`
-	} `json:"params"`
-}
-
 type SingleDelegationResponse struct {
 	Code               int                `json:"code"`
 	DelegationResponse DelegationResponse `json:"delegation_response"`
@@ -139,13 +102,6 @@ type DelegationResponse struct {
 type RewardsResponse struct {
 	Code    int              `json:"code"`
 	Rewards []ResponseAmount `json:"rewards"`
-}
-
-type StakingParamsResponse struct {
-	Code          int `json:"code"`
-	StakingParams struct {
-		MaxValidators int `json:"max_validators"`
-	} `json:"params"`
 }
 
 type CommissionResponse struct {

@@ -8,6 +8,8 @@ import (
 	"main/pkg/types"
 	"sync"
 
+	slashingTypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -20,7 +22,7 @@ type SlashingParamsFetcher struct {
 }
 
 type SlashingParamsData struct {
-	Params map[string]*types.SlashingParamsResponse
+	Params map[string]*slashingTypes.Params
 }
 
 func NewSlashingParamsFetcher(
@@ -42,7 +44,7 @@ func (q *SlashingParamsFetcher) Fetch(
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	allParams := map[string]*types.SlashingParamsResponse{}
+	allParams := map[string]*slashingTypes.Params{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
