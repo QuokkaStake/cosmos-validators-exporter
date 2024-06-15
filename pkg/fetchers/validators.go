@@ -15,7 +15,7 @@ import (
 type ValidatorsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -26,7 +26,7 @@ type ValidatorsData struct {
 func NewValidatorsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *ValidatorsFetcher {
 	return &ValidatorsFetcher{
@@ -51,7 +51,7 @@ func (f *ValidatorsFetcher) Fetch(
 		rpc, _ := f.RPCs[chain.Name]
 
 		wg.Add(1)
-		go func(rpc *tendermint.RPC, chain config.Chain) {
+		go func(rpc *tendermint.RPC, chain *config.Chain) {
 			defer wg.Done()
 
 			allValidatorsList, queryInfo, err := rpc.GetAllValidators(ctx)
@@ -72,7 +72,7 @@ func (f *ValidatorsFetcher) Fetch(
 			}
 
 			allValidators[chain.Name] = allValidatorsList
-		}(rpc, chain)
+		}(rpc.RPC, chain)
 	}
 
 	wg.Wait()

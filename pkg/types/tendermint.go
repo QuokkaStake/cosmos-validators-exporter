@@ -120,6 +120,11 @@ type SigningInfoResponse struct {
 	} `json:"val_signing_info"`
 }
 
+type AssignedKeyResponse struct {
+	Code            int    `json:"code"`
+	ConsumerAddress string `json:"consumer_address"`
+}
+
 type SlashingParamsResponse struct {
 	Code           int `json:"code"`
 	SlashingParams struct {

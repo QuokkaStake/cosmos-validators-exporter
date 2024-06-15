@@ -14,12 +14,12 @@ import (
 )
 
 type SingleValidatorInfoGenerator struct {
-	Chains []configPkg.Chain
+	Chains []*configPkg.Chain
 	Logger zerolog.Logger
 }
 
 func NewSingleValidatorInfoGenerator(
-	chains []configPkg.Chain,
+	chains []*configPkg.Chain,
 	logger *zerolog.Logger,
 ) *SingleValidatorInfoGenerator {
 	return &SingleValidatorInfoGenerator{
@@ -110,7 +110,7 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 		}
 
 		for _, validatorAddr := range chain.Validators {
-			validator, ok := utils.Find(chainValidators.Validators, func(v types.Validator) bool {
+			compare := func(v types.Validator) bool {
 				equal, err := utils.CompareTwoBech32(v.OperatorAddress, validatorAddr.Address)
 				if err != nil {
 					g.Logger.Error().
@@ -122,7 +122,9 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 				}
 
 				return equal
-			})
+			}
+
+			validator, ok := utils.Find(chainValidators.Validators, compare)
 
 			if !ok {
 				g.Logger.Warn().

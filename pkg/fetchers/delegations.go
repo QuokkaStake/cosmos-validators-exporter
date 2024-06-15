@@ -16,7 +16,7 @@ import (
 type DelegationsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -27,7 +27,7 @@ type DelegationsData struct {
 func NewDelegationsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *DelegationsFetcher {
 	return &DelegationsFetcher{
@@ -49,15 +49,18 @@ func (q *DelegationsFetcher) Fetch(
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
-		mutex.Lock()
 		allDelegations[chain.Name] = map[string]int64{}
-		mutex.Unlock()
+		for _, consumerChain := range chain.ConsumerChains {
+			allDelegations[consumerChain.Name] = map[string]int64{}
+		}
+	}
 
+	for _, chain := range q.Config.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
+			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
 				delegatorsResponse, query, err := rpc.GetDelegationsCount(validator, ctx)
 
@@ -82,7 +85,10 @@ func (q *DelegationsFetcher) Fetch(
 				}
 
 				allDelegations[chain.Name][validator] = utils.StrToInt64(delegatorsResponse.Pagination.Total)
-			}(validator.Address, rpc, chain)
+
+				// consumer chains do not have staking module, so no delegations, therefore
+				// we do not calculate it here
+			}(validator.Address, rpc.RPC, chain)
 		}
 	}
 

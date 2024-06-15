@@ -16,7 +16,7 @@ import (
 type UnbondsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -27,7 +27,7 @@ type UnbondsData struct {
 func NewUnbondsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *UnbondsFetcher {
 	return &UnbondsFetcher{
@@ -57,7 +57,7 @@ func (q *UnbondsFetcher) Fetch(
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
+			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
 				unbondsResponse, query, err := rpc.GetUnbondsCount(validator, ctx)
 
@@ -82,7 +82,10 @@ func (q *UnbondsFetcher) Fetch(
 				}
 
 				allUnbonds[chain.Name][validator] = utils.StrToInt64(unbondsResponse.Pagination.Total)
-			}(validator.Address, rpc, chain)
+
+				// consumer chains do not have staking module, so no unbonds, therefore
+				// we do not calculate it here
+			}(validator.Address, rpc.RPC, chain)
 		}
 	}
 

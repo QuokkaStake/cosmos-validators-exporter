@@ -9,7 +9,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/creasty/defaults"
-	"github.com/guregu/null/v5"
 )
 
 type Validator struct {
@@ -25,139 +24,17 @@ func (v *Validator) Validate() error {
 	return nil
 }
 
-type DenomInfo struct {
-	Denom              string `toml:"denom"`
-	DenomCoefficient   int64  `default:"1000000"            toml:"denom-coefficient"`
-	DisplayDenom       string `toml:"display-denom"`
-	CoingeckoCurrency  string `toml:"coingecko-currency"`
-	DexScreenerChainID string `toml:"dex-screener-chain-id"`
-	DexScreenerPair    string `toml:"dex-screener-pair"`
-}
-
-func (d *DenomInfo) Validate() error {
-	if d.Denom == "" {
-		return errors.New("empty denom name")
-	}
-
-	if d.Denom == "" {
-		return errors.New("empty display denom name")
-	}
-
-	return nil
-}
-
-func (d *DenomInfo) DisplayWarnings(chain *Chain, logger *zerolog.Logger) {
-	if d.CoingeckoCurrency == "" && (d.DexScreenerPair == "" || d.DexScreenerChainID == "") {
-		logger.Warn().
-			Str("chain", chain.Name).
-			Str("denom", d.Denom).
-			Msg("Currency code not set, not fetching exchange rate.")
-	}
-}
-
-type DenomInfos []*DenomInfo
-
-func (d DenomInfos) Find(denom string) *DenomInfo {
-	for _, info := range d {
-		if denom == info.Denom {
-			return info
-		}
-	}
-
-	return nil
-}
-
-type Chain struct {
-	Name             string          `toml:"name"`
-	LCDEndpoint      string          `toml:"lcd-endpoint"`
-	BaseDenom        string          `toml:"base-denom"`
-	Denoms           DenomInfos      `toml:"denoms"`
-	BechWalletPrefix string          `toml:"bech-wallet-prefix"`
-	Validators       []Validator     `toml:"validators"`
-	Queries          map[string]bool `toml:"queries"`
-
-	ProviderChainLCD string `toml:"provider-lcd-endpoint"`
-}
-
-func (c *Chain) IsConsumer() bool {
-	return c.ProviderChainLCD != ""
-}
-
-func (c *Chain) Validate() error {
-	if c.Name == "" {
-		return errors.New("empty chain name")
-	}
-
-	if c.LCDEndpoint == "" {
-		return errors.New("no LCD endpoint provided")
-	}
-
-	if len(c.Validators) == 0 {
-		return errors.New("no validators provided")
-	}
-
-	for index, validator := range c.Validators {
-		if err := validator.Validate(); err != nil {
-			return fmt.Errorf("error in validator #%d: %s", index, err)
-		}
-	}
-
-	for index, denomInfo := range c.Denoms {
-		if err := denomInfo.Validate(); err != nil {
-			return fmt.Errorf("error in denom #%d: %s", index, err)
-		}
-	}
-
-	return nil
-}
-
-func (c *Chain) DisplayWarnings(logger *zerolog.Logger) {
-	if c.BaseDenom == "" {
-		logger.Warn().
-			Str("chain", c.Name).
-			Msg("Base denom is not set")
-	}
-
-	for _, denom := range c.Denoms {
-		denom.DisplayWarnings(c, logger)
-	}
-}
-
-func (c *Chain) QueryEnabled(query string) bool {
-	if value, ok := c.Queries[query]; !ok {
-		return true // all queries are enabled by default
-	} else {
-		return value
-	}
-}
-
 type Config struct {
 	LogConfig     LogConfig     `toml:"log"`
 	TracingConfig TracingConfig `toml:"tracing"`
-	ListenAddress string        `default:":9550" toml:"listen-address"`
+	ListenAddress string        `default:":9560" toml:"listen-address"`
 	Timeout       int           `default:"10"    toml:"timeout"`
-	Chains        []Chain       `toml:"chains"`
+	Chains        []*Chain      `toml:"chains"`
 }
 
 type LogConfig struct {
 	LogLevel   string `default:"info"  toml:"level"`
 	JSONOutput bool   `default:"false" toml:"json"`
-}
-
-type TracingConfig struct {
-	Enabled                   null.Bool `default:"false"                     toml:"enabled"`
-	OpenTelemetryHTTPHost     string    `toml:"open-telemetry-http-host"`
-	OpenTelemetryHTTPInsecure null.Bool `default:"true"                      toml:"open-telemetry-http-insecure"`
-	OpenTelemetryHTTPUser     string    `toml:"open-telemetry-http-user"`
-	OpenTelemetryHTTPPassword string    `toml:"open-telemetry-http-password"`
-}
-
-func (c *TracingConfig) Validate() error {
-	if c.Enabled.Bool && c.OpenTelemetryHTTPHost == "" {
-		return errors.New("tracing is enabled, but open-telemetry-http-host is not provided")
-	}
-
-	return nil
 }
 
 func (c *Config) Validate() error {

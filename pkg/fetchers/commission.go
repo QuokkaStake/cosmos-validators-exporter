@@ -15,7 +15,7 @@ import (
 type CommissionFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -26,7 +26,7 @@ type CommissionData struct {
 func NewCommissionFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *CommissionFetcher {
 	return &CommissionFetcher{
@@ -44,19 +44,19 @@ func (q *CommissionFetcher) Fetch(
 
 	allCommissions := map[string]map[string][]types.Amount{}
 
+	for _, chain := range q.Config.Chains {
+		allCommissions[chain.Name] = map[string][]types.Amount{}
+	}
+
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
-		mutex.Lock()
-		allCommissions[chain.Name] = map[string][]types.Amount{}
-		mutex.Unlock()
-
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
+			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
 				commission, query, err := rpc.GetValidatorCommission(validator, ctx)
 
@@ -81,7 +81,9 @@ func (q *CommissionFetcher) Fetch(
 				}
 
 				allCommissions[chain.Name][validator] = commission
-			}(validator.Address, rpc, chain)
+
+				// consumers have no commission, so not counting it here
+			}(validator.Address, rpc.RPC, chain)
 		}
 	}
 

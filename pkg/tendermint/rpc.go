@@ -18,24 +18,32 @@ import (
 )
 
 type RPC struct {
-	Chain   config.Chain
-	Client  *http.Client
-	Timeout int
-	Logger  zerolog.Logger
-	Tracer  trace.Tracer
+	ChainName    string
+	ChainHost    string
+	ChainQueries config.Queries
+	Client       *http.Client
+	Timeout      int
+	Logger       zerolog.Logger
+	Tracer       trace.Tracer
 
 	LastHeight map[string]int64
 	Mutex      sync.Mutex
 }
 
-func NewRPC(chain config.Chain, timeout int, logger zerolog.Logger, tracer trace.Tracer) *RPC {
+func NewRPC(
+	chain config.ChainInfo,
+	timeout int,
+	logger zerolog.Logger,
+	tracer trace.Tracer,
+) *RPC {
 	return &RPC{
-		Chain:   chain,
-		Client:  http.NewClient(&logger, chain.Name, tracer),
-		Timeout: timeout,
+		ChainName: chain.GetName(),
+		ChainHost: chain.GetHost(),
+		Client:    http.NewClient(&logger, chain.GetName(), tracer),
+		Timeout:   timeout,
 		Logger: logger.With().
 			Str("component", "rpc").
-			Str("chain", chain.Name).
+			Str("chain", chain.GetName()).
 			Logger(),
 		Tracer:     tracer,
 		LastHeight: map[string]int64{},
@@ -46,7 +54,7 @@ func (rpc *RPC) GetDelegationsCount(
 	address string,
 	ctx context.Context,
 ) (*types.PaginationResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("delegations") {
+	if !rpc.ChainQueries.Enabled("delegations") {
 		return nil, nil, nil
 	}
 
@@ -59,7 +67,7 @@ func (rpc *RPC) GetDelegationsCount(
 
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations?pagination.count_total=true&pagination.limit=1",
-		rpc.Chain.LCDEndpoint,
+		rpc.ChainHost,
 		address,
 	)
 
@@ -81,7 +89,7 @@ func (rpc *RPC) GetUnbondsCount(
 	address string,
 	ctx context.Context,
 ) (*types.PaginationResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("unbonds") {
+	if !rpc.ChainQueries.Enabled("unbonds") {
 		return nil, nil, nil
 	}
 
@@ -94,7 +102,7 @@ func (rpc *RPC) GetUnbondsCount(
 
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations?pagination.count_total=true&pagination.limit=1",
-		rpc.Chain.LCDEndpoint,
+		rpc.ChainHost,
 		address,
 	)
 
@@ -116,7 +124,7 @@ func (rpc *RPC) GetSingleDelegation(
 	validator, wallet string,
 	ctx context.Context,
 ) (*types.Amount, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("self-delegation") {
+	if !rpc.ChainQueries.Enabled("self-delegation") {
 		return nil, nil, nil
 	}
 
@@ -132,7 +140,7 @@ func (rpc *RPC) GetSingleDelegation(
 
 	url := fmt.Sprintf(
 		"%s/cosmos/staking/v1beta1/validators/%s/delegations/%s",
-		rpc.Chain.LCDEndpoint,
+		rpc.ChainHost,
 		validator,
 		wallet,
 	)
@@ -155,7 +163,7 @@ func (rpc *RPC) GetSingleDelegation(
 func (rpc *RPC) GetAllValidators(
 	ctx context.Context,
 ) (*types.ValidatorsResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("validators") {
+	if !rpc.ChainQueries.Enabled("validators") {
 		return nil, nil, nil
 	}
 
@@ -165,12 +173,7 @@ func (rpc *RPC) GetAllValidators(
 	)
 	defer span.End()
 
-	host := rpc.Chain.LCDEndpoint
-	if rpc.Chain.IsConsumer() {
-		host = rpc.Chain.ProviderChainLCD
-	}
-
-	url := host + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000"
+	url := rpc.ChainHost + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000"
 
 	var response *types.ValidatorsResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)
@@ -190,7 +193,7 @@ func (rpc *RPC) GetValidatorCommission(
 	address string,
 	ctx context.Context,
 ) ([]types.Amount, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("commission") {
+	if !rpc.ChainQueries.Enabled("commission") {
 		return nil, nil, nil
 	}
 
@@ -203,7 +206,7 @@ func (rpc *RPC) GetValidatorCommission(
 
 	url := fmt.Sprintf(
 		"%s/cosmos/distribution/v1beta1/validators/%s/commission",
-		rpc.Chain.LCDEndpoint,
+		rpc.ChainHost,
 		address,
 	)
 
@@ -227,7 +230,7 @@ func (rpc *RPC) GetDelegatorRewards(
 	validator, wallet string,
 	ctx context.Context,
 ) ([]types.Amount, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("rewards") {
+	if !rpc.ChainQueries.Enabled("rewards") {
 		return nil, nil, nil
 	}
 
@@ -243,7 +246,7 @@ func (rpc *RPC) GetDelegatorRewards(
 
 	url := fmt.Sprintf(
 		"%s/cosmos/distribution/v1beta1/delegators/%s/rewards/%s",
-		rpc.Chain.LCDEndpoint,
+		rpc.ChainHost,
 		wallet,
 		validator,
 	)
@@ -268,7 +271,7 @@ func (rpc *RPC) GetWalletBalance(
 	wallet string,
 	ctx context.Context,
 ) ([]types.Amount, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("balance") {
+	if !rpc.ChainQueries.Enabled("balance") {
 		return nil, nil, nil
 	}
 
@@ -281,7 +284,7 @@ func (rpc *RPC) GetWalletBalance(
 
 	url := fmt.Sprintf(
 		"%s/cosmos/bank/v1beta1/balances/%s",
-		rpc.Chain.LCDEndpoint,
+		rpc.ChainHost,
 		wallet,
 	)
 
@@ -301,11 +304,51 @@ func (rpc *RPC) GetWalletBalance(
 	}), &info, nil
 }
 
+func (rpc *RPC) GetConsumerAssignedKey(
+	valcons string,
+	chainID string,
+	ctx context.Context,
+) (*types.AssignedKeyResponse, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("assigned-key") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator assigned key",
+		trace.WithAttributes(
+			attribute.String("valcons", valcons),
+			attribute.String("chain-id", chainID),
+		),
+	)
+	defer span.End()
+
+	url := fmt.Sprintf(
+		"%s/interchain_security/ccv/provider/validator_consumer_addr?chain_id=%s&provider_address=%s",
+		rpc.ChainHost,
+		chainID,
+		valcons,
+	)
+
+	var response *types.AssignedKeyResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.AssignedKeyResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) GetSigningInfo(
 	valcons string,
 	ctx context.Context,
 ) (*types.SigningInfoResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("signing-info") {
+	if !rpc.ChainQueries.Enabled("signing-info") {
 		return nil, nil, nil
 	}
 
@@ -316,7 +359,7 @@ func (rpc *RPC) GetSigningInfo(
 	)
 	defer span.End()
 
-	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.Chain.LCDEndpoint, valcons)
+	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.ChainHost, valcons)
 
 	var response *types.SigningInfoResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)
@@ -335,7 +378,7 @@ func (rpc *RPC) GetSigningInfo(
 func (rpc *RPC) GetSlashingParams(
 	ctx context.Context,
 ) (*types.SlashingParamsResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("slashing-params") {
+	if !rpc.ChainQueries.Enabled("slashing-params") {
 		return nil, nil, nil
 	}
 
@@ -345,7 +388,7 @@ func (rpc *RPC) GetSlashingParams(
 	)
 	defer span.End()
 
-	url := rpc.Chain.LCDEndpoint + "/cosmos/slashing/v1beta1/params"
+	url := rpc.ChainHost + "/cosmos/slashing/v1beta1/params"
 
 	var response *types.SlashingParamsResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)
@@ -364,7 +407,7 @@ func (rpc *RPC) GetSlashingParams(
 func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 	ctx context.Context,
 ) (float64, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("params") {
+	if !rpc.ChainQueries.Enabled("params") {
 		return 0, nil, nil
 	}
 
@@ -376,7 +419,7 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 
 	var response *types.ParamsResponse
 	info, err := rpc.Get(
-		rpc.Chain.LCDEndpoint+"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
+		rpc.ChainHost+"/cosmos/params/v1beta1/params?subspace=ccvconsumer&key=SoftOptOutThreshold",
 		&response,
 		childQuerierCtx,
 	)
@@ -402,7 +445,7 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 func (rpc *RPC) GetStakingParams(
 	ctx context.Context,
 ) (*types.StakingParamsResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("staking-params") {
+	if !rpc.ChainQueries.Enabled("staking-params") {
 		return nil, nil, nil
 	}
 
@@ -412,12 +455,7 @@ func (rpc *RPC) GetStakingParams(
 	)
 	defer span.End()
 
-	host := rpc.Chain.LCDEndpoint
-	if rpc.Chain.IsConsumer() {
-		host = rpc.Chain.ProviderChainLCD
-	}
-
-	url := host + "/cosmos/staking/v1beta1/params"
+	url := rpc.ChainHost + "/cosmos/staking/v1beta1/params"
 
 	var response *types.StakingParamsResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)
@@ -436,7 +474,7 @@ func (rpc *RPC) GetStakingParams(
 func (rpc *RPC) GetNodeInfo(
 	ctx context.Context,
 ) (*types.NodeInfoResponse, *types.QueryInfo, error) {
-	if !rpc.Chain.QueryEnabled("node-info") {
+	if !rpc.ChainQueries.Enabled("node-info") {
 		return nil, nil, nil
 	}
 
@@ -446,7 +484,7 @@ func (rpc *RPC) GetNodeInfo(
 	)
 	defer span.End()
 
-	url := rpc.Chain.LCDEndpoint + "/cosmos/base/tendermint/v1beta1/node_info"
+	url := rpc.ChainHost + "/cosmos/base/tendermint/v1beta1/node_info"
 
 	var response *types.NodeInfoResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)

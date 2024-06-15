@@ -15,12 +15,12 @@ import (
 )
 
 type ValidatorRankGenerator struct {
-	Chains []configPkg.Chain
+	Chains []*configPkg.Chain
 	Logger zerolog.Logger
 }
 
 func NewValidatorRankGenerator(
-	chains []configPkg.Chain,
+	chains []*configPkg.Chain,
 	logger *zerolog.Logger,
 ) *ValidatorRankGenerator {
 	return &ValidatorRankGenerator{

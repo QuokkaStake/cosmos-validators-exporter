@@ -15,7 +15,7 @@ import (
 type NodeInfoFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -26,7 +26,7 @@ type NodeInfoData struct {
 func NewNodeInfoFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *NodeInfoFetcher {
 	return &NodeInfoFetcher{
@@ -47,35 +47,61 @@ func (q *NodeInfoFetcher) Fetch(
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
+	processChain := func(
+		chainName string,
+		rpc *tendermint.RPC,
+		mutex *sync.Mutex,
+		wg *sync.WaitGroup,
+		allNodeInfos map[string]*types.NodeInfoResponse,
+	) {
+		defer wg.Done()
+		nodeInfo, query, err := rpc.GetNodeInfo(ctx)
+
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		if query != nil {
+			queryInfos = append(queryInfos, query)
+		}
+
+		if err != nil {
+			q.Logger.Error().
+				Err(err).
+				Str("chain", chainName).
+				Msg("Error querying node info")
+			return
+		}
+
+		if nodeInfo == nil {
+			return
+		}
+
+		allNodeInfos[chainName] = nodeInfo
+	}
+
 	for _, chain := range q.Config.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
-		wg.Add(1)
-		go func(rpc *tendermint.RPC, chain config.Chain) {
-			defer wg.Done()
-			nodeInfo, query, err := rpc.GetNodeInfo(ctx)
+		wg.Add(1 + len(chain.ConsumerChains))
 
-			mutex.Lock()
-			defer mutex.Unlock()
+		go processChain(
+			chain.Name,
+			rpc.RPC,
+			&mutex,
+			&wg,
+			allNodeInfos,
+		)
 
-			if query != nil {
-				queryInfos = append(queryInfos, query)
-			}
-
-			if err != nil {
-				q.Logger.Error().
-					Err(err).
-					Str("chain", chain.Name).
-					Msg("Error querying node info")
-				return
-			}
-
-			if nodeInfo == nil {
-				return
-			}
-
-			allNodeInfos[chain.Name] = nodeInfo
-		}(rpc, chain)
+		for consumerIndex, consumerChain := range chain.ConsumerChains {
+			consumerRPC := rpc.Consumers[consumerIndex]
+			go processChain(
+				consumerChain.Name,
+				consumerRPC,
+				&mutex,
+				&wg,
+				allNodeInfos,
+			)
+		}
 	}
 
 	wg.Wait()
