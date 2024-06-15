@@ -18,6 +18,12 @@ type BalanceFetcher struct {
 	Config *config.Config
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
+
+	wg    sync.WaitGroup
+	mutex sync.Mutex
+
+	queryInfos  []*types.QueryInfo
+	allBalances map[string]map[string][]types.Amount
 }
 
 type BalanceData struct {
@@ -41,67 +47,13 @@ func NewBalanceFetcher(
 func (q *BalanceFetcher) Fetch(
 	ctx context.Context,
 ) (interface{}, []*types.QueryInfo) {
-	var queryInfos []*types.QueryInfo
-
-	allBalances := map[string]map[string][]types.Amount{}
-
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-
-	processChain := func(
-		chainName string,
-		chainBechWalletPrefix string,
-		validator string,
-		rpc *tendermint.RPC,
-		mutex *sync.Mutex,
-		wg *sync.WaitGroup,
-		allBalances map[string]map[string][]types.Amount,
-	) {
-		defer wg.Done()
-
-		if chainBechWalletPrefix == "" {
-			return
-		}
-
-		wallet, err := utils.ChangeBech32Prefix(validator, chainBechWalletPrefix)
-		if err != nil {
-			q.Logger.Error().
-				Err(err).
-				Str("chain", chainName).
-				Str("address", validator).
-				Msg("Error converting validator address")
-			return
-		}
-
-		balances, query, err := rpc.GetWalletBalance(wallet, ctx)
-
-		mutex.Lock()
-		defer mutex.Unlock()
-
-		if query != nil {
-			queryInfos = append(queryInfos, query)
-		}
-
-		if err != nil {
-			q.Logger.Error().
-				Err(err).
-				Str("chain", chainName).
-				Str("address", validator).
-				Msg("Error querying for validator wallet balance")
-			return
-		}
-
-		if balances == nil {
-			return
-		}
-
-		allBalances[chainName][validator] = balances
-	}
+	q.queryInfos = []*types.QueryInfo{}
+	q.allBalances = map[string]map[string][]types.Amount{}
 
 	for _, chain := range q.Config.Chains {
-		allBalances[chain.Name] = map[string][]types.Amount{}
+		q.allBalances[chain.Name] = map[string][]types.Amount{}
 		for _, consumerChain := range chain.ConsumerChains {
-			allBalances[consumerChain.Name] = map[string][]types.Amount{}
+			q.allBalances[consumerChain.Name] = map[string][]types.Amount{}
 		}
 	}
 
@@ -109,39 +61,83 @@ func (q *BalanceFetcher) Fetch(
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
-			wg.Add(1 + len(chain.ConsumerChains))
+			q.wg.Add(1 + len(chain.ConsumerChains))
 
-			go processChain(
+			go q.processChain(
+				ctx,
 				chain.Name,
 				chain.BechWalletPrefix,
 				validator.Address,
 				rpc.RPC,
-				&mutex,
-				&wg,
-				allBalances,
 			)
 
 			for consumerIndex, consumerChain := range chain.ConsumerChains {
 				consumerRPC := rpc.Consumers[consumerIndex]
 
-				go processChain(
+				go q.processChain(
+					ctx,
 					consumerChain.Name,
 					consumerChain.BechWalletPrefix,
 					validator.Address,
 					consumerRPC,
-					&mutex,
-					&wg,
-					allBalances,
 				)
 			}
 		}
 	}
 
-	wg.Wait()
+	q.wg.Wait()
 
-	return BalanceData{Balances: allBalances}, queryInfos
+	return BalanceData{Balances: q.allBalances}, q.queryInfos
 }
 
 func (q *BalanceFetcher) Name() constants.FetcherName {
 	return constants.FetcherNameBalance
+}
+
+func (q *BalanceFetcher) processChain(
+	ctx context.Context,
+	chainName string,
+	chainBechWalletPrefix string,
+	validator string,
+	rpc *tendermint.RPC,
+) {
+	defer q.wg.Done()
+
+	if chainBechWalletPrefix == "" {
+		return
+	}
+
+	wallet, err := utils.ChangeBech32Prefix(validator, chainBechWalletPrefix)
+	if err != nil {
+		q.Logger.Error().
+			Err(err).
+			Str("chain", chainName).
+			Str("address", validator).
+			Msg("Error converting validator address")
+		return
+	}
+
+	balances, query, err := rpc.GetWalletBalance(wallet, ctx)
+
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	if query != nil {
+		q.queryInfos = append(q.queryInfos, query)
+	}
+
+	if err != nil {
+		q.Logger.Error().
+			Err(err).
+			Str("chain", chainName).
+			Str("address", validator).
+			Msg("Error querying for validator wallet balance")
+		return
+	}
+
+	if balances == nil {
+		return
+	}
+
+	q.allBalances[chainName][validator] = balances
 }
