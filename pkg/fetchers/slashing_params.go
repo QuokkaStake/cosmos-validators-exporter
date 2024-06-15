@@ -17,6 +17,12 @@ type SlashingParamsFetcher struct {
 	Config *config.Config
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
+
+	wg    sync.WaitGroup
+	mutex sync.Mutex
+
+	queryInfos []*types.QueryInfo
+	allParams  map[string]*types.SlashingParamsResponse
 }
 
 type SlashingParamsData struct {
@@ -40,62 +46,56 @@ func NewSlashingParamsFetcher(
 func (q *SlashingParamsFetcher) Fetch(
 	ctx context.Context,
 ) (interface{}, []*types.QueryInfo) {
-	var queryInfos []*types.QueryInfo
-
-	allParams := map[string]*types.SlashingParamsResponse{}
-
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-
-	processChain := func(
-		chainName string,
-		rpc *tendermint.RPC,
-		mutex *sync.Mutex,
-		wg *sync.WaitGroup,
-		allParams map[string]*types.SlashingParamsResponse,
-	) {
-		defer wg.Done()
-
-		params, query, err := rpc.GetSlashingParams(ctx)
-
-		mutex.Lock()
-		defer mutex.Unlock()
-
-		if query != nil {
-			queryInfos = append(queryInfos, query)
-		}
-
-		if err != nil {
-			q.Logger.Error().
-				Err(err).
-				Str("chain", chainName).
-				Msg("Error querying slashing params")
-			return
-		}
-
-		if params != nil {
-			allParams[chainName] = params
-		}
-	}
+	q.queryInfos = []*types.QueryInfo{}
+	q.allParams = map[string]*types.SlashingParamsResponse{}
 
 	for _, chain := range q.Config.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
-		wg.Add(1 + len(chain.ConsumerChains))
+		q.wg.Add(1 + len(chain.ConsumerChains))
 
-		go processChain(chain.Name, rpc.RPC, &mutex, &wg, allParams)
+		go q.processChain(ctx, chain.Name, rpc.RPC)
 
 		for consumerIndex, consumerChain := range chain.ConsumerChains {
 			consumerRPC := rpc.Consumers[consumerIndex]
-			go processChain(consumerChain.Name, consumerRPC, &mutex, &wg, allParams)
+			go q.processChain(ctx, consumerChain.Name, consumerRPC)
 		}
 	}
 
-	wg.Wait()
+	q.wg.Wait()
 
-	return SlashingParamsData{Params: allParams}, queryInfos
+	return SlashingParamsData{Params: q.allParams}, q.queryInfos
 }
 
 func (q *SlashingParamsFetcher) Name() constants.FetcherName {
 	return constants.FetcherNameSlashingParams
+}
+
+func (q *SlashingParamsFetcher) processChain(
+	ctx context.Context,
+	chainName string,
+	rpc *tendermint.RPC,
+) {
+	defer q.wg.Done()
+
+	params, query, err := rpc.GetSlashingParams(ctx)
+
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	if query != nil {
+		q.queryInfos = append(q.queryInfos, query)
+	}
+
+	if err != nil {
+		q.Logger.Error().
+			Err(err).
+			Str("chain", chainName).
+			Msg("Error querying slashing params")
+		return
+	}
+
+	if params != nil {
+		q.allParams[chainName] = params
+	}
 }
