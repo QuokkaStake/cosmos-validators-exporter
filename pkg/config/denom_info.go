@@ -20,7 +20,7 @@ func (d *DenomInfo) Validate() error {
 		return errors.New("empty denom name")
 	}
 
-	if d.Denom == "" {
+	if d.DisplayDenom == "" {
 		return errors.New("empty display denom name")
 	}
 
