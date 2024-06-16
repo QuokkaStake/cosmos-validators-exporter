@@ -77,6 +77,9 @@ func (q *StakingParamsFetcher) Fetch(
 
 			if params != nil {
 				allParams[chain.Name] = params
+				for _, consumerChain := range chain.ConsumerChains {
+					allParams[consumerChain.Name] = params
+				}
 			}
 		}(chain, rpc.RPC)
 	}
