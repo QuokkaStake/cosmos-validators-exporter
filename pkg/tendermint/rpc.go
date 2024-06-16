@@ -37,10 +37,11 @@ func NewRPC(
 	tracer trace.Tracer,
 ) *RPC {
 	return &RPC{
-		ChainName: chain.GetName(),
-		ChainHost: chain.GetHost(),
-		Client:    http.NewClient(&logger, chain.GetName(), tracer),
-		Timeout:   timeout,
+		ChainName:    chain.GetName(),
+		ChainHost:    chain.GetHost(),
+		ChainQueries: chain.GetQueries(),
+		Client:       http.NewClient(&logger, chain.GetName(), tracer),
+		Timeout:      timeout,
 		Logger: logger.With().
 			Str("component", "rpc").
 			Str("chain", chain.GetName()).
