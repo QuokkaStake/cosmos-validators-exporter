@@ -13,10 +13,10 @@ import (
 )
 
 type ActiveSetTokensGenerator struct {
-	Chains []configPkg.Chain
+	Chains []*configPkg.Chain
 }
 
-func NewActiveSetTokensGenerator(chains []configPkg.Chain) *ActiveSetTokensGenerator {
+func NewActiveSetTokensGenerator(chains []*configPkg.Chain) *ActiveSetTokensGenerator {
 	return &ActiveSetTokensGenerator{Chains: chains}
 }
 

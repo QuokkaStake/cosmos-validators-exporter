@@ -15,8 +15,14 @@ import (
 type NodeInfoFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
+
+	wg    sync.WaitGroup
+	mutex sync.Mutex
+
+	queryInfos   []*types.QueryInfo
+	allNodeInfos map[string]*types.NodeInfoResponse
 }
 
 type NodeInfoData struct {
@@ -26,7 +32,7 @@ type NodeInfoData struct {
 func NewNodeInfoFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *NodeInfoFetcher {
 	return &NodeInfoFetcher{
@@ -40,49 +46,65 @@ func NewNodeInfoFetcher(
 func (q *NodeInfoFetcher) Fetch(
 	ctx context.Context,
 ) (interface{}, []*types.QueryInfo) {
-	var queryInfos []*types.QueryInfo
-
-	allNodeInfos := map[string]*types.NodeInfoResponse{}
-
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	q.queryInfos = []*types.QueryInfo{}
+	q.allNodeInfos = map[string]*types.NodeInfoResponse{}
 
 	for _, chain := range q.Config.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
-		wg.Add(1)
-		go func(rpc *tendermint.RPC, chain config.Chain) {
-			defer wg.Done()
-			nodeInfo, query, err := rpc.GetNodeInfo(ctx)
+		q.wg.Add(1 + len(chain.ConsumerChains))
 
-			mutex.Lock()
-			defer mutex.Unlock()
+		go q.processChain(
+			ctx,
+			chain.Name,
+			rpc.RPC,
+		)
 
-			if query != nil {
-				queryInfos = append(queryInfos, query)
-			}
-
-			if err != nil {
-				q.Logger.Error().
-					Err(err).
-					Str("chain", chain.Name).
-					Msg("Error querying node info")
-				return
-			}
-
-			if nodeInfo == nil {
-				return
-			}
-
-			allNodeInfos[chain.Name] = nodeInfo
-		}(rpc, chain)
+		for consumerIndex, consumerChain := range chain.ConsumerChains {
+			consumerRPC := rpc.Consumers[consumerIndex]
+			go q.processChain(
+				ctx,
+				consumerChain.Name,
+				consumerRPC,
+			)
+		}
 	}
 
-	wg.Wait()
+	q.wg.Wait()
 
-	return NodeInfoData{NodeInfos: allNodeInfos}, queryInfos
+	return NodeInfoData{NodeInfos: q.allNodeInfos}, q.queryInfos
 }
 
 func (q *NodeInfoFetcher) Name() constants.FetcherName {
 	return constants.FetcherNameNodeInfo
+}
+
+func (q *NodeInfoFetcher) processChain(
+	ctx context.Context,
+	chainName string,
+	rpc *tendermint.RPC,
+) {
+	defer q.wg.Done()
+	nodeInfo, query, err := rpc.GetNodeInfo(ctx)
+
+	q.mutex.Lock()
+	defer q.mutex.Unlock()
+
+	if query != nil {
+		q.queryInfos = append(q.queryInfos, query)
+	}
+
+	if err != nil {
+		q.Logger.Error().
+			Err(err).
+			Str("chain", chainName).
+			Msg("Error querying node info")
+		return
+	}
+
+	if nodeInfo == nil {
+		return
+	}
+
+	q.allNodeInfos[chainName] = nodeInfo
 }

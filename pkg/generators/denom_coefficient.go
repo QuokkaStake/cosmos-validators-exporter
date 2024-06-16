@@ -9,10 +9,10 @@ import (
 )
 
 type DenomCoefficientGenerator struct {
-	Chains []config.Chain
+	Chains []*config.Chain
 }
 
-func NewDenomCoefficientGenerator(chains []config.Chain) *DenomCoefficientGenerator {
+func NewDenomCoefficientGenerator(chains []*config.Chain) *DenomCoefficientGenerator {
 	return &DenomCoefficientGenerator{Chains: chains}
 }
 
@@ -47,6 +47,23 @@ func (g *DenomCoefficientGenerator) Generate(state *statePkg.State) []prometheus
 				"display_denom": denom.DisplayDenom,
 				"denom":         denom.Denom,
 			}).Set(float64(denom.DenomCoefficient))
+
+			for _, consumerChain := range chain.ConsumerChains {
+				if consumerChain.BaseDenom != "" {
+					baseDenomGauge.With(prometheus.Labels{
+						"chain": consumerChain.Name,
+						"denom": consumerChain.BaseDenom,
+					}).Set(float64(1))
+				}
+
+				for _, consumerDenom := range consumerChain.Denoms {
+					denomCoefficientGauge.With(prometheus.Labels{
+						"chain":         consumerChain.Name,
+						"display_denom": consumerDenom.DisplayDenom,
+						"denom":         consumerDenom.Denom,
+					}).Set(float64(consumerDenom.DenomCoefficient))
+				}
+			}
 		}
 	}
 

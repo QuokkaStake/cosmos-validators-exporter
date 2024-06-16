@@ -15,7 +15,7 @@ import (
 type StakingParamsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -26,7 +26,7 @@ type StakingParamsData struct {
 func NewStakingParamsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *StakingParamsFetcher {
 	return &StakingParamsFetcher{
@@ -52,7 +52,10 @@ func (q *StakingParamsFetcher) Fetch(
 
 		wg.Add(1)
 
-		go func(chain config.Chain, rpc *tendermint.RPC) {
+		// only fetching params for provider chains, as consumer chains
+		// do not have the staking module, or it doesn't represent
+		// the actual staking params (like on Stride)
+		go func(chain *config.Chain, rpc *tendermint.RPC) {
 			defer wg.Done()
 
 			params, query, err := rpc.GetStakingParams(ctx)
@@ -75,7 +78,7 @@ func (q *StakingParamsFetcher) Fetch(
 			if params != nil {
 				allParams[chain.Name] = params
 			}
-		}(chain, rpc)
+		}(chain, rpc.RPC)
 	}
 
 	wg.Wait()

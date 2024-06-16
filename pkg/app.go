@@ -31,7 +31,7 @@ type App struct {
 	Config *config.Config
 	Logger *zerolog.Logger
 
-	RPCs map[string]*tendermint.RPC
+	RPCs map[string]*tendermint.RPCWithConsumers
 
 	// Fetcher is a class that fetch data and is later stored in state.
 	// It doesn't provide any metrics, only data to generate them later.
@@ -66,10 +66,10 @@ func NewApp(configPath string, version string) *App {
 	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
-	rpcs := make(map[string]*tendermint.RPC, len(appConfig.Chains))
+	rpcs := make(map[string]*tendermint.RPCWithConsumers, len(appConfig.Chains))
 
 	for _, chain := range appConfig.Chains {
-		rpcs[chain.Name] = tendermint.NewRPC(chain, appConfig.Timeout, *logger, tracer)
+		rpcs[chain.Name] = tendermint.RPCWithConsumersFromChain(chain, appConfig.Timeout, *logger, tracer)
 	}
 
 	fetchers := []fetchersPkg.Fetcher{

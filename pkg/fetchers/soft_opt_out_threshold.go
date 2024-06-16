@@ -15,7 +15,7 @@ import (
 type SoftOptOutThresholdFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -26,7 +26,7 @@ type SoftOptOutThresholdData struct {
 func NewSoftOptOutThresholdFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *SoftOptOutThresholdFetcher {
 	return &SoftOptOutThresholdFetcher{
@@ -50,34 +50,34 @@ func (q *SoftOptOutThresholdFetcher) Fetch(
 	for _, chain := range q.Config.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
-		if !chain.IsConsumer() {
-			continue
+		for consumerIndex, consumerChain := range chain.ConsumerChains {
+			consumerRPC := rpc.Consumers[consumerIndex]
+
+			wg.Add(1)
+
+			go func(chain *config.ConsumerChain, rpc *tendermint.RPC) {
+				defer wg.Done()
+
+				threshold, query, err := rpc.GetConsumerSoftOutOutThreshold(ctx)
+
+				mutex.Lock()
+				defer mutex.Unlock()
+
+				if query != nil {
+					queryInfos = append(queryInfos, query)
+				}
+
+				if err != nil {
+					q.Logger.Error().
+						Err(err).
+						Str("chain", chain.Name).
+						Msg("Error querying soft opt-out threshold")
+					return
+				}
+
+				allThresholds[chain.Name] = threshold
+			}(consumerChain, consumerRPC)
 		}
-
-		wg.Add(1)
-
-		go func(chain config.Chain, rpc *tendermint.RPC) {
-			defer wg.Done()
-
-			threshold, query, err := rpc.GetConsumerSoftOutOutThreshold(ctx)
-
-			mutex.Lock()
-			defer mutex.Unlock()
-
-			if query != nil {
-				queryInfos = append(queryInfos, query)
-			}
-
-			if err != nil {
-				q.Logger.Error().
-					Err(err).
-					Str("chain", chain.Name).
-					Msg("Error querying soft opt-out threshold")
-				return
-			}
-
-			allThresholds[chain.Name] = threshold
-		}(chain, rpc)
 	}
 
 	wg.Wait()

@@ -16,7 +16,7 @@ import (
 type RewardsFetcher struct {
 	Logger zerolog.Logger
 	Config *config.Config
-	RPCs   map[string]*tendermint.RPC
+	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
 
@@ -27,7 +27,7 @@ type RewardsData struct {
 func NewRewardsFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
-	rpcs map[string]*tendermint.RPC,
+	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *RewardsFetcher {
 	return &RewardsFetcher{
@@ -44,20 +44,19 @@ func (q *RewardsFetcher) Fetch(
 	var queryInfos []*types.QueryInfo
 
 	allRewards := map[string]map[string][]types.Amount{}
+	for _, chain := range q.Config.Chains {
+		allRewards[chain.Name] = map[string][]types.Amount{}
+	}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
-		mutex.Lock()
-		allRewards[chain.Name] = map[string][]types.Amount{}
-		mutex.Unlock()
-
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
-			go func(validator string, rpc *tendermint.RPC, chain config.Chain) {
+			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
 
 				if chain.BechWalletPrefix == "" {
@@ -97,7 +96,9 @@ func (q *RewardsFetcher) Fetch(
 				}
 
 				allRewards[chain.Name][validator] = balances
-			}(validator.Address, rpc, chain)
+
+				// consumer chains have no rewards and/or staking module, so not counting it here
+			}(validator.Address, rpc.RPC, chain)
 		}
 	}
 
