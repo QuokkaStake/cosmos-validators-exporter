@@ -13,6 +13,7 @@ const (
 	FetcherNameBalance             FetcherName = "balance"
 	FetcherNameSelfDelegation      FetcherName = "self-delegation"
 	FetcherNameValidators          FetcherName = "validators"
+	FetcherNameConsumerValidators  FetcherName = "consumer-validators"
 	FetcherNameStakingParams       FetcherName = "staking_params"
 	FetcherNamePrice               FetcherName = "price"
 	FetcherNameNodeInfo            FetcherName = "node_info"

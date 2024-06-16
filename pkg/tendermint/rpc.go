@@ -190,6 +190,36 @@ func (rpc *RPC) GetAllValidators(
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetConsumerValidators(
+	ctx context.Context,
+	chainId string,
+) (*types.ConsumerValidatorsResponse, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("consumer-validators") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching consumer validators list",
+	)
+	defer span.End()
+
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_validators/" + chainId
+
+	var response *types.ConsumerValidatorsResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.ConsumerValidatorsResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) GetValidatorCommission(
 	address string,
 	ctx context.Context,
