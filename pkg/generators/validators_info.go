@@ -24,6 +24,11 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 		return []prometheus.Collector{}
 	}
 
+	consumersDataRaw, ok := state.Get(constants.FetcherNameConsumerValidators)
+	if !ok {
+		return []prometheus.Collector{}
+	}
+
 	validatorsCountGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: constants.MetricsPrefix + "validators_count",
@@ -41,6 +46,7 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 	)
 
 	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
+	consumersData, _ := consumersDataRaw.(fetchersPkg.ConsumerValidatorsData)
 
 	for chain, validators := range data.Validators {
 		activeValidators := utils.Filter(validators.Validators, func(v types.Validator) bool {
@@ -64,6 +70,12 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 		totalBondedTokensGauge.With(prometheus.Labels{
 			"chain": chain,
 		}).Set(totalStake)
+	}
+
+	for chain, validators := range consumersData.Validators {
+		validatorsCountGauge.With(prometheus.Labels{
+			"chain": chain,
+		}).Set(float64(len(validators.Validators)))
 	}
 
 	return []prometheus.Collector{validatorsCountGauge, totalBondedTokensGauge}

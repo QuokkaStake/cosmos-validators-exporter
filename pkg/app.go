@@ -83,6 +83,7 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewBalanceFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewValidatorsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewConsumerValidatorsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
 		fetchersPkg.NewNodeInfoFetcher(logger, appConfig, rpcs, tracer),

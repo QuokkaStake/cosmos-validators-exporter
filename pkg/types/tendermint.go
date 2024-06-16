@@ -1,15 +1,9 @@
 package types
 
 import (
-	b64 "encoding/base64"
 	"main/pkg/constants"
 	"main/pkg/utils"
 	"time"
-
-	codecTypes "github.com/cosmos/cosmos-sdk/codec/types"
-	cryptoTypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/types"
 )
 
 type ValidatorResponse struct {
@@ -51,30 +45,6 @@ func (v Validator) Active() bool {
 type ConsensusPubkey struct {
 	Type string `json:"@type"`
 	Key  string `json:"key"`
-}
-
-func (key *ConsensusPubkey) GetValConsAddress(prefix string) (string, error) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	interfaceRegistry := encCfg.InterfaceRegistry
-
-	sDec, _ := b64.StdEncoding.DecodeString(key.Key)
-	pk := codecTypes.Any{
-		TypeUrl: key.Type,
-		Value:   append([]byte{10, 32}, sDec...),
-	}
-
-	var pkProto cryptoTypes.PubKey
-	if err := interfaceRegistry.UnpackAny(&pk, &pkProto); err != nil {
-		return "", err
-	}
-
-	cosmosValCons := types.ConsAddress(pkProto.Address()).String()
-	properValCons, err := utils.ChangeBech32Prefix(cosmosValCons, prefix)
-	if err != nil {
-		return "", err
-	}
-
-	return properValCons, nil
 }
 
 type PaginationResponse struct {
@@ -181,4 +151,13 @@ type NodeInfoResponse struct {
 		Version          string `json:"version"`
 		CosmosSDKVersion string `json:"cosmos_sdk_version"`
 	} `json:"application_version"`
+}
+
+type ConsumerValidator struct {
+	ProviderAddress string `json:"provider_address"`
+}
+
+type ConsumerValidatorsResponse struct {
+	Code       int                 `json:"code"`
+	Validators []ConsumerValidator `json:"validators"`
 }
