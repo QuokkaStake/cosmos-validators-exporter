@@ -161,3 +161,14 @@ type ConsumerValidatorsResponse struct {
 	Code       int                 `json:"code"`
 	Validators []ConsumerValidator `json:"validators"`
 }
+
+type ConsumerChainInfo struct {
+	ChainID        string `json:"chain_id"`
+	TopN           int    `json:"top_n"`
+	MinPowerInTopN string `json:"min_power_in_top_N"`
+}
+
+type ConsumerInfoResponse struct {
+	Code   int                 `json:"code"`
+	Chains []ConsumerChainInfo `json:"chains"`
+}

@@ -87,6 +87,7 @@ func NewApp(configPath string, version string) *App {
 		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
 		fetchersPkg.NewNodeInfoFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig, rpcs, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -109,6 +110,7 @@ func NewApp(configPath string, version string) *App {
 		generatorsPkg.NewNodeInfoGenerator(),
 		generatorsPkg.NewStakingParamsGenerator(),
 		generatorsPkg.NewPriceGenerator(),
+		generatorsPkg.NewConsumerInfoGenerator(),
 	}
 
 	return &App{

@@ -220,6 +220,35 @@ func (rpc *RPC) GetConsumerValidators(
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetConsumerInfo(
+	ctx context.Context,
+) (*types.ConsumerInfoResponse, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("consumer-info") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching consumer info",
+	)
+	defer span.End()
+
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_chains"
+
+	var response *types.ConsumerInfoResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.ConsumerInfoResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) GetValidatorCommission(
 	address string,
 	ctx context.Context,
