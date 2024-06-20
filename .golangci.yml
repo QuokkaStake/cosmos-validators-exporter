@@ -45,3 +45,4 @@ linters:
     - maintidx
     - depguard
     - mnd
+    - testpackage
