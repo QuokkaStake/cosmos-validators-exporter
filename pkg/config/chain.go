@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/guregu/null/v5"
+
 	"github.com/rs/zerolog"
 )
 
@@ -15,6 +17,7 @@ type Chain struct {
 	BechWalletPrefix string      `toml:"bech-wallet-prefix"`
 	Validators       []Validator `toml:"validators"`
 	Queries          Queries     `toml:"queries"`
+	IsProvider       null.Bool   `toml:"is-provider"`
 
 	ConsumerChains []*ConsumerChain `toml:"consumers"`
 }
