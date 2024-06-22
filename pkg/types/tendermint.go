@@ -95,11 +95,13 @@ type AssignedKeyResponse struct {
 	ConsumerAddress string `json:"consumer_address"`
 }
 
+type SlashingParams struct {
+	SignedBlocksWindow string `json:"signed_blocks_window"`
+}
+
 type SlashingParamsResponse struct {
-	Code           int `json:"code"`
-	SlashingParams struct {
-		SignedBlocksWindow string `json:"signed_blocks_window"`
-	} `json:"params"`
+	Code           int            `json:"code"`
+	SlashingParams SlashingParams `json:"params"`
 }
 
 type SingleDelegationResponse struct {
