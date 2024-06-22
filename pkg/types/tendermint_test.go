@@ -3,6 +3,9 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,8 +19,11 @@ func TestValidatorActive(t *testing.T) {
 func TestResponseAmountToAmount(t *testing.T) {
 	t.Parallel()
 
+	amount, err := math.LegacyNewDecFromStr("1.23")
+	require.NoError(t, err)
+
 	responseAmount := ResponseAmount{
-		Amount: "1.23",
+		Amount: amount,
 		Denom:  "ustake",
 	}
 

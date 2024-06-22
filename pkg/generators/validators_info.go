@@ -1,13 +1,14 @@
 package generators
 
 import (
-	"cosmossdk.io/math"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
+
+	"cosmossdk.io/math"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
