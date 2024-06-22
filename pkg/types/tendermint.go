@@ -78,16 +78,18 @@ func (a ResponseAmount) ToAmount() Amount {
 	}
 }
 
+type SigningInfo struct {
+	Address             string    `json:"address"`
+	StartHeight         string    `json:"start_height"`
+	IndexOffset         string    `json:"index_offset"`
+	JailedUntil         time.Time `json:"jailed_until"`
+	Tombstoned          bool      `json:"tombstoned"`
+	MissedBlocksCounter string    `json:"missed_blocks_counter"`
+}
+
 type SigningInfoResponse struct {
-	Code           int `json:"code"`
-	ValSigningInfo struct {
-		Address             string    `json:"address"`
-		StartHeight         string    `json:"start_height"`
-		IndexOffset         string    `json:"index_offset"`
-		JailedUntil         time.Time `json:"jailed_until"`
-		Tombstoned          bool      `json:"tombstoned"`
-		MissedBlocksCounter string    `json:"missed_blocks_counter"`
-	} `json:"val_signing_info"`
+	Code           int         `json:"code"`
+	ValSigningInfo SigningInfo `json:"val_signing_info"`
 }
 
 type AssignedKeyResponse struct {
