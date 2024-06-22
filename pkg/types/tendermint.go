@@ -2,7 +2,6 @@ package types
 
 import (
 	"main/pkg/constants"
-	"main/pkg/utils"
 	"time"
 
 	"cosmossdk.io/math"
@@ -69,13 +68,13 @@ type BalancesResponse struct {
 }
 
 type ResponseAmount struct {
-	Amount string `json:"amount"`
-	Denom  string `json:"denom"`
+	Amount math.LegacyDec `json:"amount"`
+	Denom  string         `json:"denom"`
 }
 
 func (a ResponseAmount) ToAmount() Amount {
 	return Amount{
-		Amount: utils.StrToFloat64(a.Amount),
+		Amount: a.Amount.MustFloat64(),
 		Denom:  a.Denom,
 	}
 }
