@@ -3,26 +3,11 @@ package config
 import (
 	"errors"
 	"fmt"
-	"os"
-
-	"github.com/rs/zerolog"
+	"main/pkg/fs"
 
 	"github.com/BurntSushi/toml"
 	"github.com/creasty/defaults"
 )
-
-type Validator struct {
-	Address          string `toml:"address"`
-	ConsensusAddress string `toml:"consensus-address"`
-}
-
-func (v *Validator) Validate() error {
-	if v.Address == "" {
-		return errors.New("validator address is expected!")
-	}
-
-	return nil
-}
 
 type Config struct {
 	LogConfig     LogConfig     `toml:"log"`
@@ -55,10 +40,14 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func (c *Config) DisplayWarnings(logger *zerolog.Logger) {
+func (c *Config) DisplayWarnings() []Warning {
+	warnings := []Warning{}
+
 	for _, chain := range c.Chains {
-		chain.DisplayWarnings(logger)
+		warnings = append(warnings, chain.DisplayWarnings()...)
 	}
+
+	return warnings
 }
 
 func (c *Config) GetCoingeckoCurrencies() []string {
@@ -70,13 +59,21 @@ func (c *Config) GetCoingeckoCurrencies() []string {
 				currencies = append(currencies, denom.CoingeckoCurrency)
 			}
 		}
+
+		for _, consumerChain := range chain.ConsumerChains {
+			for _, denom := range consumerChain.Denoms {
+				if denom.CoingeckoCurrency != "" {
+					currencies = append(currencies, denom.CoingeckoCurrency)
+				}
+			}
+		}
 	}
 
 	return currencies
 }
 
-func GetConfig(path string) (*Config, error) {
-	configBytes, err := os.ReadFile(path)
+func GetConfig(path string, filesystem fs.FS) (*Config, error) {
+	configBytes, err := filesystem.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -88,9 +85,6 @@ func GetConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
-	if err = defaults.Set(&configStruct); err != nil {
-		return nil, err
-	}
-
+	defaults.MustSet(&configStruct)
 	return &configStruct, nil
 }

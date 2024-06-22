@@ -2,8 +2,6 @@ package config
 
 import (
 	"errors"
-
-	"github.com/rs/zerolog"
 )
 
 type DenomInfo struct {
@@ -27,13 +25,19 @@ func (d *DenomInfo) Validate() error {
 	return nil
 }
 
-func (d *DenomInfo) DisplayWarnings(chain *Chain, logger *zerolog.Logger) {
+func (d *DenomInfo) DisplayWarnings(chain *Chain) []Warning {
+	warnings := []Warning{}
 	if d.CoingeckoCurrency == "" && (d.DexScreenerPair == "" || d.DexScreenerChainID == "") {
-		logger.Warn().
-			Str("chain", chain.Name).
-			Str("denom", d.Denom).
-			Msg("Currency code not set, not fetching exchange rate.")
+		warnings = append(warnings, Warning{
+			Message: "Currency code not set, not fetching exchange rate.",
+			Labels: map[string]string{
+				"chain": chain.Name,
+				"denom": d.Denom,
+			},
+		})
 	}
+
+	return warnings
 }
 
 type DenomInfos []*DenomInfo
