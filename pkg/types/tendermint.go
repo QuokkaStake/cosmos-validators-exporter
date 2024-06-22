@@ -116,11 +116,13 @@ type RewardsResponse struct {
 	Rewards []ResponseAmount `json:"rewards"`
 }
 
+type StakingParams struct {
+	MaxValidators int `json:"max_validators"`
+}
+
 type StakingParamsResponse struct {
-	Code          int `json:"code"`
-	StakingParams struct {
-		MaxValidators int `json:"max_validators"`
-	} `json:"params"`
+	Code          int           `json:"code"`
+	StakingParams StakingParams `json:"params"`
 }
 
 type CommissionResponse struct {
