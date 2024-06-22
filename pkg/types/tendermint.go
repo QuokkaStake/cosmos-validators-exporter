@@ -171,9 +171,9 @@ type ConsumerValidatorsResponse struct {
 }
 
 type ConsumerChainInfo struct {
-	ChainID        string `json:"chain_id"`
-	TopN           int    `json:"top_n"`
-	MinPowerInTopN string `json:"min_power_in_top_N"`
+	ChainID        string   `json:"chain_id"`
+	TopN           int      `json:"top_n"`
+	MinPowerInTopN math.Int `json:"min_power_in_top_N"`
 }
 
 type ConsumerInfoResponse struct {

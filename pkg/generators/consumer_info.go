@@ -4,7 +4,6 @@ import (
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
-	"main/pkg/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -56,7 +55,7 @@ func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Col
 			minStakeGauge.With(prometheus.Labels{
 				"chain":    chain,
 				"chain_id": info.ChainID,
-			}).Set(utils.StrToFloat64(info.MinPowerInTopN))
+			}).Set(float64(info.MinPowerInTopN.Int64()))
 		}
 	}
 

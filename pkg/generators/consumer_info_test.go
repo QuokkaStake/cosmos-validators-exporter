@@ -7,6 +7,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"cosmossdk.io/math"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +29,7 @@ func TestConsumerInfoGeneratorNotEmptyState(t *testing.T) {
 		Info: map[string]*types.ConsumerInfoResponse{
 			"chain": {
 				Chains: []types.ConsumerChainInfo{
-					{ChainID: "chain-id", TopN: 1, MinPowerInTopN: "123"},
+					{ChainID: "chain-id", TopN: 1, MinPowerInTopN: math.NewInt(100)},
 				},
 			},
 		},
