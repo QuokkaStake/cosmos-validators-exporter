@@ -57,7 +57,16 @@ func (c *Config) Validate() error {
 
 func (c *Config) DisplayWarnings(logger *zerolog.Logger) {
 	for _, chain := range c.Chains {
-		chain.DisplayWarnings(logger)
+		warnings := chain.DisplayWarnings()
+
+		for _, warning := range warnings {
+			entry := logger.Warn()
+			for label, value := range warning.Labels {
+				entry = entry.Str(label, value)
+			}
+
+			entry.Msg(warning.Message)
+		}
 	}
 }
 

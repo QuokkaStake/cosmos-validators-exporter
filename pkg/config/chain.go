@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	"github.com/guregu/null/v5"
-
-	"github.com/rs/zerolog"
 )
 
 type Chain struct {
@@ -68,14 +66,19 @@ func (c *Chain) Validate() error {
 	return nil
 }
 
-func (c *Chain) DisplayWarnings(logger *zerolog.Logger) {
+func (c *Chain) DisplayWarnings() []Warning {
+	warnings := []Warning{}
+
 	if c.BaseDenom == "" {
-		logger.Warn().
-			Str("chain", c.Name).
-			Msg("Base denom is not set")
+		warnings = append(warnings, Warning{
+			Message: "Base denom is not set",
+			Labels:  map[string]string{"chain": c.Name},
+		})
 	}
 
 	for _, denom := range c.Denoms {
-		denom.DisplayWarnings(c, logger)
+		warnings = append(warnings, denom.DisplayWarnings(c)...)
 	}
+
+	return warnings
 }
