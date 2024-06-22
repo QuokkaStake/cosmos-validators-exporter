@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/guregu/null/v5"
 	"testing"
+
+	"github.com/guregu/null/v5"
 
 	"github.com/stretchr/testify/assert"
 )
