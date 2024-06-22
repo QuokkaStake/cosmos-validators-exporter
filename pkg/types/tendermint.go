@@ -12,31 +12,37 @@ type ValidatorResponse struct {
 	Validator Validator `json:"validator"`
 }
 
+type ValidatorDescription struct {
+	Moniker         string `json:"moniker"`
+	Identity        string `json:"identity"`
+	Website         string `json:"website"`
+	SecurityContact string `json:"security_contact"`
+	Details         string `json:"details"`
+}
+
+type ValidatorCommission struct {
+	CommissionRates ValidatorCommissionRates `json:"commission_rates"`
+	UpdateTime      time.Time                `json:"update_time"`
+}
+
+type ValidatorCommissionRates struct {
+	Rate          math.LegacyDec `json:"rate"`
+	MaxRate       math.LegacyDec `json:"max_rate"`
+	MaxChangeRate math.LegacyDec `json:"max_change_rate"`
+}
+
 type Validator struct {
-	OperatorAddress string          `json:"operator_address"`
-	ConsensusPubkey ConsensusPubkey `json:"consensus_pubkey"`
-	Jailed          bool            `json:"jailed"`
-	Status          string          `json:"status"`
-	Tokens          string          `json:"tokens"`
-	DelegatorShares math.LegacyDec  `json:"delegator_shares"`
-	Description     struct {
-		Moniker         string `json:"moniker"`
-		Identity        string `json:"identity"`
-		Website         string `json:"website"`
-		SecurityContact string `json:"security_contact"`
-		Details         string `json:"details"`
-	} `json:"description"`
-	UnbondingHeight string    `json:"unbonding_height"`
-	UnbondingTime   time.Time `json:"unbonding_time"`
-	Commission      struct {
-		CommissionRates struct {
-			Rate          math.LegacyDec `json:"rate"`
-			MaxRate       math.LegacyDec `json:"max_rate"`
-			MaxChangeRate math.LegacyDec `json:"max_change_rate"`
-		} `json:"commission_rates"`
-		UpdateTime time.Time `json:"update_time"`
-	} `json:"commission"`
-	MinSelfDelegation string `json:"min_self_delegation"`
+	OperatorAddress   string               `json:"operator_address"`
+	ConsensusPubkey   ConsensusPubkey      `json:"consensus_pubkey"`
+	Jailed            bool                 `json:"jailed"`
+	Status            string               `json:"status"`
+	Tokens            string               `json:"tokens"`
+	DelegatorShares   math.LegacyDec       `json:"delegator_shares"`
+	Description       ValidatorDescription `json:"description"`
+	UnbondingHeight   string               `json:"unbonding_height"`
+	UnbondingTime     time.Time            `json:"unbonding_time"`
+	Commission        ValidatorCommission  `json:"commission"`
+	MinSelfDelegation string               `json:"min_self_delegation"`
 }
 
 func (v Validator) Active() bool {
