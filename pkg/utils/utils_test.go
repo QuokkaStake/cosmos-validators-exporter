@@ -72,23 +72,6 @@ func TestStrToFloat64Invalid(t *testing.T) {
 	StrToFloat64("test")
 }
 
-func TestStrToInt64(t *testing.T) {
-	t.Parallel()
-	assert.InDelta(t, int64(1234), StrToInt64("1234"), 0.001)
-}
-
-func TestStrToInt64Invalid(t *testing.T) {
-	t.Parallel()
-
-	defer func() {
-		if r := recover(); r == nil {
-			require.Fail(t, "Expected to have a panic here!")
-		}
-	}()
-
-	StrToInt64("test")
-}
-
 func TestFilter(t *testing.T) {
 	t.Parallel()
 

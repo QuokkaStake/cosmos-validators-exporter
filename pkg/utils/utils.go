@@ -26,15 +26,6 @@ func StrToFloat64(s string) float64 {
 	return f
 }
 
-func StrToInt64(s string) int64 {
-	f, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic(err)
-	}
-
-	return f
-}
-
 func ChangeBech32Prefix(source, newPrefix string) (string, error) {
 	_, bytes, err := bech32.Decode(source)
 	if err != nil {

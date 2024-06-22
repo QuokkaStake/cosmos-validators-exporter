@@ -6,7 +6,6 @@ import (
 	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
-	"main/pkg/utils"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -21,7 +20,7 @@ type UnbondsFetcher struct {
 }
 
 type UnbondsData struct {
-	Unbonds map[string]map[string]int64
+	Unbonds map[string]map[string]uint64
 }
 
 func NewUnbondsFetcher(
@@ -43,14 +42,14 @@ func (q *UnbondsFetcher) Fetch(
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	allUnbonds := map[string]map[string]int64{}
+	allUnbonds := map[string]map[string]uint64{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
 		mutex.Lock()
-		allUnbonds[chain.Name] = map[string]int64{}
+		allUnbonds[chain.Name] = map[string]uint64{}
 		mutex.Unlock()
 
 		rpc, _ := q.RPCs[chain.Name]
@@ -81,7 +80,7 @@ func (q *UnbondsFetcher) Fetch(
 					return
 				}
 
-				allUnbonds[chain.Name][validator] = utils.StrToInt64(unbondsResponse.Pagination.Total)
+				allUnbonds[chain.Name][validator] = unbondsResponse.Pagination.Total
 
 				// consumer chains do not have staking module, so no unbonds, therefore
 				// we do not calculate it here

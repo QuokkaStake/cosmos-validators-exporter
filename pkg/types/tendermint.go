@@ -55,7 +55,7 @@ type PaginationResponse struct {
 }
 
 type Pagination struct {
-	Total string `json:"total"`
+	Total uint64 `json:"total,string"`
 }
 
 type ValidatorsResponse struct {
