@@ -82,7 +82,7 @@ func (g *ValidatorRankGenerator) Generate(state *statePkg.State) []prometheus.Co
 			})
 
 			sort.Slice(activeValidators, func(i, j int) bool {
-				return utils.StrToFloat64(activeValidators[i].DelegatorShares) > utils.StrToFloat64(activeValidators[j].DelegatorShares)
+				return activeValidators[i].DelegatorShares.GT(activeValidators[j].DelegatorShares)
 			})
 
 			rank, found := utils.FindIndex(activeValidators, func(v types.Validator) bool {

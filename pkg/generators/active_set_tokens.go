@@ -58,10 +58,10 @@ func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.
 		})
 
 		sort.Slice(activeValidators, func(i, j int) bool {
-			return utils.StrToFloat64(activeValidators[i].DelegatorShares) > utils.StrToFloat64(activeValidators[j].DelegatorShares)
+			return activeValidators[i].DelegatorShares.GT(activeValidators[j].DelegatorShares)
 		})
 
-		lastValidatorStake := utils.StrToFloat64(activeValidators[len(activeValidators)-1].DelegatorShares)
+		lastValidatorStake := activeValidators[len(activeValidators)-1].DelegatorShares.MustFloat64()
 
 		if chainStakingParams != nil && len(activeValidators) >= chainStakingParams.StakingParams.MaxValidators {
 			activeSetTokensGauge.With(prometheus.Labels{

@@ -19,7 +19,7 @@ type Validator struct {
 	Jailed          bool            `json:"jailed"`
 	Status          string          `json:"status"`
 	Tokens          string          `json:"tokens"`
-	DelegatorShares string          `json:"delegator_shares"`
+	DelegatorShares math.LegacyDec  `json:"delegator_shares"`
 	Description     struct {
 		Moniker         string `json:"moniker"`
 		Identity        string `json:"identity"`
@@ -31,9 +31,9 @@ type Validator struct {
 	UnbondingTime   time.Time `json:"unbonding_time"`
 	Commission      struct {
 		CommissionRates struct {
-			Rate          string `json:"rate"`
-			MaxRate       string `json:"max_rate"`
-			MaxChangeRate string `json:"max_change_rate"`
+			Rate          math.LegacyDec `json:"rate"`
+			MaxRate       math.LegacyDec `json:"max_rate"`
+			MaxChangeRate math.LegacyDec `json:"max_change_rate"`
 		} `json:"commission_rates"`
 		UpdateTime time.Time `json:"update_time"`
 	} `json:"commission"`
