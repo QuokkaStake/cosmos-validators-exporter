@@ -4,37 +4,33 @@ import (
 	"main/pkg/constants"
 	"main/pkg/fetchers"
 	statePkg "main/pkg/state"
-	"main/pkg/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBalanceGeneratorNoState(t *testing.T) {
+func TestPriceGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
 	state := statePkg.NewState()
-	generator := NewBalanceGenerator()
+	generator := NewPriceGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
 }
 
-func TestBalanceGeneratorNotEmptyState(t *testing.T) {
+func TestPriceGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
 	state := statePkg.NewState()
-	state.Set(constants.FetcherNameBalance, fetchers.BalanceData{
-		Balances: map[string]map[string][]types.Amount{
+	state.Set(constants.FetcherNamePrice, fetchers.PriceData{
+		Prices: map[string]map[string]float64{
 			"chain": {
-				"validator": {
-					{Amount: 100, Denom: "uatom"},
-					{Amount: 200, Denom: "ustake"},
-				},
+				"denom": 0.01,
 			},
 		},
 	})
 
-	generator := NewBalanceGenerator()
+	generator := NewPriceGenerator()
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
 }
