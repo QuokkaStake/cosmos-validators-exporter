@@ -5,6 +5,9 @@ import (
 	statePkg "main/pkg/state"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,4 +29,13 @@ func TestIsConsumerGenerator(t *testing.T) {
 	generator := NewIsConsumerGenerator(chains)
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
+
+	gauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.Zero(t, testutil.ToFloat64(gauge.With(prometheus.Labels{
+		"chain": "chain",
+	})))
+	assert.InEpsilon(t, float64(1), testutil.ToFloat64(gauge.With(prometheus.Labels{
+		"chain": "consumer",
+	})), 0.01)
 }

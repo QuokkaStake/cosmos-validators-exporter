@@ -7,6 +7,9 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"cosmossdk.io/math"
 
 	"github.com/stretchr/testify/assert"
@@ -37,5 +40,19 @@ func TestConsumerInfoGeneratorNotEmptyState(t *testing.T) {
 
 	generator := NewConsumerInfoGenerator()
 	results := generator.Generate(state)
-	assert.NotEmpty(t, results)
+	assert.Len(t, results, 2)
+
+	topNGauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, 0.01, testutil.ToFloat64(topNGauge.With(prometheus.Labels{
+		"chain":    "chain",
+		"chain_id": "chain-id",
+	})), 0.01)
+
+	minPowerGauge, ok := results[1].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, float64(100), testutil.ToFloat64(minPowerGauge.With(prometheus.Labels{
+		"chain":    "chain",
+		"chain_id": "chain-id",
+	})), 0.01)
 }

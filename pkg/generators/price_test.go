@@ -6,6 +6,9 @@ import (
 	statePkg "main/pkg/state"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,4 +36,11 @@ func TestPriceGeneratorNotEmptyState(t *testing.T) {
 	generator := NewPriceGenerator()
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
+
+	gauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, 0.01, testutil.ToFloat64(gauge.With(prometheus.Labels{
+		"chain": "chain",
+		"denom": "denom",
+	})), 0.01)
 }

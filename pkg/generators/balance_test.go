@@ -7,6 +7,9 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,5 +39,18 @@ func TestBalanceGeneratorNotEmptyState(t *testing.T) {
 
 	generator := NewBalanceGenerator()
 	results := generator.Generate(state)
-	assert.NotEmpty(t, results)
+	assert.Len(t, results, 1)
+
+	gauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, float64(100), testutil.ToFloat64(gauge.With(prometheus.Labels{
+		"chain":   "chain",
+		"address": "validator",
+		"denom":   "uatom",
+	})), 0.01)
+	assert.InEpsilon(t, float64(200), testutil.ToFloat64(gauge.With(prometheus.Labels{
+		"chain":   "chain",
+		"address": "validator",
+		"denom":   "ustake",
+	})), 0.01)
 }

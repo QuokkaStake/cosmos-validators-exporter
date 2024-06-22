@@ -7,6 +7,9 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,8 +31,8 @@ func TestNodeInfoGeneratorNotEmptyState(t *testing.T) {
 			"chain": {
 				DefaultNodeInfo: types.DefaultNodeInfo{Network: "network", Version: "version"},
 				ApplicationVersion: types.ApplicationVersion{
-					Name:             "app",
-					AppName:          "app",
+					Name:             "name",
+					AppName:          "appname",
 					Version:          "1.2.3",
 					CosmosSDKVersion: "0.50.7",
 				},
@@ -40,4 +43,16 @@ func TestNodeInfoGeneratorNotEmptyState(t *testing.T) {
 	generator := NewNodeInfoGenerator()
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
+
+	gauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, float64(1), testutil.ToFloat64(gauge.With(prometheus.Labels{
+		"chain":              "chain",
+		"chain_id":           "network",
+		"cosmos_sdk_version": "0.50.7",
+		"tendermint_version": "version",
+		"app_version":        "1.2.3",
+		"name":               "name",
+		"app_name":           "appname",
+	})), 0.01)
 }
