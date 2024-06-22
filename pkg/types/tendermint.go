@@ -4,6 +4,8 @@ import (
 	"main/pkg/constants"
 	"main/pkg/utils"
 	"time"
+
+	"cosmossdk.io/math"
 )
 
 type ValidatorResponse struct {
@@ -84,7 +86,7 @@ type SigningInfo struct {
 	IndexOffset         string    `json:"index_offset"`
 	JailedUntil         time.Time `json:"jailed_until"`
 	Tombstoned          bool      `json:"tombstoned"`
-	MissedBlocksCounter string    `json:"missed_blocks_counter"`
+	MissedBlocksCounter math.Int  `json:"missed_blocks_counter"`
 }
 
 type SigningInfoResponse struct {
@@ -98,7 +100,7 @@ type AssignedKeyResponse struct {
 }
 
 type SlashingParams struct {
-	SignedBlocksWindow string `json:"signed_blocks_window"`
+	SignedBlocksWindow math.Int `json:"signed_blocks_window"`
 }
 
 type SlashingParamsResponse struct {

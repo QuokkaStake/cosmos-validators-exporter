@@ -7,6 +7,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"cosmossdk.io/math"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +30,7 @@ func TestSigningInfoGeneratorNotEmptyState(t *testing.T) {
 			"chain": {
 				"validator": &types.SigningInfoResponse{
 					ValSigningInfo: types.SigningInfo{
-						MissedBlocksCounter: "100",
+						MissedBlocksCounter: math.NewInt(100),
 					},
 				},
 			},

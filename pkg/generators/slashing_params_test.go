@@ -7,6 +7,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"cosmossdk.io/math"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +29,7 @@ func TestSlashingParamsGeneratorNotEmptyState(t *testing.T) {
 		Params: map[string]*types.SlashingParamsResponse{
 			"chain": {
 				SlashingParams: types.SlashingParams{
-					SignedBlocksWindow: "100",
+					SignedBlocksWindow: math.NewInt(100),
 				},
 			},
 		},
