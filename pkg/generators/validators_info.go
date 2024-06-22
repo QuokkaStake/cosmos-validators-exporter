@@ -6,7 +6,6 @@ import (
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
-	"sort"
 
 	"cosmossdk.io/math"
 
@@ -53,10 +52,6 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 	for chain, validators := range data.Validators {
 		activeValidators := utils.Filter(validators.Validators, func(v types.Validator) bool {
 			return v.Active()
-		})
-
-		sort.Slice(activeValidators, func(i, j int) bool {
-			return activeValidators[i].DelegatorShares.GT(activeValidators[j].DelegatorShares)
 		})
 
 		totalStake := math.LegacyNewDec(0)
