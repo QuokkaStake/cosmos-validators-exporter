@@ -27,7 +27,17 @@ func ExecuteValidateConfig(configPath string) {
 		logger.GetDefaultLogger().Fatal().Err(err).Msg("Config is invalid!")
 	}
 
-	config.DisplayWarnings(logger.GetDefaultLogger())
+	warnings := config.DisplayWarnings()
+
+	for _, warning := range warnings {
+		entry := logger.GetDefaultLogger().Warn()
+		for label, value := range warning.Labels {
+			entry = entry.Str(label, value)
+		}
+
+		entry.Msg(warning.Message)
+	}
+
 	logger.GetDefaultLogger().Info().Msg("Provided config is valid.")
 }
 

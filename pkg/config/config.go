@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog"
-
 	"github.com/BurntSushi/toml"
 	"github.com/creasty/defaults"
 )
@@ -42,19 +40,14 @@ func (c *Config) Validate() error {
 	return nil
 }
 
-func (c *Config) DisplayWarnings(logger *zerolog.Logger) {
+func (c *Config) DisplayWarnings() []Warning {
+	warnings := []Warning{}
+
 	for _, chain := range c.Chains {
-		warnings := chain.DisplayWarnings()
-
-		for _, warning := range warnings {
-			entry := logger.Warn()
-			for label, value := range warning.Labels {
-				entry = entry.Str(label, value)
-			}
-
-			entry.Msg(warning.Message)
-		}
+		warnings = append(warnings, chain.DisplayWarnings()...)
 	}
+
+	return warnings
 }
 
 func (c *Config) GetCoingeckoCurrencies() []string {
@@ -64,6 +57,14 @@ func (c *Config) GetCoingeckoCurrencies() []string {
 		for _, denom := range chain.Denoms {
 			if denom.CoingeckoCurrency != "" {
 				currencies = append(currencies, denom.CoingeckoCurrency)
+			}
+		}
+
+		for _, consumerChain := range chain.ConsumerChains {
+			for _, denom := range consumerChain.Denoms {
+				if denom.CoingeckoCurrency != "" {
+					currencies = append(currencies, denom.CoingeckoCurrency)
+				}
 			}
 		}
 	}
