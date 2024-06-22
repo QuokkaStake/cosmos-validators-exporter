@@ -77,7 +77,7 @@ func TestDisplayWarningsEmpty(t *testing.T) {
 			Name:        "chain",
 			LCDEndpoint: "test",
 			BaseDenom:   "test",
-			Validators:  []Validator{{Address: "test"}},
+			Validators:  []Validator{{Address: "test", ConsensusAddress: "test"}},
 		}},
 	}
 

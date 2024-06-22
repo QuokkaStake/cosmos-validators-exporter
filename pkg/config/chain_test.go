@@ -117,7 +117,7 @@ func TestChainDisplayWarningsDenomWarning(t *testing.T) {
 		Name:        "test",
 		LCDEndpoint: "test",
 		BaseDenom:   "ustake",
-		Validators:  []Validator{{Address: "test"}},
+		Validators:  []Validator{{Address: "test", ConsensusAddress: "test"}},
 		Denoms:      DenomInfos{{Denom: "ustake", DisplayDenom: "stake"}},
 	}
 	warnings := chain.DisplayWarnings()
@@ -131,7 +131,7 @@ func TestChainDisplayWarningsEmpty(t *testing.T) {
 		Name:        "test",
 		LCDEndpoint: "test",
 		BaseDenom:   "ustake",
-		Validators:  []Validator{{Address: "test"}},
+		Validators:  []Validator{{Address: "test", ConsensusAddress: "test"}},
 		Denoms:      DenomInfos{{Denom: "ustake", DisplayDenom: "stake", CoingeckoCurrency: "stake"}},
 	}
 	warnings := chain.DisplayWarnings()

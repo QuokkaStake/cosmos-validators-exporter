@@ -80,5 +80,9 @@ func (c *Chain) DisplayWarnings() []Warning {
 		warnings = append(warnings, denom.DisplayWarnings(c)...)
 	}
 
+	for _, validator := range c.Validators {
+		warnings = append(warnings, validator.DisplayWarnings(c)...)
+	}
+
 	return warnings
 }
