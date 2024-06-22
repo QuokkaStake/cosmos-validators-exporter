@@ -11,19 +11,6 @@ import (
 	"github.com/creasty/defaults"
 )
 
-type Validator struct {
-	Address          string `toml:"address"`
-	ConsensusAddress string `toml:"consensus-address"`
-}
-
-func (v *Validator) Validate() error {
-	if v.Address == "" {
-		return errors.New("validator address is expected!")
-	}
-
-	return nil
-}
-
 type Config struct {
 	LogConfig     LogConfig     `toml:"log"`
 	TracingConfig TracingConfig `toml:"tracing"`
