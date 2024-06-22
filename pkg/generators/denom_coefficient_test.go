@@ -14,13 +14,15 @@ func TestDenomCoefficientGenerator(t *testing.T) {
 	state := statePkg.NewState()
 	chains := []*config.Chain{
 		{
-			Name: "chain",
+			Name:      "chain",
+			BaseDenom: "uatom",
 			Denoms: config.DenomInfos{
 				{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000},
 			},
 			ConsumerChains: []*config.ConsumerChain{
 				{
-					Name: "consumer",
+					Name:      "consumer",
+					BaseDenom: "uakt",
 					Denoms: config.DenomInfos{
 						{Denom: "uakt", DisplayDenom: "akt", DenomCoefficient: 1000000},
 					},
