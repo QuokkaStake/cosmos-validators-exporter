@@ -147,18 +147,22 @@ type ParamsResponse struct {
 	} `json:"param"`
 }
 
+type DefaultNodeInfo struct {
+	Network string `json:"network"`
+	Version string `json:"version"`
+}
+
+type ApplicationVersion struct {
+	Name             string `json:"name"`
+	AppName          string `json:"app_name"`
+	Version          string `json:"version"`
+	CosmosSDKVersion string `json:"cosmos_sdk_version"`
+}
+
 type NodeInfoResponse struct {
-	Code            int `json:"code"`
-	DefaultNodeInfo struct {
-		Network string `json:"network"`
-		Version string `json:"version"`
-	} `json:"default_node_info"`
-	ApplicationVersion struct {
-		Name             string `json:"name"`
-		AppName          string `json:"app_name"`
-		Version          string `json:"version"`
-		CosmosSDKVersion string `json:"cosmos_sdk_version"`
-	} `json:"application_version"`
+	Code               int                `json:"code"`
+	DefaultNodeInfo    DefaultNodeInfo    `json:"default_node_info"`
+	ApplicationVersion ApplicationVersion `json:"application_version"`
 }
 
 type ConsumerValidator struct {
