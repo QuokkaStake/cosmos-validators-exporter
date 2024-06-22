@@ -4,7 +4,6 @@ import (
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
-	"main/pkg/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -34,7 +33,7 @@ func (g *SigningInfoGenerator) Generate(state *statePkg.State) []prometheus.Coll
 
 	for chain, commissions := range data.SigningInfos {
 		for validator, signingInfo := range commissions {
-			missedBlocksCounter := utils.StrToInt64(signingInfo.ValSigningInfo.MissedBlocksCounter)
+			missedBlocksCounter := signingInfo.ValSigningInfo.MissedBlocksCounter.Int64()
 			if missedBlocksCounter >= 0 {
 				missedBlocksGauge.With(prometheus.Labels{
 					"chain":   chain,

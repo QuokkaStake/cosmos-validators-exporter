@@ -6,7 +6,6 @@ import (
 	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
-	"main/pkg/utils"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -21,7 +20,7 @@ type DelegationsFetcher struct {
 }
 
 type DelegationsData struct {
-	Delegations map[string]map[string]int64
+	Delegations map[string]map[string]uint64
 }
 
 func NewDelegationsFetcher(
@@ -43,15 +42,15 @@ func (q *DelegationsFetcher) Fetch(
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
-	allDelegations := map[string]map[string]int64{}
+	allDelegations := map[string]map[string]uint64{}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
 	for _, chain := range q.Config.Chains {
-		allDelegations[chain.Name] = map[string]int64{}
+		allDelegations[chain.Name] = map[string]uint64{}
 		for _, consumerChain := range chain.ConsumerChains {
-			allDelegations[consumerChain.Name] = map[string]int64{}
+			allDelegations[consumerChain.Name] = map[string]uint64{}
 		}
 	}
 
@@ -84,7 +83,7 @@ func (q *DelegationsFetcher) Fetch(
 					return
 				}
 
-				allDelegations[chain.Name][validator] = utils.StrToInt64(delegatorsResponse.Pagination.Total)
+				allDelegations[chain.Name][validator] = delegatorsResponse.Pagination.Total
 
 				// consumer chains do not have staking module, so no delegations, therefore
 				// we do not calculate it here

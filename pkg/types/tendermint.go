@@ -2,8 +2,9 @@ package types
 
 import (
 	"main/pkg/constants"
-	"main/pkg/utils"
 	"time"
+
+	"cosmossdk.io/math"
 )
 
 type ValidatorResponse struct {
@@ -11,31 +12,37 @@ type ValidatorResponse struct {
 	Validator Validator `json:"validator"`
 }
 
+type ValidatorDescription struct {
+	Moniker         string `json:"moniker"`
+	Identity        string `json:"identity"`
+	Website         string `json:"website"`
+	SecurityContact string `json:"security_contact"`
+	Details         string `json:"details"`
+}
+
+type ValidatorCommission struct {
+	CommissionRates ValidatorCommissionRates `json:"commission_rates"`
+	UpdateTime      time.Time                `json:"update_time"`
+}
+
+type ValidatorCommissionRates struct {
+	Rate          math.LegacyDec `json:"rate"`
+	MaxRate       math.LegacyDec `json:"max_rate"`
+	MaxChangeRate math.LegacyDec `json:"max_change_rate"`
+}
+
 type Validator struct {
-	OperatorAddress string          `json:"operator_address"`
-	ConsensusPubkey ConsensusPubkey `json:"consensus_pubkey"`
-	Jailed          bool            `json:"jailed"`
-	Status          string          `json:"status"`
-	Tokens          string          `json:"tokens"`
-	DelegatorShares string          `json:"delegator_shares"`
-	Description     struct {
-		Moniker         string `json:"moniker"`
-		Identity        string `json:"identity"`
-		Website         string `json:"website"`
-		SecurityContact string `json:"security_contact"`
-		Details         string `json:"details"`
-	} `json:"description"`
-	UnbondingHeight string    `json:"unbonding_height"`
-	UnbondingTime   time.Time `json:"unbonding_time"`
-	Commission      struct {
-		CommissionRates struct {
-			Rate          string `json:"rate"`
-			MaxRate       string `json:"max_rate"`
-			MaxChangeRate string `json:"max_change_rate"`
-		} `json:"commission_rates"`
-		UpdateTime time.Time `json:"update_time"`
-	} `json:"commission"`
-	MinSelfDelegation string `json:"min_self_delegation"`
+	OperatorAddress   string               `json:"operator_address"`
+	ConsensusPubkey   ConsensusPubkey      `json:"consensus_pubkey"`
+	Jailed            bool                 `json:"jailed"`
+	Status            string               `json:"status"`
+	Tokens            string               `json:"tokens"`
+	DelegatorShares   math.LegacyDec       `json:"delegator_shares"`
+	Description       ValidatorDescription `json:"description"`
+	UnbondingHeight   string               `json:"unbonding_height"`
+	UnbondingTime     time.Time            `json:"unbonding_time"`
+	Commission        ValidatorCommission  `json:"commission"`
+	MinSelfDelegation string               `json:"min_self_delegation"`
 }
 
 func (v Validator) Active() bool {
@@ -53,7 +60,7 @@ type PaginationResponse struct {
 }
 
 type Pagination struct {
-	Total string `json:"total"`
+	Total uint64 `json:"total,string"`
 }
 
 type ValidatorsResponse struct {
@@ -67,27 +74,29 @@ type BalancesResponse struct {
 }
 
 type ResponseAmount struct {
-	Amount string `json:"amount"`
-	Denom  string `json:"denom"`
+	Amount math.LegacyDec `json:"amount"`
+	Denom  string         `json:"denom"`
 }
 
 func (a ResponseAmount) ToAmount() Amount {
 	return Amount{
-		Amount: utils.StrToFloat64(a.Amount),
+		Amount: a.Amount.MustFloat64(),
 		Denom:  a.Denom,
 	}
 }
 
+type SigningInfo struct {
+	Address             string    `json:"address"`
+	StartHeight         string    `json:"start_height"`
+	IndexOffset         string    `json:"index_offset"`
+	JailedUntil         time.Time `json:"jailed_until"`
+	Tombstoned          bool      `json:"tombstoned"`
+	MissedBlocksCounter math.Int  `json:"missed_blocks_counter"`
+}
+
 type SigningInfoResponse struct {
-	Code           int `json:"code"`
-	ValSigningInfo struct {
-		Address             string    `json:"address"`
-		StartHeight         string    `json:"start_height"`
-		IndexOffset         string    `json:"index_offset"`
-		JailedUntil         time.Time `json:"jailed_until"`
-		Tombstoned          bool      `json:"tombstoned"`
-		MissedBlocksCounter string    `json:"missed_blocks_counter"`
-	} `json:"val_signing_info"`
+	Code           int         `json:"code"`
+	ValSigningInfo SigningInfo `json:"val_signing_info"`
 }
 
 type AssignedKeyResponse struct {
@@ -95,11 +104,13 @@ type AssignedKeyResponse struct {
 	ConsumerAddress string `json:"consumer_address"`
 }
 
+type SlashingParams struct {
+	SignedBlocksWindow math.Int `json:"signed_blocks_window"`
+}
+
 type SlashingParamsResponse struct {
-	Code           int `json:"code"`
-	SlashingParams struct {
-		SignedBlocksWindow string `json:"signed_blocks_window"`
-	} `json:"params"`
+	Code           int            `json:"code"`
+	SlashingParams SlashingParams `json:"params"`
 }
 
 type SingleDelegationResponse struct {
@@ -116,11 +127,13 @@ type RewardsResponse struct {
 	Rewards []ResponseAmount `json:"rewards"`
 }
 
+type StakingParams struct {
+	MaxValidators int `json:"max_validators"`
+}
+
 type StakingParamsResponse struct {
-	Code          int `json:"code"`
-	StakingParams struct {
-		MaxValidators int `json:"max_validators"`
-	} `json:"params"`
+	Code          int           `json:"code"`
+	StakingParams StakingParams `json:"params"`
 }
 
 type CommissionResponse struct {
@@ -139,18 +152,22 @@ type ParamsResponse struct {
 	} `json:"param"`
 }
 
+type DefaultNodeInfo struct {
+	Network string `json:"network"`
+	Version string `json:"version"`
+}
+
+type ApplicationVersion struct {
+	Name             string `json:"name"`
+	AppName          string `json:"app_name"`
+	Version          string `json:"version"`
+	CosmosSDKVersion string `json:"cosmos_sdk_version"`
+}
+
 type NodeInfoResponse struct {
-	Code            int `json:"code"`
-	DefaultNodeInfo struct {
-		Network string `json:"network"`
-		Version string `json:"version"`
-	} `json:"default_node_info"`
-	ApplicationVersion struct {
-		Name             string `json:"name"`
-		AppName          string `json:"app_name"`
-		Version          string `json:"version"`
-		CosmosSDKVersion string `json:"cosmos_sdk_version"`
-	} `json:"application_version"`
+	Code               int                `json:"code"`
+	DefaultNodeInfo    DefaultNodeInfo    `json:"default_node_info"`
+	ApplicationVersion ApplicationVersion `json:"application_version"`
 }
 
 type ConsumerValidator struct {
@@ -163,9 +180,9 @@ type ConsumerValidatorsResponse struct {
 }
 
 type ConsumerChainInfo struct {
-	ChainID        string `json:"chain_id"`
-	TopN           int    `json:"top_n"`
-	MinPowerInTopN string `json:"min_power_in_top_N"`
+	ChainID        string   `json:"chain_id"`
+	TopN           int      `json:"top_n"`
+	MinPowerInTopN math.Int `json:"min_power_in_top_N"`
 }
 
 type ConsumerInfoResponse struct {

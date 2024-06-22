@@ -4,7 +4,6 @@ import (
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
-	"main/pkg/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -35,7 +34,7 @@ func (g *SlashingParamsGenerator) Generate(state *statePkg.State) []prometheus.C
 	for chain, params := range data.Params {
 		blocksWindowGauge.With(prometheus.Labels{
 			"chain": chain,
-		}).Set(float64(utils.StrToInt64(params.SlashingParams.SignedBlocksWindow)))
+		}).Set(float64(params.SlashingParams.SignedBlocksWindow.Int64()))
 	}
 
 	return []prometheus.Collector{blocksWindowGauge}

@@ -157,22 +157,22 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 			commissionGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
-			}).Set(utils.StrToFloat64(validator.Commission.CommissionRates.Rate))
+			}).Set(validator.Commission.CommissionRates.Rate.MustFloat64())
 
 			commissionMaxGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
-			}).Set(utils.StrToFloat64(validator.Commission.CommissionRates.MaxRate))
+			}).Set(validator.Commission.CommissionRates.MaxRate.MustFloat64())
 
 			commissionMaxChangeGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
-			}).Set(utils.StrToFloat64(validator.Commission.CommissionRates.MaxChangeRate))
+			}).Set(validator.Commission.CommissionRates.MaxChangeRate.MustFloat64())
 
 			delegationsGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
-			}).Set(utils.StrToFloat64(validator.DelegatorShares))
+			}).Set(validator.DelegatorShares.MustFloat64())
 		}
 	}
 

@@ -10,47 +10,44 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
+	"cosmossdk.io/math"
+
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBalanceGeneratorNoState(t *testing.T) {
+func TestSigningInfoGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
 	state := statePkg.NewState()
-	generator := NewBalanceGenerator()
+	generator := NewSigningInfoGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
 }
 
-func TestBalanceGeneratorNotEmptyState(t *testing.T) {
+func TestSigningInfoGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
 	state := statePkg.NewState()
-	state.Set(constants.FetcherNameBalance, fetchers.BalanceData{
-		Balances: map[string]map[string][]types.Amount{
+	state.Set(constants.FetcherNameSigningInfo, fetchers.SigningInfoData{
+		SigningInfos: map[string]map[string]*types.SigningInfoResponse{
 			"chain": {
-				"validator": {
-					{Amount: 100, Denom: "uatom"},
-					{Amount: 200, Denom: "ustake"},
+				"validator": &types.SigningInfoResponse{
+					ValSigningInfo: types.SigningInfo{
+						MissedBlocksCounter: math.NewInt(100),
+					},
 				},
 			},
 		},
 	})
 
-	generator := NewBalanceGenerator()
+	generator := NewSigningInfoGenerator()
 	results := generator.Generate(state)
-	assert.Len(t, results, 1)
+	assert.NotEmpty(t, results)
 
 	gauge, ok := results[0].(*prometheus.GaugeVec)
 	assert.True(t, ok)
 	assert.InEpsilon(t, float64(100), testutil.ToFloat64(gauge.With(prometheus.Labels{
 		"chain":   "chain",
 		"address": "validator",
-		"denom":   "uatom",
-	})), 0.01)
-	assert.InEpsilon(t, float64(200), testutil.ToFloat64(gauge.With(prometheus.Labels{
-		"chain":   "chain",
-		"address": "validator",
-		"denom":   "ustake",
 	})), 0.01)
 }

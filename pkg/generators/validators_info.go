@@ -6,7 +6,8 @@ import (
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
-	"sort"
+
+	"cosmossdk.io/math"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -53,14 +54,10 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 			return v.Active()
 		})
 
-		sort.Slice(activeValidators, func(i, j int) bool {
-			return utils.StrToFloat64(activeValidators[i].DelegatorShares) > utils.StrToFloat64(activeValidators[j].DelegatorShares)
-		})
-
-		var totalStake float64 = 0
+		totalStake := math.LegacyNewDec(0)
 
 		for _, activeValidator := range activeValidators {
-			totalStake += utils.StrToFloat64(activeValidator.DelegatorShares)
+			totalStake = totalStake.Add(activeValidator.DelegatorShares)
 		}
 
 		validatorsCountGauge.With(prometheus.Labels{
@@ -69,7 +66,7 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 
 		totalBondedTokensGauge.With(prometheus.Labels{
 			"chain": chain,
-		}).Set(totalStake)
+		}).Set(totalStake.MustFloat64())
 	}
 
 	for chain, validators := range consumersData.Validators {
