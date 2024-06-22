@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"os"
+	"main/pkg/fs"
 
 	"github.com/BurntSushi/toml"
 	"github.com/creasty/defaults"
@@ -72,8 +72,8 @@ func (c *Config) GetCoingeckoCurrencies() []string {
 	return currencies
 }
 
-func GetConfig(path string) (*Config, error) {
-	configBytes, err := os.ReadFile(path)
+func GetConfig(path string, filesystem fs.FS) (*Config, error) {
+	configBytes, err := filesystem.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +85,6 @@ func GetConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
-	if err = defaults.Set(&configStruct); err != nil {
-		return nil, err
-	}
-
+	defaults.MustSet(&configStruct)
 	return &configStruct, nil
 }

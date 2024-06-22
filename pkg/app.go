@@ -2,6 +2,7 @@ package pkg
 
 import (
 	fetchersPkg "main/pkg/fetchers"
+	"main/pkg/fs"
 	generatorsPkg "main/pkg/generators"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
@@ -45,8 +46,8 @@ type App struct {
 	Generators []generatorsPkg.Generator
 }
 
-func NewApp(configPath string, version string) *App {
-	appConfig, err := config.GetConfig(configPath)
+func NewApp(configPath string, filesystem fs.FS, version string) *App {
+	appConfig, err := config.GetConfig(configPath, filesystem)
 	if err != nil {
 		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
 	}

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"main/pkg/fs"
 	"testing"
 
 	"github.com/guregu/null/v5"
@@ -106,4 +107,29 @@ func TestCoingeckoCurrencies(t *testing.T) {
 	require.Len(t, currencies, 2)
 	require.Contains(t, currencies, "denom1")
 	require.Contains(t, currencies, "denom3")
+}
+
+func TestLoadConfigNotFound(t *testing.T) {
+	t.Parallel()
+
+	filesystem := &fs.TestFS{}
+	_, err := GetConfig("not-existing.toml", filesystem)
+	require.Error(t, err)
+}
+
+func TestLoadConfigInvalid(t *testing.T) {
+	t.Parallel()
+
+	filesystem := &fs.TestFS{}
+	_, err := GetConfig("invalid.toml", filesystem)
+	require.Error(t, err)
+}
+
+func TestLoadConfigValid(t *testing.T) {
+	t.Parallel()
+
+	filesystem := &fs.TestFS{}
+	config, err := GetConfig("valid.toml", filesystem)
+	require.NoError(t, err)
+	require.NotNil(t, config)
 }
