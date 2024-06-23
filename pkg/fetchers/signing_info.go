@@ -103,7 +103,9 @@ func (q *SigningInfoFetcher) fetchAndSetSigningInfo(
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	q.queryInfos = append(q.queryInfos, signingInfoQuery)
+	if signingInfoQuery != nil {
+		q.queryInfos = append(q.queryInfos, signingInfoQuery)
+	}
 
 	if err != nil {
 		q.Logger.Error().
@@ -155,7 +157,9 @@ func (q *SigningInfoFetcher) processConsumerChain(
 	)
 
 	q.mutex.Lock()
-	q.queryInfos = append(q.queryInfos, queryInfo)
+	if queryInfo != nil {
+		q.queryInfos = append(q.queryInfos, queryInfo)
+	}
 	q.mutex.Unlock()
 
 	if err != nil {
