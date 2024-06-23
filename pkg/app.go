@@ -88,7 +88,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		fetchersPkg.NewDelegationsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewUnbondsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewRewardsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewRewardsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewBalanceFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewValidatorsFetcher(logger, appConfig, rpcs, tracer),
