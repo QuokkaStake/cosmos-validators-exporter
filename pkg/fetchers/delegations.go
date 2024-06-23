@@ -14,7 +14,7 @@ import (
 
 type DelegationsFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
@@ -25,13 +25,13 @@ type DelegationsData struct {
 
 func NewDelegationsFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *DelegationsFetcher {
 	return &DelegationsFetcher{
 		Logger: logger.With().Str("component", "delegations_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -47,14 +47,11 @@ func (q *DelegationsFetcher) Fetch(
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		allDelegations[chain.Name] = map[string]uint64{}
-		for _, consumerChain := range chain.ConsumerChains {
-			allDelegations[consumerChain.Name] = map[string]uint64{}
-		}
 	}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {

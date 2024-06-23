@@ -15,7 +15,7 @@ import (
 
 type SelfDelegationFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
@@ -26,13 +26,13 @@ type SelfDelegationData struct {
 
 func NewSelfDelegationFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *SelfDelegationFetcher {
 	return &SelfDelegationFetcher{
 		Logger: logger.With().Str("component", "self_delegation_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -45,14 +45,14 @@ func (q *SelfDelegationFetcher) Fetch(
 
 	allSelfDelegations := map[string]map[string]*types.Amount{}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		allSelfDelegations[chain.Name] = map[string]*types.Amount{}
 	}
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {

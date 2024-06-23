@@ -14,7 +14,7 @@ import (
 
 type StakingParamsFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 }
@@ -25,13 +25,13 @@ type StakingParamsData struct {
 
 func NewStakingParamsFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *StakingParamsFetcher {
 	return &StakingParamsFetcher{
 		Logger: logger.With().Str("component", "staking_params_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -47,7 +47,7 @@ func (q *StakingParamsFetcher) Fetch(
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		wg.Add(1)

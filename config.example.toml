@@ -34,15 +34,11 @@ provider-lcd-endpoint = ""
 # 1. coingecko-currency
 # Coingecko currency, specify it if you want to also get the wallet balance
 # in total in USD. Optional.
-# 2. dex-screener-chain-id and dex-screener-pair.
-# dexscreener.com's chain ID (usually "osmosis") and pair (usually pool ID).
-# Won't be used if coingecko-currency is provided.
-# Either coingecko-currency or these two params are required for getting token price.
-# 3. denom
+# 2. denom
 # The actual denom value (such as "uatom" for Cosmos Hub or "ibc/xxxxx" for IBC denoms). Required.
-# 4. display-denom
+# 3. display-denom
 # The denom that'll be returned in labels. Required.
-# 5. denom-coefficient
+# 4. denom-coefficient
 # The coefficient you need to multiply base denom to to get 1 token on Coingecko/DexScreener.
 # Is exposed by `cosmos_validators_exporter_denom_coefficient` metric.
 # Optional, defaults to 1_000_000.
@@ -62,7 +58,7 @@ provider-lcd-endpoint = ""
 # which you can use to display a worthwhile of your unclaimed commission and use display-denom
 # label for legend.
 denoms = [
-    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-coefficient = 1000000, dex-screener-chain-id = "osmosis", dex-screener-pair = "1" },
+    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-coefficient = 1000000 },
 ]
 # Bech32 prefix for a wallet address (example: "cosmos" for a Cosmos wallet). If omitted,
 # the self-delegation metric will not be present.

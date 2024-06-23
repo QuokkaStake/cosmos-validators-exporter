@@ -14,7 +14,7 @@ import (
 
 type ConsumerInfoFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 
@@ -31,13 +31,13 @@ type ConsumerInfoData struct {
 
 func NewConsumerInfoFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *ConsumerInfoFetcher {
 	return &ConsumerInfoFetcher{
 		Logger: logger.With().Str("component", "validators_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -49,8 +49,8 @@ func (f *ConsumerInfoFetcher) Fetch(
 	f.queryInfos = []*types.QueryInfo{}
 	f.allInfos = map[string]*types.ConsumerInfoResponse{}
 
-	f.wg.Add(len(f.Config.Chains))
-	for _, chain := range f.Config.Chains {
+	f.wg.Add(len(f.Chains))
+	for _, chain := range f.Chains {
 		rpc, _ := f.RPCs[chain.Name]
 		go f.processChain(ctx, rpc.RPC, chain)
 	}

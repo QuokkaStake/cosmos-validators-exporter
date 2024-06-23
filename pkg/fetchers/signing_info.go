@@ -15,7 +15,7 @@ import (
 
 type SigningInfoFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 
@@ -32,13 +32,13 @@ type SigningInfoData struct {
 
 func NewSigningInfoFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *SigningInfoFetcher {
 	return &SigningInfoFetcher{
 		Logger: logger.With().Str("component", "signing_infos").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -50,14 +50,14 @@ func (q *SigningInfoFetcher) Fetch(
 	q.queryInfos = []*types.QueryInfo{}
 	q.allSigningInfos = map[string]map[string]*types.SigningInfoResponse{}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		q.allSigningInfos[chain.Name] = map[string]*types.SigningInfoResponse{}
 		for _, consumerChain := range chain.ConsumerChains {
 			q.allSigningInfos[consumerChain.Name] = map[string]*types.SigningInfoResponse{}
 		}
 	}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
@@ -103,7 +103,9 @@ func (q *SigningInfoFetcher) fetchAndSetSigningInfo(
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	q.queryInfos = append(q.queryInfos, signingInfoQuery)
+	if signingInfoQuery != nil {
+		q.queryInfos = append(q.queryInfos, signingInfoQuery)
+	}
 
 	if err != nil {
 		q.Logger.Error().
@@ -155,7 +157,9 @@ func (q *SigningInfoFetcher) processConsumerChain(
 	)
 
 	q.mutex.Lock()
-	q.queryInfos = append(q.queryInfos, queryInfo)
+	if queryInfo != nil {
+		q.queryInfos = append(q.queryInfos, queryInfo)
+	}
 	q.mutex.Unlock()
 
 	if err != nil {

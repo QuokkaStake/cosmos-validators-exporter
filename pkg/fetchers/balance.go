@@ -15,7 +15,7 @@ import (
 
 type BalanceFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 
@@ -32,13 +32,13 @@ type BalanceData struct {
 
 func NewBalanceFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *BalanceFetcher {
 	return &BalanceFetcher{
 		Logger: logger.With().Str("component", "balance_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -50,14 +50,14 @@ func (q *BalanceFetcher) Fetch(
 	q.queryInfos = []*types.QueryInfo{}
 	q.allBalances = map[string]map[string][]types.Amount{}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		q.allBalances[chain.Name] = map[string][]types.Amount{}
 		for _, consumerChain := range chain.ConsumerChains {
 			q.allBalances[consumerChain.Name] = map[string][]types.Amount{}
 		}
 	}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
