@@ -457,12 +457,12 @@ func TestSigningInfoFetcherConsumerAssignedKeyInvalidValcons(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &SigningInfoFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -646,12 +646,12 @@ func TestSigningInfoFetcherConsumerSuccessWithoutAssignedKey(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &SigningInfoFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -707,12 +707,12 @@ func TestSigningInfoFetcherConsumerSuccessWithAssignedKeyQueryDisabled(t *testin
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &SigningInfoFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),

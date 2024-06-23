@@ -1,0 +1,14 @@
+{
+  "chains": [
+    {
+      "chain_id": "neutron-1",
+      "client_id": "07-tendermint-1119",
+      "top_N": 95,
+      "min_power_in_top_N": "287843",
+      "validators_power_cap": 0,
+      "validator_set_cap": 0,
+      "allowlist": [],
+      "denylist": []
+    }
+  ]
+}
