@@ -583,10 +583,7 @@ func (rpc *RPC) Get(
 		return info, err
 	}
 
-	height, err := utils.GetBlockHeightFromHeader(header)
-	if err != nil {
-		return info, err
-	}
+	height, _ := utils.GetBlockHeightFromHeader(header)
 
 	rpc.Mutex.Lock()
 	rpc.LastHeight[url] = height

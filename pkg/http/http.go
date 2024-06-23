@@ -52,7 +52,6 @@ func (c *Client) Get(
 	}
 
 	req, err := http.NewRequestWithContext(childCtx, http.MethodGet, url, nil)
-
 	if err != nil {
 		span.RecordError(err)
 		return queryInfo, nil, err
