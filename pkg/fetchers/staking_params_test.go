@@ -176,6 +176,9 @@ func TestStakingParamsFetcherQuerySuccess(t *testing.T) {
 		LCDEndpoint:      "https://api.cosmos.quokkastake.io",
 		BechWalletPrefix: "cosmos",
 		Validators:       []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
+		ConsumerChains: []*config.ConsumerChain{{
+			Name: "consumer",
+		}},
 	}}
 	rpcs := map[string]*tendermint.RPCWithConsumers{
 		"chain": tendermint.RPCWithConsumersFromChain(
@@ -202,4 +205,9 @@ func TestStakingParamsFetcherQuerySuccess(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, chainData)
 	assert.Equal(t, 180, chainData.StakingParams.MaxValidators)
+
+	consumerData, ok := paramsData.Params["consumer"]
+	assert.True(t, ok)
+	assert.NotNil(t, consumerData)
+	assert.Equal(t, 180, consumerData.StakingParams.MaxValidators)
 }
