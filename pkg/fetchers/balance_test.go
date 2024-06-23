@@ -19,10 +19,28 @@ import (
 func TestBalanceFetcherBase(t *testing.T) {
 	t.Parallel()
 
+	chains := []*config.Chain{
+		{Name: "chain1", LCDEndpoint: "example1"},
+		{Name: "chain2", LCDEndpoint: "example2"},
+	}
+	rpcs := map[string]*tendermint.RPCWithConsumers{
+		"chain1": tendermint.RPCWithConsumersFromChain(
+			chains[0],
+			10,
+			*logger.GetNopLogger(),
+			tracing.InitNoopTracer(),
+		),
+		"chain2": tendermint.RPCWithConsumersFromChain(
+			chains[1],
+			10,
+			*logger.GetNopLogger(),
+			tracing.InitNoopTracer(),
+		),
+	}
 	fetcher := NewBalanceFetcher(
 		logger.GetNopLogger(),
-		[]*config.Chain{},
-		map[string]*tendermint.RPCWithConsumers{},
+		chains,
+		rpcs,
 		tracing.InitNoopTracer(),
 	)
 
