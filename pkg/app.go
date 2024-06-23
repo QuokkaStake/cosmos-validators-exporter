@@ -82,21 +82,21 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	}
 
 	fetchers := []fetchersPkg.Fetcher{
-		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewCommissionFetcher(logger, appConfig.Chains, rpcs, tracer),
-		fetchersPkg.NewDelegationsFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewUnbondsFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewDelegationsFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewUnbondsFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewSigningInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewRewardsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewBalanceFetcher(logger, appConfig.Chains, rpcs, tracer),
-		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewValidatorsFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewConsumerValidatorsFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewStakingParamsFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewSelfDelegationFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewValidatorsFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewConsumerValidatorsFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewStakingParamsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
-		fetchersPkg.NewNodeInfoFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewNodeInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{

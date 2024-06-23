@@ -14,7 +14,7 @@ import (
 
 type NodeInfoFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 
@@ -31,13 +31,13 @@ type NodeInfoData struct {
 
 func NewNodeInfoFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *NodeInfoFetcher {
 	return &NodeInfoFetcher{
-		Logger: logger.With().Str("component", "commission_fetcher").Logger(),
-		Config: config,
+		Logger: logger.With().Str("component", "node_info_fetcher").Logger(),
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -49,7 +49,7 @@ func (q *NodeInfoFetcher) Fetch(
 	q.queryInfos = []*types.QueryInfo{}
 	q.allNodeInfos = map[string]*types.NodeInfoResponse{}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		q.wg.Add(1 + len(chain.ConsumerChains))

@@ -14,7 +14,7 @@ import (
 
 type ConsumerValidatorsFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 
@@ -31,13 +31,13 @@ type ConsumerValidatorsData struct {
 
 func NewConsumerValidatorsFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *ConsumerValidatorsFetcher {
 	return &ConsumerValidatorsFetcher{
 		Logger: logger.With().Str("component", "validators_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -49,7 +49,7 @@ func (f *ConsumerValidatorsFetcher) Fetch(
 	f.queryInfos = []*types.QueryInfo{}
 	f.allValidators = map[string]*types.ConsumerValidatorsResponse{}
 
-	for _, chain := range f.Config.Chains {
+	for _, chain := range f.Chains {
 		f.wg.Add(len(chain.ConsumerChains))
 
 		rpc, _ := f.RPCs[chain.Name]

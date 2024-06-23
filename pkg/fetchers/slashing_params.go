@@ -14,7 +14,7 @@ import (
 
 type SlashingParamsFetcher struct {
 	Logger zerolog.Logger
-	Config *config.Config
+	Chains []*config.Chain
 	RPCs   map[string]*tendermint.RPCWithConsumers
 	Tracer trace.Tracer
 
@@ -31,13 +31,13 @@ type SlashingParamsData struct {
 
 func NewSlashingParamsFetcher(
 	logger *zerolog.Logger,
-	config *config.Config,
+	chains []*config.Chain,
 	rpcs map[string]*tendermint.RPCWithConsumers,
 	tracer trace.Tracer,
 ) *SlashingParamsFetcher {
 	return &SlashingParamsFetcher{
 		Logger: logger.With().Str("component", "slashing_params_fetcher").Logger(),
-		Config: config,
+		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
@@ -49,7 +49,7 @@ func (q *SlashingParamsFetcher) Fetch(
 	q.queryInfos = []*types.QueryInfo{}
 	q.allParams = map[string]*types.SlashingParamsResponse{}
 
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		rpc, _ := q.RPCs[chain.Name]
 
 		q.wg.Add(1 + len(chain.ConsumerChains))
