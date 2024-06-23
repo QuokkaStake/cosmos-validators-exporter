@@ -1,0 +1,13 @@
+{
+  "delegation_response": {
+    "delegation": {
+      "delegator_address": "cosmos1xqz9pemz5e5zycaa89kys5aw6m8rhgsvtp9lt2",
+      "validator_address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+      "shares": "200000000.000000000000000000"
+    },
+    "balance": {
+      "denom": "uatom",
+      "amount": "200000000"
+    }
+  }
+}
