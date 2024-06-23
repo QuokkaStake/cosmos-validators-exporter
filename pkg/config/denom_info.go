@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"main/pkg/types"
 )
 
 type DenomInfo struct {
@@ -50,4 +51,17 @@ func (d DenomInfos) Find(denom string) *DenomInfo {
 	}
 
 	return nil
+}
+
+func (d DenomInfos) Convert(amount *types.Amount) *types.Amount {
+	for _, info := range d {
+		if info.Denom == amount.Denom {
+			return &types.Amount{
+				Amount: amount.Amount / float64(info.DenomCoefficient),
+				Denom:  info.DisplayDenom,
+			}
+		}
+	}
+
+	return amount
 }

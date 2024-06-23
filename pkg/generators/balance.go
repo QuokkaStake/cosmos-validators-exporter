@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
@@ -9,10 +10,11 @@ import (
 )
 
 type BalanceGenerator struct {
+	Chains []*config.Chain
 }
 
-func NewBalanceGenerator() *BalanceGenerator {
-	return &BalanceGenerator{}
+func NewBalanceGenerator(chains []*config.Chain) *BalanceGenerator {
+	return &BalanceGenerator{Chains: chains}
 }
 
 func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -31,14 +33,48 @@ func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 
 	data, _ := dataRaw.(fetchersPkg.BalanceData)
 
-	for chain, commissions := range data.Balances {
-		for validator, commission := range commissions {
-			for _, balance := range commission {
+	for _, chain := range g.Chains {
+		for _, consumer := range chain.ConsumerChains {
+			consumerBalances, ok := data.Balances[consumer.Name]
+			if !ok {
+				continue
+			}
+
+			for _, validator := range chain.Validators {
+				validatorBalances, ok := consumerBalances[validator.Address]
+				if !ok {
+					continue
+				}
+
+				for _, balance := range validatorBalances {
+					amountConverted := consumer.Denoms.Convert(&balance)
+					walletBalanceTokens.With(prometheus.Labels{
+						"chain":   consumer.Name,
+						"address": validator.Address,
+						"denom":   amountConverted.Denom,
+					}).Set(amountConverted.Amount)
+				}
+			}
+		}
+
+		chainBalances, ok := data.Balances[chain.Name]
+		if !ok {
+			continue
+		}
+
+		for _, validator := range chain.Validators {
+			validatorBalances, ok := chainBalances[validator.Address]
+			if !ok {
+				continue
+			}
+
+			for _, balance := range validatorBalances {
+				amountConverted := chain.Denoms.Convert(&balance)
 				walletBalanceTokens.With(prometheus.Labels{
-					"chain":   chain,
-					"address": validator,
-					"denom":   balance.Denom,
-				}).Set(balance.Amount)
+					"chain":   chain.Name,
+					"address": validator.Address,
+					"denom":   amountConverted.Denom,
+				}).Set(amountConverted.Amount)
 			}
 		}
 	}

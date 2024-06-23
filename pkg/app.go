@@ -108,7 +108,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewUnbondsGenerator(),
 		generatorsPkg.NewSigningInfoGenerator(),
 		generatorsPkg.NewRewardsGenerator(),
-		generatorsPkg.NewBalanceGenerator(),
+		generatorsPkg.NewBalanceGenerator(appConfig.Chains),
 		generatorsPkg.NewSelfDelegationGenerator(),
 		generatorsPkg.NewValidatorsInfoGenerator(),
 		generatorsPkg.NewSingleValidatorInfoGenerator(appConfig.Chains, logger),
