@@ -5,7 +5,6 @@ import (
 	"main/pkg/fs"
 	generatorsPkg "main/pkg/generators"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
-	dexScreenerPkg "main/pkg/price_fetchers/dex_screener"
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/tracing"
@@ -73,7 +72,6 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	}
 
 	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
-	dexScreener := dexScreenerPkg.NewDexScreener(logger)
 
 	rpcs := make(map[string]*tendermint.RPCWithConsumers, len(appConfig.Chains))
 
@@ -94,7 +92,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		fetchersPkg.NewValidatorsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerValidatorsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewStakingParamsFetcher(logger, appConfig.Chains, rpcs, tracer),
-		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko, dexScreener),
+		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko),
 		fetchersPkg.NewNodeInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 	}
