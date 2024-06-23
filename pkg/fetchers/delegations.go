@@ -49,9 +49,6 @@ func (q *DelegationsFetcher) Fetch(
 
 	for _, chain := range q.Chains {
 		allDelegations[chain.Name] = map[string]uint64{}
-		for _, consumerChain := range chain.ConsumerChains {
-			allDelegations[consumerChain.Name] = map[string]uint64{}
-		}
 	}
 
 	for _, chain := range q.Chains {
