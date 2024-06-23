@@ -1,0 +1,12 @@
+{
+  "balances": [
+    {
+      "denom": "uatom",
+      "amount": "596250"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
