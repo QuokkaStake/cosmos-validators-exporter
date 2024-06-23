@@ -84,7 +84,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	fetchers := []fetchersPkg.Fetcher{
 		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig, rpcs, tracer),
-		fetchersPkg.NewCommissionFetcher(logger, appConfig, rpcs, tracer),
+		fetchersPkg.NewCommissionFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewDelegationsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewUnbondsFetcher(logger, appConfig, rpcs, tracer),
 		fetchersPkg.NewSigningInfoFetcher(logger, appConfig, rpcs, tracer),
