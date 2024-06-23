@@ -20,7 +20,7 @@ func TestBalanceFetcherBase(t *testing.T) {
 	t.Parallel()
 
 	fetcher := NewBalanceFetcher(
-		logger.GetDefaultLogger(),
+		logger.GetNopLogger(),
 		[]*config.Chain{},
 		map[string]*tendermint.RPCWithConsumers{},
 		tracing.InitNoopTracer(),
@@ -42,12 +42,12 @@ func TestBalanceFetcherNoBechWalletPrefix(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -76,12 +76,12 @@ func TestBalanceFetcherInvalidBechWalletPrefix(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -111,12 +111,12 @@ func TestBalanceFetcherQueryDisabled(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -153,12 +153,12 @@ func TestBalanceFetcherQueryError(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -196,12 +196,12 @@ func TestBalanceFetcherNodeError(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -239,12 +239,12 @@ func TestBalanceFetcherQuerySuccess(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),
@@ -295,12 +295,12 @@ func TestBalanceFetcherConsumer(t *testing.T) {
 		"chain": tendermint.RPCWithConsumersFromChain(
 			chains[0],
 			10,
-			*logger.GetDefaultLogger(),
+			*logger.GetNopLogger(),
 			tracing.InitNoopTracer(),
 		),
 	}
 	fetcher := &BalanceFetcher{
-		Logger: *logger.GetDefaultLogger(),
+		Logger: *logger.GetNopLogger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracing.InitNoopTracer(),

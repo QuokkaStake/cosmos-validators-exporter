@@ -13,6 +13,11 @@ func GetDefaultLogger() *zerolog.Logger {
 	return &log
 }
 
+func GetNopLogger() *zerolog.Logger {
+	log := zerolog.Nop()
+	return &log
+}
+
 func GetLogger(appConfig config.LogConfig) *zerolog.Logger {
 	log := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout}).With().Timestamp().Logger()
 

@@ -20,7 +20,7 @@ func TestSingleValidatorInfoGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
 	state := statePkg.NewState()
-	generator := NewSingleValidatorInfoGenerator([]*config.Chain{}, loggerPkg.GetDefaultLogger())
+	generator := NewSingleValidatorInfoGenerator([]*config.Chain{}, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
 }
@@ -31,7 +31,7 @@ func TestSingleValidatorInfoGeneratorNoChainValidators(t *testing.T) {
 	chains := []*config.Chain{{Name: "chain"}}
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
-	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetDefaultLogger())
+	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
 
@@ -59,7 +59,7 @@ func TestSingleValidatorInfoGeneratorNotFound(t *testing.T) {
 			},
 		},
 	})
-	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetDefaultLogger())
+	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 7)
 
@@ -115,7 +115,7 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 			},
 		},
 	})
-	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetDefaultLogger())
+	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 7)
 
