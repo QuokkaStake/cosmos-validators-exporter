@@ -466,9 +466,9 @@ func (rpc *RPC) GetSlashingParams(
 
 func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 	ctx context.Context,
-) (float64, *types.QueryInfo, error) {
+) (float64, bool, *types.QueryInfo, error) {
 	if !rpc.ChainQueries.Enabled("params") {
-		return 0, nil, nil
+		return 0, false, nil, nil
 	}
 
 	childQuerierCtx, span := rpc.Tracer.Start(
@@ -484,22 +484,22 @@ func (rpc *RPC) GetConsumerSoftOutOutThreshold(
 		childQuerierCtx,
 	)
 	if err != nil {
-		return 0, &info, err
+		return 0.0, false, &info, err
 	}
 
 	if response.Code != 0 {
 		info.Success = false
-		return 0, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+		return 0, false, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
 	}
 
 	valueStripped := strings.ReplaceAll(response.Param.Value, "\"", "")
 	value, err := strconv.ParseFloat(valueStripped, 64)
 	if err != nil {
 		info.Success = false
-		return 0, &info, err
+		return 0, false, &info, err
 	}
 
-	return value, &info, nil
+	return value, true, &info, nil
 }
 
 func (rpc *RPC) GetStakingParams(

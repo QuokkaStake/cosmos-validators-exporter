@@ -58,7 +58,7 @@ func (q *SoftOptOutThresholdFetcher) Fetch(
 			go func(chain *config.ConsumerChain, rpc *tendermint.RPC) {
 				defer wg.Done()
 
-				threshold, query, err := rpc.GetConsumerSoftOutOutThreshold(ctx)
+				threshold, queried, query, err := rpc.GetConsumerSoftOutOutThreshold(ctx)
 
 				mutex.Lock()
 				defer mutex.Unlock()
@@ -75,7 +75,9 @@ func (q *SoftOptOutThresholdFetcher) Fetch(
 					return
 				}
 
-				allThresholds[chain.Name] = threshold
+				if queried {
+					allThresholds[chain.Name] = threshold
+				}
 			}(consumerChain, consumerRPC)
 		}
 	}
