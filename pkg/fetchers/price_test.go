@@ -51,7 +51,7 @@ func TestPriceFetcherProviderCoingeckoError(t *testing.T) {
 
 	chains := []*configPkg.Chain{{
 		Name:   "chain",
-		Denoms: configPkg.DenomInfos{{Denom: "denom", CoingeckoCurrency: "cosmos"}},
+		Denoms: configPkg.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", CoingeckoCurrency: "cosmos"}},
 	}}
 	config := &configPkg.Config{Chains: chains}
 	logger := loggerPkg.GetNopLogger()
@@ -89,7 +89,7 @@ func TestPriceFetcherProviderCoingeckoSuccess(t *testing.T) {
 
 	chains := []*configPkg.Chain{{
 		Name:   "chain",
-		Denoms: configPkg.DenomInfos{{Denom: "denom", CoingeckoCurrency: "cosmos"}},
+		Denoms: configPkg.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", CoingeckoCurrency: "cosmos"}},
 	}}
 	config := &configPkg.Config{Chains: chains}
 	logger := loggerPkg.GetNopLogger()
@@ -112,7 +112,7 @@ func TestPriceFetcherProviderCoingeckoSuccess(t *testing.T) {
 	chainData, ok := balanceData.Prices["chain"]
 	assert.True(t, ok)
 
-	denomData, ok := chainData["denom"]
+	denomData, ok := chainData["atom"]
 	assert.True(t, ok)
 	assert.InEpsilon(t, 6.71, denomData, 0.01)
 }
@@ -132,7 +132,7 @@ func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 		Name: "chain",
 		ConsumerChains: []*configPkg.ConsumerChain{{
 			Name:   "consumer",
-			Denoms: configPkg.DenomInfos{{Denom: "denom", CoingeckoCurrency: "cosmos"}},
+			Denoms: configPkg.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", CoingeckoCurrency: "cosmos"}},
 		}},
 	}}
 	config := &configPkg.Config{Chains: chains}
@@ -156,7 +156,7 @@ func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 	chainData, ok := balanceData.Prices["consumer"]
 	assert.True(t, ok)
 
-	denomData, ok := chainData["denom"]
+	denomData, ok := chainData["atom"]
 	assert.True(t, ok)
 	assert.InEpsilon(t, 6.71, denomData, 0.01)
 }
