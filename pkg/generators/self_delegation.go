@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
@@ -9,10 +10,11 @@ import (
 )
 
 type SelfDelegationGenerator struct {
+	Chains []*config.Chain
 }
 
-func NewSelfDelegationGenerator() *SelfDelegationGenerator {
-	return &SelfDelegationGenerator{}
+func NewSelfDelegationGenerator(chains []*config.Chain) *SelfDelegationGenerator {
+	return &SelfDelegationGenerator{Chains: chains}
 }
 
 func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -31,13 +33,24 @@ func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.C
 
 	data, _ := dataRaw.(fetchersPkg.SelfDelegationData)
 
-	for chain, delegations := range data.Delegations {
-		for validator, delegation := range delegations {
+	for _, chain := range g.Chains {
+		chainDelegations, ok := data.Delegations[chain.Name]
+		if !ok {
+			continue
+		}
+
+		for _, validator := range chain.Validators {
+			validatorSelfDelegation, ok := chainDelegations[validator.Address]
+			if !ok {
+				continue
+			}
+
+			amountConverted := chain.Denoms.Convert(validatorSelfDelegation)
 			selfDelegatedTokensGauge.With(prometheus.Labels{
-				"chain":   chain,
-				"address": validator,
-				"denom":   delegation.Denom,
-			}).Set(delegation.Amount)
+				"chain":   chain.Name,
+				"address": validator.Address,
+				"denom":   amountConverted.Denom,
+			}).Set(amountConverted.Amount)
 		}
 	}
 

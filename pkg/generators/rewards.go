@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
@@ -9,10 +10,11 @@ import (
 )
 
 type RewardsGenerator struct {
+	Chains []*config.Chain
 }
 
-func NewRewardsGenerator() *RewardsGenerator {
-	return &RewardsGenerator{}
+func NewRewardsGenerator(chains []*config.Chain) *RewardsGenerator {
+	return &RewardsGenerator{Chains: chains}
 }
 
 func (g *RewardsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -31,14 +33,25 @@ func (g *RewardsGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 
 	data, _ := dataRaw.(fetchersPkg.RewardsData)
 
-	for chain, rewards := range data.Rewards {
-		for validator, validatorReward := range rewards {
-			for _, balance := range validatorReward {
+	for _, chain := range g.Chains {
+		chainRewards, ok := data.Rewards[chain.Name]
+		if !ok {
+			continue
+		}
+
+		for _, validator := range chain.Validators {
+			validatorRewards, ok := chainRewards[validator.Address]
+			if !ok {
+				continue
+			}
+
+			for _, balance := range validatorRewards {
+				amountConverted := chain.Denoms.Convert(&balance)
 				selfDelegationRewardsTokens.With(prometheus.Labels{
-					"chain":   chain,
-					"address": validator,
-					"denom":   balance.Denom,
-				}).Set(balance.Amount)
+					"chain":   chain.Name,
+					"address": validator.Address,
+					"denom":   amountConverted.Denom,
+				}).Set(amountConverted.Amount)
 			}
 		}
 	}
