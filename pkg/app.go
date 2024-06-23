@@ -103,7 +103,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewIsConsumerGenerator(appConfig.Chains),
 		generatorsPkg.NewDenomCoefficientGenerator(appConfig.Chains),
 		generatorsPkg.NewUptimeGenerator(),
-		generatorsPkg.NewCommissionGenerator(),
+		generatorsPkg.NewCommissionGenerator(appConfig.Chains),
 		generatorsPkg.NewDelegationsGenerator(),
 		generatorsPkg.NewUnbondsGenerator(),
 		generatorsPkg.NewSigningInfoGenerator(),
