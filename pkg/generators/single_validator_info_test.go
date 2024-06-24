@@ -75,6 +75,8 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 
 	chains := []*config.Chain{{
 		Name:       "chain",
+		BaseDenom:  "uatom",
+		Denoms:     config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000}},
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
 	state := statePkg.NewState()
@@ -83,12 +85,12 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 			"chain": {
 				Validators: []types.Validator{
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("3"),
+						DelegatorShares: math.LegacyMustNewDecFromStr("3000000"),
 						OperatorAddress: "cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en",
 						Status:          constants.ValidatorStatusBonded,
 					},
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("2"),
+						DelegatorShares: math.LegacyMustNewDecFromStr("2000000"),
 						OperatorAddress: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 						Status:          constants.ValidatorStatusBonded,
 						Description: types.ValidatorDescription{
@@ -107,7 +109,7 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 						},
 					},
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("1"),
+						DelegatorShares: math.LegacyMustNewDecFromStr("1000000"),
 						OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
 						Status:          constants.ValidatorStatusBonded,
 					},
@@ -171,5 +173,6 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 	assert.InEpsilon(t, float64(2), testutil.ToFloat64(delegationsGauge.With(prometheus.Labels{
 		"chain":   "chain",
 		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+		"denom":   "atom",
 	})), 0.01)
 }
