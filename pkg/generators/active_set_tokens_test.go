@@ -73,7 +73,11 @@ func TestActiveSetTokensGeneratorNoChainStakingParams(t *testing.T) {
 func TestActiveSetTokensGeneratorNotEnoughValidators(t *testing.T) {
 	t.Parallel()
 
-	chains := []*config.Chain{{Name: "chain"}}
+	chains := []*config.Chain{{
+		Name:      "chain",
+		BaseDenom: "uatom",
+		Denoms:    config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000}},
+	}}
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
@@ -101,21 +105,26 @@ func TestActiveSetTokensGeneratorNotEnoughValidators(t *testing.T) {
 	assert.True(t, ok)
 	assert.Zero(t, testutil.ToFloat64(gauge.With(prometheus.Labels{
 		"chain": "chain",
+		"denom": "atom",
 	})))
 }
 
 func TestActiveSetTokensGeneratorEnoughValidators(t *testing.T) {
 	t.Parallel()
 
-	chains := []*config.Chain{{Name: "chain"}}
+	chains := []*config.Chain{{
+		Name:      "chain",
+		BaseDenom: "uatom",
+		Denoms:    config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000}},
+	}}
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
 				Validators: []types.Validator{
-					{DelegatorShares: math.LegacyMustNewDecFromStr("2"), Status: constants.ValidatorStatusBonded},
-					{DelegatorShares: math.LegacyMustNewDecFromStr("1")},
-					{DelegatorShares: math.LegacyMustNewDecFromStr("3"), Status: constants.ValidatorStatusBonded},
+					{DelegatorShares: math.LegacyMustNewDecFromStr("2000000"), Status: constants.ValidatorStatusBonded},
+					{DelegatorShares: math.LegacyMustNewDecFromStr("1000000")},
+					{DelegatorShares: math.LegacyMustNewDecFromStr("3000000"), Status: constants.ValidatorStatusBonded},
 				},
 			},
 		},
@@ -135,5 +144,6 @@ func TestActiveSetTokensGeneratorEnoughValidators(t *testing.T) {
 	assert.True(t, ok)
 	assert.InEpsilon(t, float64(2), testutil.ToFloat64(gauge.With(prometheus.Labels{
 		"chain": "chain",
+		"denom": "atom",
 	})), 0.01)
 }
