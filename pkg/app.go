@@ -110,7 +110,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewRewardsGenerator(appConfig.Chains),
 		generatorsPkg.NewBalanceGenerator(appConfig.Chains),
 		generatorsPkg.NewSelfDelegationGenerator(appConfig.Chains),
-		generatorsPkg.NewValidatorsInfoGenerator(),
+		generatorsPkg.NewValidatorsInfoGenerator(appConfig.Chains),
 		generatorsPkg.NewSingleValidatorInfoGenerator(appConfig.Chains, logger),
 		generatorsPkg.NewValidatorRankGenerator(appConfig.Chains, logger),
 		generatorsPkg.NewActiveSetTokensGenerator(appConfig.Chains),
