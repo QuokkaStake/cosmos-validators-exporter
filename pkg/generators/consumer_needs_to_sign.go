@@ -35,6 +35,7 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 			"chain",
 			"chain_id",
 			"provider",
+			"address",
 		},
 	)
 
@@ -57,6 +58,7 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 					"chain":    consumer.Name,
 					"chain_id": consumer.ChainID,
 					"provider": chain.Name,
+					"address":  validator.Address,
 				}).Set(utils.BoolToFloat64(needsToSign))
 			}
 		}
