@@ -145,7 +145,7 @@ func (q *SigningInfoFetcher) processConsumerChain(
 ) {
 	defer q.wg.Done()
 
-	if chain.BechConsensusPrefix == "" {
+	if chain.BechConsensusPrefix == "" || chain.BechValidatorPrefix == "" {
 		return
 	}
 

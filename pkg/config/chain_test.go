@@ -45,12 +45,21 @@ func TestChainValidateNoValidators(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestChainValidateNoBaseDenom(t *testing.T) {
+	t.Parallel()
+
+	chain := Chain{Name: "test", LCDEndpoint: "test", Validators: []Validator{{Address: "address"}}}
+	err := chain.Validate()
+	require.Error(t, err)
+}
+
 func TestChainValidateInvalidValidator(t *testing.T) {
 	t.Parallel()
 
 	chain := Chain{
 		Name:        "test",
 		LCDEndpoint: "test",
+		BaseDenom:   "denom",
 		Validators:  []Validator{{}},
 	}
 	err := chain.Validate()
@@ -63,6 +72,7 @@ func TestChainValidateInvalidDenom(t *testing.T) {
 	chain := Chain{
 		Name:        "test",
 		LCDEndpoint: "test",
+		BaseDenom:   "denom",
 		Validators:  []Validator{{Address: "test"}},
 		Denoms:      DenomInfos{{}},
 	}
@@ -76,6 +86,7 @@ func TestChainValidateInvalidConsumer(t *testing.T) {
 	chain := Chain{
 		Name:           "test",
 		LCDEndpoint:    "test",
+		BaseDenom:      "denom",
 		Validators:     []Validator{{Address: "test"}},
 		Denoms:         DenomInfos{{Denom: "ustake", DisplayDenom: "stake"}},
 		ConsumerChains: []*ConsumerChain{{}},
@@ -90,6 +101,7 @@ func TestChainValidateValid(t *testing.T) {
 	chain := Chain{
 		Name:        "test",
 		LCDEndpoint: "test",
+		BaseDenom:   "denom",
 		Validators:  []Validator{{Address: "test"}},
 		Denoms:      DenomInfos{{Denom: "ustake", DisplayDenom: "stake"}},
 	}
@@ -97,13 +109,14 @@ func TestChainValidateValid(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestChainDisplayWarningsNoBaseDenom(t *testing.T) {
+func TestChainDisplayWarningsNoBechWalletPrefix(t *testing.T) {
 	t.Parallel()
 
 	chain := Chain{
 		Name:        "test",
 		LCDEndpoint: "test",
-		Validators:  []Validator{{Address: "test"}},
+		BaseDenom:   "ustake",
+		Validators:  []Validator{{Address: "test", ConsensusAddress: "test"}},
 		Denoms:      DenomInfos{{Denom: "ustake", DisplayDenom: "stake", CoingeckoCurrency: "stake"}},
 	}
 	warnings := chain.DisplayWarnings()
@@ -124,15 +137,30 @@ func TestChainDisplayWarningsDenomWarning(t *testing.T) {
 	require.NotEmpty(t, warnings)
 }
 
+func TestChainDisplayWarningsConsumerWarning(t *testing.T) {
+	t.Parallel()
+
+	chain := Chain{
+		Name:           "test",
+		LCDEndpoint:    "test",
+		BaseDenom:      "ustake",
+		Validators:     []Validator{{Address: "test", ConsensusAddress: "test"}},
+		ConsumerChains: []*ConsumerChain{{}},
+	}
+	warnings := chain.DisplayWarnings()
+	require.NotEmpty(t, warnings)
+}
+
 func TestChainDisplayWarningsEmpty(t *testing.T) {
 	t.Parallel()
 
 	chain := Chain{
-		Name:        "test",
-		LCDEndpoint: "test",
-		BaseDenom:   "ustake",
-		Validators:  []Validator{{Address: "test", ConsensusAddress: "test"}},
-		Denoms:      DenomInfos{{Denom: "ustake", DisplayDenom: "stake", CoingeckoCurrency: "stake"}},
+		Name:             "test",
+		LCDEndpoint:      "test",
+		BaseDenom:        "ustake",
+		BechWalletPrefix: "wallet",
+		Validators:       []Validator{{Address: "test", ConsensusAddress: "test"}},
+		Denoms:           DenomInfos{{Denom: "ustake", DisplayDenom: "stake", CoingeckoCurrency: "stake"}},
 	}
 	warnings := chain.DisplayWarnings()
 	require.Empty(t, warnings)

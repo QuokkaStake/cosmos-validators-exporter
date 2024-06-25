@@ -45,6 +45,10 @@ func (c *Chain) Validate() error {
 		return errors.New("no validators provided")
 	}
 
+	if c.BaseDenom == "" {
+		return errors.New("base-denom is not set")
+	}
+
 	for index, validator := range c.Validators {
 		if err := validator.Validate(); err != nil {
 			return fmt.Errorf("error in validator #%d: %s", index, err)
@@ -69,9 +73,9 @@ func (c *Chain) Validate() error {
 func (c *Chain) DisplayWarnings() []Warning {
 	warnings := []Warning{}
 
-	if c.BaseDenom == "" {
+	if c.BechWalletPrefix == "" {
 		warnings = append(warnings, Warning{
-			Message: "Base denom is not set",
+			Message: "bech-wallet-prefix is not set, cannot query wallet balances.",
 			Labels:  map[string]string{"chain": c.Name},
 		})
 	}
@@ -82,6 +86,10 @@ func (c *Chain) DisplayWarnings() []Warning {
 
 	for _, validator := range c.Validators {
 		warnings = append(warnings, validator.DisplayWarnings(c)...)
+	}
+
+	for _, consumer := range c.ConsumerChains {
+		warnings = append(warnings, consumer.DisplayWarnings(c)...)
 	}
 
 	return warnings

@@ -42,6 +42,10 @@ func (c *ConsumerChain) Validate() error {
 		return errors.New("no chain-id provided")
 	}
 
+	if c.BaseDenom == "" {
+		return errors.New("base-denom is not set")
+	}
+
 	for index, denomInfo := range c.Denoms {
 		if err := denomInfo.Validate(); err != nil {
 			return fmt.Errorf("error in denom #%d: %s", index, err)
@@ -49,4 +53,31 @@ func (c *ConsumerChain) Validate() error {
 	}
 
 	return nil
+}
+
+func (c *ConsumerChain) DisplayWarnings(chain *Chain) []Warning {
+	warnings := []Warning{}
+
+	if c.BechWalletPrefix == "" {
+		warnings = append(warnings, Warning{
+			Message: "bech-wallet-prefix is not set, cannot query wallet balances.",
+			Labels:  map[string]string{"chain": c.Name},
+		})
+	}
+
+	if c.BechValidatorPrefix == "" {
+		warnings = append(warnings, Warning{
+			Message: "bech-validator-prefix is not set, cannot query signing-infos.",
+			Labels:  map[string]string{"chain": c.Name},
+		})
+	}
+
+	if c.BechConsensusPrefix == "" {
+		warnings = append(warnings, Warning{
+			Message: "bech-consensus-prefix is not set, cannot query signing-infos.",
+			Labels:  map[string]string{"chain": c.Name},
+		})
+	}
+
+	return warnings
 }
