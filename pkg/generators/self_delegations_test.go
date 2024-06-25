@@ -45,7 +45,7 @@ func TestSelfDelegationGeneratorNotEmptyState(t *testing.T) {
 				{Address: "validator3"},
 			},
 			Denoms: config.DenomInfos{
-				{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000},
+				{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6},
 			},
 		},
 		{

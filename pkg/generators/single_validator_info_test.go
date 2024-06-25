@@ -76,7 +76,7 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 	chains := []*config.Chain{{
 		Name:       "chain",
 		BaseDenom:  "uatom",
-		Denoms:     config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000}},
+		Denoms:     config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6}},
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
 	state := statePkg.NewState()

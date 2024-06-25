@@ -49,12 +49,12 @@ func TestBalanceGeneratorNotEmptyState(t *testing.T) {
 			Name:       "chain",
 			Validators: []config.Validator{{Address: "validator"}, {Address: "validator2"}},
 			Denoms: config.DenomInfos{
-				{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000},
+				{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6},
 			},
 			ConsumerChains: []*config.ConsumerChain{{
 				Name: "consumer",
 				Denoms: config.DenomInfos{
-					{Denom: "untrn", DisplayDenom: "ntrn", DenomCoefficient: 1000000},
+					{Denom: "untrn", DisplayDenom: "ntrn", DenomExponent: 6},
 				},
 			}},
 		},

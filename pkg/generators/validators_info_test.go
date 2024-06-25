@@ -65,7 +65,7 @@ func TestValidatorsInfoGeneratorNotConsumer(t *testing.T) {
 	chains := []*config.Chain{{
 		Name:      "chain",
 		BaseDenom: "uatom",
-		Denoms:    config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000}},
+		Denoms:    config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6}},
 	}, {Name: "chain2"}}
 	generator := NewValidatorsInfoGenerator(chains)
 	results := generator.Generate(state)

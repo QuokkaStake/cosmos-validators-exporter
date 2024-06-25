@@ -43,7 +43,7 @@ func TestRewardsGeneratorNotEmptyState(t *testing.T) {
 			Name:       "chain",
 			Validators: []config.Validator{{Address: "validator"}, {Address: "validator2"}},
 			Denoms: config.DenomInfos{
-				{Denom: "uatom", DisplayDenom: "atom", DenomCoefficient: 1000000},
+				{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6},
 			},
 		},
 		{
