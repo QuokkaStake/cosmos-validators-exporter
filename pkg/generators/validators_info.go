@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
@@ -13,10 +14,11 @@ import (
 )
 
 type ValidatorsInfoGenerator struct {
+	Chains []*config.Chain
 }
 
-func NewValidatorsInfoGenerator() *ValidatorsInfoGenerator {
-	return &ValidatorsInfoGenerator{}
+func NewValidatorsInfoGenerator(chains []*config.Chain) *ValidatorsInfoGenerator {
+	return &ValidatorsInfoGenerator{Chains: chains}
 }
 
 func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -43,13 +45,18 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 			Name: constants.MetricsPrefix + "tokens_bonded_total",
 			Help: "Total tokens bonded in chain",
 		},
-		[]string{"chain"},
+		[]string{"chain", "denom"},
 	)
 
 	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
 	consumersData, _ := consumersDataRaw.(fetchersPkg.ConsumerValidatorsData)
 
-	for chain, validators := range data.Validators {
+	for _, chain := range g.Chains {
+		validators, ok := data.Validators[chain.Name]
+		if !ok {
+			continue
+		}
+
 		activeValidators := utils.Filter(validators.Validators, func(v types.Validator) bool {
 			return v.Active()
 		})
@@ -61,12 +68,19 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 		}
 
 		validatorsCountGauge.With(prometheus.Labels{
-			"chain": chain,
+			"chain": chain.Name,
 		}).Set(float64(len(activeValidators)))
 
+		totalBondedAmount := &types.Amount{
+			Amount: totalStake.MustFloat64(),
+			Denom:  chain.BaseDenom,
+		}
+		totalBondedAmountConverted := chain.Denoms.Convert(totalBondedAmount)
+
 		totalBondedTokensGauge.With(prometheus.Labels{
-			"chain": chain,
-		}).Set(totalStake.MustFloat64())
+			"chain": chain.Name,
+			"denom": totalBondedAmountConverted.Denom,
+		}).Set(totalBondedAmountConverted.Amount)
 	}
 
 	for chain, validators := range consumersData.Validators {

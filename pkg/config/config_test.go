@@ -46,6 +46,7 @@ func TestConfigValidateValid(t *testing.T) {
 		Chains: []*Chain{{
 			Name:        "chain",
 			LCDEndpoint: "test",
+			BaseDenom:   "denom",
 			Validators:  []Validator{{Address: "test"}},
 		}},
 	}
@@ -61,6 +62,7 @@ func TestDisplayWarningsChainWarning(t *testing.T) {
 		Chains: []*Chain{{
 			Name:        "chain",
 			LCDEndpoint: "test",
+			BaseDenom:   "test",
 			Validators:  []Validator{{Address: "test"}},
 		}},
 	}
@@ -74,10 +76,11 @@ func TestDisplayWarningsEmpty(t *testing.T) {
 
 	config := Config{
 		Chains: []*Chain{{
-			Name:        "chain",
-			LCDEndpoint: "test",
-			BaseDenom:   "test",
-			Validators:  []Validator{{Address: "test", ConsensusAddress: "test"}},
+			Name:             "chain",
+			LCDEndpoint:      "test",
+			BaseDenom:        "test",
+			BechWalletPrefix: "wallet",
+			Validators:       []Validator{{Address: "test", ConsensusAddress: "test"}},
 		}},
 	}
 

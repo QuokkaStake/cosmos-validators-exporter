@@ -75,7 +75,7 @@ func (q *PriceFetcher) ProcessDenoms(chainName string, denoms config.DenomInfos,
 	for _, denom := range denoms {
 		// using coingecko response
 		if rate, ok := currenciesRates[denom.CoingeckoCurrency]; ok {
-			q.CurrenciesRatesToChains[chainName][denom.Denom] = rate
+			q.CurrenciesRatesToChains[chainName][denom.DisplayDenom] = rate
 			continue
 		}
 	}

@@ -1,5 +1,5 @@
 # Global timeout for RPC queries, in seconds. Defaults to 5.
-timeout = 5
+timeout = 10
 # The address the exporter will listen on .Defaults to ":9560".
 listen-address = ":9560"
 
@@ -14,55 +14,37 @@ json = false
 # Per-chain config.
 [[chains]]
 # Chain name that will go into labels. Required.
-name = "bitsong"
+name = "cosmos"
 # LCD endpoint to query data from. Required.
-lcd-endpoint = "https://api.bitsong.quokkastake.io"
-# Chain's base denom.
-# This value is quite useless by itself, but it's exposed in `cosmos_validators_exporter_base_denom` metric,
-# which later can be joined with other metrics (such as, total delegated tokens)
-# and the price can be calculated based on that.
-base-denom = "ubtsg"
-# Provider chain LCD endpoint to query data from, for Replicated Security.
-# If it's empty, we consider the chain a sovereign one.
-# Please do not set it for sovereign chains and set it for consumer chains, as otherwise
-# half of the queries won't work (for instance, everything related to staking).
-# Defaults to empty string, so basically not set (chain's treated as a sovereign one).
-provider-lcd-endpoint = ""
+lcd-endpoint = "https://api.cosmos.quokkastake.io"
+# Chain's base denom. Required.
+# This value is used to convert denoms (e.g. if you have a balance with denom=uatom,
+# a denom in config with denom=uatom and display-denom=atom, then it will be converted).
+# Also, it will be prepended as a denom to metrics like total delegations of a validator
+# and total bonded.
+base-denom = "uatom"
 # Denoms info.
-# Used to 1) be exposed as a standalone metric, and 2) when calculating metric for token price.
+# Used when calculating metric for token price.
 # This is an array of objects with following values:
 # 1. coingecko-currency
 # Coingecko currency, specify it if you want to also get the wallet balance
-# in total in USD. Optional.
+# in total in USD as a standalone metric. Optional.
 # 2. denom
 # The actual denom value (such as "uatom" for Cosmos Hub or "ibc/xxxxx" for IBC denoms). Required.
 # 3. display-denom
 # The denom that'll be returned in labels. Required.
-# 4. denom-coefficient
-# The coefficient you need to multiply base denom to to get 1 token on Coingecko/DexScreener.
-# Is exposed by `cosmos_validators_exporter_denom_coefficient` metric.
-# Optional, defaults to 1_000_000.
-# You can calculate the actual price of something by doing the following:
-# 1) taking the actual metric (either with "denom" label, like commission, or joining it with "base-denom" label
-# of `cosmos_validators_exporter_base_denom` metric for the chain, which will add the label)
-# 2) divide and join it with `cosmos_validators_exporter_denom_coefficient` metric for this chain for this denom
-# 3) multiply it with `cosmos_validators_exporter_price` metric for this denom/chain.
-# For example, with denom = "uatom", display-denom = "atom", "coingecko-currency" = "cosmos",
-# if you have 10 ATOM unclaimed commission, and $ATOM price = 10, here's what'll happen on each step:
-# 1) will return a metric with labels/values like this:
-# {chain="cosmos",address="cosmosvaloperxxxx",denom="uatom"} 10000000
-# 2) will return a metric like this
-# {chain="cosmos",address="cosmosvaloperxxxx",denom="uatom",display-denom="atom"} 10
-# 3) will return a metric like this:
-# {chain="cosmos",address="cosmosvaloperxxxx",denom="uatom",display-denom="atom"} 100
-# which you can use to display a worthwhile of your unclaimed commission and use display-denom
-# label for legend.
+# 4. denom-exponent
+# The exponent of a coefficient you need to multiply base denom to get 1 token on Coingecko.
+# Optional, defaults to 6 (so a coefficient == 1_000_000).
+#
+# You can calculate the actual price of something by multiplying the metric that has denoms by the
+# `cosmos_validators_exporter_price` metric (by chain + denom).
 denoms = [
-    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-coefficient = 1000000 },
+    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-exponent = 6 },
 ]
 # Bech32 prefix for a wallet address (example: "cosmos" for a Cosmos wallet). If omitted,
 # the self-delegation metric will not be present.
-bech-wallet-prefix = "bitsong"
+bech-wallet-prefix = "cosmos"
 # List of validators to monitor.
 # Address is required, consensus-address is optional but will result in omitting
 # signing-infos metrics (like missed blocks counter).
@@ -71,38 +53,75 @@ bech-wallet-prefix = "bitsong"
 # If you are using it to track a consumer chain validator and if you are using the assigned key,
 # please make sure to use the consensus address of this chain and not the provider chain one.
 validators = [
-    { address = "bitsongvaloper14rvn7anf22e00vj5x3al4w50ns78s7n42rc0ge", consensus-address = "bitsongvalcons16ktzzs4ra4kcw668demahue52zh2xjllwdd6n3" }
+    { address = "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e", consensus-address = "cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc" }
 ]
+# Set this to true for ICS provider chains (such as Cosmos Hub).
+# If true, it enabled querying provider's consumer chains, which will fail if ICS is not enabled
+# (so for all chains except Cosmos Hub basically).
+# Defaults to false.
+is-provider = false
+
 # List of queries to enable/disable.
 # If the list is not provided, or the value for query is not specified,
 # then this query will be enabled. Useful if some queries on some chains are broken or
 # do not return any meaningful value (like signing info on e-Money) or are too heavy and
 # the node can't handle such requests (like delegators count on Cosmos Hub).
 [chains.queries]
-# Query for validator info
-validator = true
-# Query for delegators count
+# Query for delegators count. Isn't used on consumer chains.
 delegations = true
-# Query for unbonding delegations count
+# Query for unbonding delegations count. Isn't used on consumer chains.
 unbonds = true
-# Query for self-delegated amount
+# Query for self-delegated amount. Isn't used on consumer chains.
 self-delegation = true
-# Query for all delegators count/ranking. Also used in total bonded tokens calculation.
+# Query for all delegators count/ranking. Also used in total bonded tokens calculation and validator info.
 validators = true
-# Query for validator unclaimed commission
+# Query for consumer chain's validators. Used in metric representing active validators count on chain.
+consumer-validators = true
+# Query for consumer chains list and info on provider. Only used on ICS provider chains.
+consumer-info = true
+# Query for validator unclaimed commission. Isn't used on consumer chains.
 commission = true
-# Query for validator unclaimed self-delegated rewards
+# Query for validator unclaimed self-delegated rewards. Isn't used on consumer chains.
 rewards = true
 # Query for validator wallet balance
 balance = true
+# Query for validator's consumer assigned key. Only used for ICS.
+# If disabled, then it'll be assumed that the validator is not using assigned keys.
+assigned-key = true
 # Query for validator signing info
 signing-info = true
 # Query for chain slashing params/missed blocks window
 slashing-params = true
-# Query for chain staking params/max validators count
+# Query for consumer's soft opt-out threshold. Is only used on consumer chains.
+params = true
+# Query for chain staking params/max validators count. Isn't used on consumer chains.
 staking-params = true
 # Query for node info (chain_id, app/cosmos-sdk/tendermint version, app name)
 node-info = true
+
+# Consumer chains config. There can be multiple consumer chains per each provider chain.
+# Only specify this block for provider chains.
+# Validators are not specified explicitly, instead they are taken from provider (so, there will be
+# metrics per each validator on both provider and consumer chains, if they can be calculated).
+[[chains.consumers]]
+# Chain name that will go into labels. Required.
+name = "neutron"
+# LCD endpoint of a consumer chain. Required.
+lcd-endpoint = "https://api.neutron.quokkastake.io"
+# Consumer chain's chain-id. Required.
+chain-id = "neutron-1"
+# Base denom, same as in provider config.
+base-denom = "untrn"
+# Bech32 prefix of a wallet on this consumer chain. Required for getting validators' wallet balance.
+bech-wallet-prefix = "neutron"
+# Bech32 prefix of a validator on this consumer chain. Required for basically everything.
+bech-validator-prefix = "neutronvaloper"
+# Bech32 prefix of a consensus key on this consumer chain. Required for signing-info metrics.
+bech-consensus-prefix = "neutronvalcons"
+# Chain denoms. Works the same way as chain denoms on provider chain.
+denoms = [
+    { denom = "untrn", display-denom = "ntrn", coingecko-currency = "neutron" }
+]
 
 # There can be multiple chains.
 [[chains]]

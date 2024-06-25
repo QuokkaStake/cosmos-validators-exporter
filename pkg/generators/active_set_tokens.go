@@ -39,7 +39,7 @@ func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.
 			Name: constants.MetricsPrefix + "active_set_tokens",
 			Help: "Tokens needed to get into active set (last validators' stake, or 0 if not enough validators)",
 		},
-		[]string{"chain"},
+		[]string{"chain", "denom"},
 	)
 
 	for _, chain := range g.Chains {
@@ -62,14 +62,20 @@ func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.
 		})
 
 		lastValidatorStake := activeValidators[len(activeValidators)-1].DelegatorShares.MustFloat64()
+		lastValidatorAmount := chain.Denoms.Convert(&types.Amount{
+			Amount: lastValidatorStake,
+			Denom:  chain.BaseDenom,
+		})
 
 		if chainStakingParams != nil && len(activeValidators) >= chainStakingParams.StakingParams.MaxValidators {
 			activeSetTokensGauge.With(prometheus.Labels{
 				"chain": chain.Name,
-			}).Set(lastValidatorStake)
+				"denom": lastValidatorAmount.Denom,
+			}).Set(lastValidatorAmount.Amount)
 		} else {
 			activeSetTokensGauge.With(prometheus.Labels{
 				"chain": chain.Name,
+				"denom": lastValidatorAmount.Denom,
 			}).Set(0)
 		}
 	}

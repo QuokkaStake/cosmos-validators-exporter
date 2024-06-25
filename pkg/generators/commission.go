@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
@@ -9,10 +10,11 @@ import (
 )
 
 type CommissionGenerator struct {
+	Chains []*config.Chain
 }
 
-func NewCommissionGenerator() *CommissionGenerator {
-	return &CommissionGenerator{}
+func NewCommissionGenerator(chains []*config.Chain) *CommissionGenerator {
+	return &CommissionGenerator{Chains: chains}
 }
 
 func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -31,14 +33,25 @@ func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Colle
 
 	data, _ := dataRaw.(fetchersPkg.CommissionData)
 
-	for chain, commissions := range data.Commissions {
-		for validator, commission := range commissions {
-			for _, balance := range commission {
+	for _, chain := range g.Chains {
+		chainCommissions, ok := data.Commissions[chain.Name]
+		if !ok {
+			continue
+		}
+
+		for _, validator := range chain.Validators {
+			validatorCommissions, ok := chainCommissions[validator.Address]
+			if !ok {
+				continue
+			}
+
+			for _, balance := range validatorCommissions {
+				amountConverted := chain.Denoms.Convert(&balance)
 				commissionUnclaimedTokens.With(prometheus.Labels{
-					"chain":   chain,
-					"address": validator,
-					"denom":   balance.Denom,
-				}).Set(balance.Amount)
+					"chain":   chain.Name,
+					"address": validator.Address,
+					"denom":   amountConverted.Denom,
+				}).Set(amountConverted.Amount)
 			}
 		}
 	}

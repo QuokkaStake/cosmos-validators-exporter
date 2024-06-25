@@ -341,6 +341,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyQueryError(t *testing.T) {
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
+				BechValidatorPrefix: "neutronvaloper",
 			},
 		},
 	}}
@@ -365,12 +366,9 @@ func TestSigningInfoFetcherConsumerAssignedKeyQueryError(t *testing.T) {
 	infosData, ok := data.(SigningInfoData)
 	assert.True(t, ok)
 
-	chainData, ok := infosData.SigningInfos["chain"]
+	chainData, ok := infosData.SigningInfos["consumer"]
 	assert.True(t, ok)
-
-	validatorData, ok := chainData["cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"]
-	assert.True(t, ok)
-	assert.Nil(t, validatorData)
+	assert.Empty(t, chainData)
 }
 
 //nolint:paralleltest // disabled due to httpmock usage
@@ -400,6 +398,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyNodeError(t *testing.T) {
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
+				BechValidatorPrefix: "neutronvaloper",
 			},
 		},
 	}}
@@ -424,12 +423,9 @@ func TestSigningInfoFetcherConsumerAssignedKeyNodeError(t *testing.T) {
 	infosData, ok := data.(SigningInfoData)
 	assert.True(t, ok)
 
-	chainData, ok := infosData.SigningInfos["chain"]
+	chainData, ok := infosData.SigningInfos["consumer"]
 	assert.True(t, ok)
-
-	validatorData, ok := chainData["cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"]
-	assert.True(t, ok)
-	assert.Nil(t, validatorData)
+	assert.Empty(t, chainData)
 }
 
 func TestSigningInfoFetcherConsumerAssignedKeyInvalidValcons(t *testing.T) {
@@ -450,6 +446,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyInvalidValcons(t *testing.T) {
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
+				BechValidatorPrefix: "neutronvaloper",
 			},
 		},
 	}}

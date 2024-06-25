@@ -95,7 +95,7 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 			Name: constants.MetricsPrefix + "total_delegations",
 			Help: "Validator delegations (in tokens)",
 		},
-		[]string{"chain", "address"},
+		[]string{"chain", "address", "denom"},
 	)
 
 	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
@@ -169,10 +169,16 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 				"address": validatorAddr.Address,
 			}).Set(validator.Commission.CommissionRates.MaxChangeRate.MustFloat64())
 
+			delegationsAmount := chain.Denoms.Convert(&types.Amount{
+				Amount: validator.DelegatorShares.MustFloat64(),
+				Denom:  chain.BaseDenom,
+			})
+
 			delegationsGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
-			}).Set(validator.DelegatorShares.MustFloat64())
+				"denom":   delegationsAmount.Denom,
+			}).Set(delegationsAmount.Amount)
 		}
 	}
 
