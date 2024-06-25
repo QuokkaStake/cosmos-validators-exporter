@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
@@ -9,10 +10,11 @@ import (
 )
 
 type ConsumerInfoGenerator struct {
+	Chains []*config.Chain
 }
 
-func NewConsumerInfoGenerator() *ConsumerInfoGenerator {
-	return &ConsumerInfoGenerator{}
+func NewConsumerInfoGenerator(chains []*config.Chain) *ConsumerInfoGenerator {
+	return &ConsumerInfoGenerator{Chains: chains}
 }
 
 func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
@@ -31,6 +33,7 @@ func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Col
 		[]string{
 			"chain",
 			"chain_id",
+			"provider",
 		},
 	)
 
@@ -42,20 +45,33 @@ func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Col
 		[]string{
 			"chain",
 			"chain_id",
+			"provider",
 		},
 	)
 
-	for chain, chainConsumersInfo := range consumerInfos.Info {
-		for _, info := range chainConsumersInfo.Chains {
+	for _, chain := range g.Chains {
+		consumersInfo, ok := consumerInfos.Info[chain.Name]
+		if !ok {
+			continue
+		}
+
+		for _, consumer := range chain.ConsumerChains {
+			consumerInfo, ok := consumersInfo[consumer.ChainID]
+			if !ok {
+				continue
+			}
+
 			thresholdPercentGauge.With(prometheus.Labels{
-				"chain":    chain,
-				"chain_id": info.ChainID,
-			}).Set(float64(info.TopN) / 100)
+				"chain":    consumer.Name,
+				"chain_id": consumer.ChainID,
+				"provider": chain.Name,
+			}).Set(float64(consumerInfo.TopN) / 100)
 
 			minStakeGauge.With(prometheus.Labels{
-				"chain":    chain,
-				"chain_id": info.ChainID,
-			}).Set(float64(info.MinPowerInTopN.Int64()))
+				"chain":    consumer.Name,
+				"chain_id": consumer.ChainID,
+				"provider": chain.Name,
+			}).Set(float64(consumerInfo.MinPowerInTopN.Int64()))
 		}
 	}
 
