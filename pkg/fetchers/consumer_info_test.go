@@ -111,10 +111,7 @@ func TestConsumerInfoFetcherQueryDisabled(t *testing.T) {
 
 	consumerData, ok := data.(ConsumerInfoData)
 	assert.True(t, ok)
-
-	chainData, ok := consumerData.Info["chain"]
-	assert.True(t, ok)
-	assert.Empty(t, chainData)
+	assert.Empty(t, consumerData.Info)
 }
 
 //nolint:paralleltest // disabled due to httpmock usage
@@ -240,5 +237,5 @@ func TestConsumerInfoFetcherQuerySuccess(t *testing.T) {
 
 	chainData, ok := consumerData.Info["chain"]
 	assert.True(t, ok)
-	assert.Len(t, chainData.Chains, 1)
+	assert.Len(t, chainData, 1)
 }

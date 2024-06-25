@@ -116,7 +116,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewNodeInfoGenerator(),
 		generatorsPkg.NewStakingParamsGenerator(),
 		generatorsPkg.NewPriceGenerator(),
-		generatorsPkg.NewConsumerInfoGenerator(),
+		generatorsPkg.NewConsumerInfoGenerator(appConfig.Chains),
 	}
 
 	return &App{

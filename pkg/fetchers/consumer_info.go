@@ -22,11 +22,11 @@ type ConsumerInfoFetcher struct {
 	mutex sync.Mutex
 
 	queryInfos []*types.QueryInfo
-	allInfos   map[string]*types.ConsumerInfoResponse
+	allInfos   map[string]map[string]types.ConsumerChainInfo
 }
 
 type ConsumerInfoData struct {
-	Info map[string]*types.ConsumerInfoResponse
+	Info map[string]map[string]types.ConsumerChainInfo
 }
 
 func NewConsumerInfoFetcher(
@@ -47,7 +47,7 @@ func (f *ConsumerInfoFetcher) Fetch(
 	ctx context.Context,
 ) (interface{}, []*types.QueryInfo) {
 	f.queryInfos = []*types.QueryInfo{}
-	f.allInfos = map[string]*types.ConsumerInfoResponse{}
+	f.allInfos = map[string]map[string]types.ConsumerChainInfo{}
 
 	f.wg.Add(len(f.Chains))
 	for _, chain := range f.Chains {
@@ -92,5 +92,13 @@ func (f *ConsumerInfoFetcher) processChain(
 		return
 	}
 
-	f.allInfos[chain.Name] = allInfosList
+	if allInfosList == nil {
+		return
+	}
+
+	f.allInfos[chain.Name] = map[string]types.ConsumerChainInfo{}
+
+	for _, consumerInfo := range allInfosList.Chains {
+		f.allInfos[chain.Name][consumerInfo.ChainID] = consumerInfo
+	}
 }
