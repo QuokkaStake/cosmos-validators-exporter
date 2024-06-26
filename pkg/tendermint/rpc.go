@@ -564,7 +564,7 @@ func (rpc *RPC) GetValidatorConsumerChains(
 	ctx context.Context,
 	valcons string,
 ) (*types.ValidatorConsumerChains, *types.QueryInfo, error) {
-	if !rpc.ChainQueries.Enabled("node-info") {
+	if !rpc.ChainQueries.Enabled("validator-consumer-chains") {
 		return nil, nil, nil
 	}
 
