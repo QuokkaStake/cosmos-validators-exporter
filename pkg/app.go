@@ -95,6 +95,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko),
 		fetchersPkg.NewNodeInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewValidatorConsumersFetcher(logger, appConfig.Chains, rpcs, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -117,6 +118,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewStakingParamsGenerator(),
 		generatorsPkg.NewPriceGenerator(),
 		generatorsPkg.NewConsumerInfoGenerator(appConfig.Chains),
+		generatorsPkg.NewConsumerNeedsToSignGenerator(appConfig.Chains),
 	}
 
 	return &App{

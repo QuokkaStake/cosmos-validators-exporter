@@ -560,6 +560,36 @@ func (rpc *RPC) GetNodeInfo(
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetValidatorConsumerChains(
+	ctx context.Context,
+	valcons string,
+) (*types.ValidatorConsumerChains, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("validator-consumer-chains") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator required consumer chains",
+	)
+	defer span.End()
+
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_chains_per_validator/" + valcons
+
+	var response *types.ValidatorConsumerChains
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.ValidatorConsumerChains{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) Get(
 	url string,
 	target interface{},
