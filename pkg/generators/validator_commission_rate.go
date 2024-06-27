@@ -13,22 +13,22 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type CommissionRateGenerator struct {
+type ValidatorCommissionRateGenerator struct {
 	Chains []*config.Chain
 	Logger zerolog.Logger
 }
 
-func NewCommissionRateGenerator(
+func NewValidatorCommissionRateGenerator(
 	chains []*config.Chain,
 	logger *zerolog.Logger,
-) *CommissionRateGenerator {
-	return &CommissionRateGenerator{
+) *ValidatorCommissionRateGenerator {
+	return &ValidatorCommissionRateGenerator{
 		Chains: chains,
-		Logger: logger.With().Str("component", "single_validator_info_generator").Logger(),
+		Logger: logger.With().Str("component", "commission_rate_generator").Logger(),
 	}
 }
 
-func (g *CommissionRateGenerator) Generate(state *statePkg.State) []prometheus.Collector {
+func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	consumerCommissionsRaw, ok := state.Get(constants.FetcherNameConsumerCommission)
 	if !ok {
 		return []prometheus.Collector{}
@@ -79,12 +79,12 @@ func (g *CommissionRateGenerator) Generate(state *statePkg.State) []prometheus.C
 					Str("validator", validatorAddr.Address).
 					Msg("Could not find validator")
 				continue
+			} else {
+				commissionGauge.With(prometheus.Labels{
+					"chain":   chain.Name,
+					"address": validatorAddr.Address,
+				}).Set(validator.Commission.CommissionRates.Rate.MustFloat64())
 			}
-
-			commissionGauge.With(prometheus.Labels{
-				"chain":   chain.Name,
-				"address": validatorAddr.Address,
-			}).Set(validator.Commission.CommissionRates.Rate.MustFloat64())
 
 			for _, consumer := range chain.ConsumerChains {
 				consumerValidators, ok := consumerCommission.Commissions[consumer.Name]

@@ -104,5 +104,7 @@ func (f *ConsumerCommissionFetcher) processChain(
 		return
 	}
 
-	f.data[chain.Name][validator.Address] = commission
+	if commission != nil {
+		f.data[chain.Name][validator.Address] = commission
+	}
 }

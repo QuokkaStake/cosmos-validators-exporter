@@ -121,7 +121,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewConsumerInfoGenerator(appConfig.Chains),
 		generatorsPkg.NewConsumerNeedsToSignGenerator(appConfig.Chains),
 		generatorsPkg.NewValidatorActiveGenerator(appConfig.Chains, logger),
-		generatorsPkg.NewCommissionRateGenerator(appConfig.Chains, logger),
+		generatorsPkg.NewValidatorCommissionRateGenerator(appConfig.Chains, logger),
 	}
 
 	return &App{
