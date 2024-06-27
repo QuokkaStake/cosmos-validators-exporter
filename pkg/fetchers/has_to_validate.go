@@ -36,7 +36,7 @@ func NewValidatorConsumersFetcher(
 	tracer trace.Tracer,
 ) *ValidatorConsumersFetcher {
 	return &ValidatorConsumersFetcher{
-		Logger: logger.With().Str("component", "node_info_fetcher").Logger(),
+		Logger: logger.With().Str("component", "validator_consumers_fetcher").Logger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,

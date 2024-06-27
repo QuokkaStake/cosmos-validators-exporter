@@ -37,7 +37,7 @@ func NewSigningInfoFetcher(
 	tracer trace.Tracer,
 ) *SigningInfoFetcher {
 	return &SigningInfoFetcher{
-		Logger: logger.With().Str("component", "signing_infos").Logger(),
+		Logger: logger.With().Str("component", "signing_infos_fetcher").Logger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
