@@ -96,6 +96,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		fetchersPkg.NewNodeInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewValidatorConsumersFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewConsumerCommissionFetcher(logger, appConfig.Chains, rpcs, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -120,6 +121,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewConsumerInfoGenerator(appConfig.Chains),
 		generatorsPkg.NewConsumerNeedsToSignGenerator(appConfig.Chains),
 		generatorsPkg.NewValidatorActiveGenerator(appConfig.Chains, logger),
+		generatorsPkg.NewValidatorCommissionRateGenerator(appConfig.Chains, logger),
 	}
 
 	return &App{

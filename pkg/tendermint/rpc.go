@@ -590,6 +590,37 @@ func (rpc *RPC) GetValidatorConsumerChains(
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetConsumerCommission(
+	ctx context.Context,
+	valcons string,
+	chainID string,
+) (*types.ConsumerCommissionResponse, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("consumer-commission") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching validator consumer commission",
+	)
+	defer span.End()
+
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_commission_rate/" + chainID + "/" + valcons
+
+	var response *types.ConsumerCommissionResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.ConsumerCommissionResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) Get(
 	url string,
 	target interface{},

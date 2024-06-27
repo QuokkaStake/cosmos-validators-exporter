@@ -8,6 +8,7 @@ const (
 	FetcherNameCommission          FetcherName = "commission"
 	FetcherNameDelegations         FetcherName = "delegations"
 	FetcherNameValidatorConsumers  FetcherName = "validator-consumers"
+	FetcherNameConsumerCommission  FetcherName = "consumer-commission"
 
 	FetcherNameUnbonds            FetcherName = "unbonds"
 	FetcherNameSigningInfo        FetcherName = "signing-info"

@@ -58,14 +58,6 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 		[]string{"chain", "address"},
 	)
 
-	commissionGauge := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: constants.MetricsPrefix + "commission",
-			Help: "Validator current commission",
-		},
-		[]string{"chain", "address"},
-	)
-
 	commissionMaxGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: constants.MetricsPrefix + "commission_max",
@@ -141,11 +133,6 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 				"address": validatorAddr.Address,
 			}).Set(utils.BoolToFloat64(validator.Jailed))
 
-			commissionGauge.With(prometheus.Labels{
-				"chain":   chain.Name,
-				"address": validatorAddr.Address,
-			}).Set(validator.Commission.CommissionRates.Rate.MustFloat64())
-
 			commissionMaxGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,
@@ -172,7 +159,6 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 	return []prometheus.Collector{
 		validatorInfoGauge,
 		isJailedGauge,
-		commissionGauge,
 		commissionMaxGauge,
 		commissionMaxChangeGauge,
 		delegationsGauge,
