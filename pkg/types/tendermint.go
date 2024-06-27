@@ -194,3 +194,8 @@ type ValidatorConsumerChains struct {
 	Code             int      `json:"code"`
 	ConsumerChainIds []string `json:"consumer_chain_ids"`
 }
+
+type ConsumerCommissionResponse struct {
+	Code int            `json:"code"`
+	Rate math.LegacyDec `json:"rate"`
+}
