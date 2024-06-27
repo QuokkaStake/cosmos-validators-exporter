@@ -192,7 +192,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 
 	wg.Wait()
 
-	queriesMetrics := NewQueriesMetrics(a.Config, queryInfos)
+	queriesMetrics := NewQueriesMetrics(a.Config.Chains, queryInfos)
 	registry.MustRegister(queriesMetrics.GetMetrics(rootSpanCtx)...)
 
 	for _, generator := range a.Generators {

@@ -9,13 +9,13 @@ import (
 )
 
 type QueriesMetrics struct {
-	Config *config.Config
+	Chains []*config.Chain
 	Infos  []*types.QueryInfo
 }
 
-func NewQueriesMetrics(appConfig *config.Config, queryInfos []*types.QueryInfo) *QueriesMetrics {
+func NewQueriesMetrics(chains []*config.Chain, queryInfos []*types.QueryInfo) *QueriesMetrics {
 	return &QueriesMetrics{
-		Config: appConfig,
+		Chains: chains,
 		Infos:  queryInfos,
 	}
 }
@@ -54,7 +54,7 @@ func (q *QueriesMetrics) GetMetrics(ctx context.Context) []prometheus.Collector 
 	)
 
 	// so we would have this metrics even if there are no requests
-	for _, chain := range q.Config.Chains {
+	for _, chain := range q.Chains {
 		queriesCountGauge.With(prometheus.Labels{
 			"chain": chain.Name,
 		}).Set(0)
