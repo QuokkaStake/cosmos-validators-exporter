@@ -119,6 +119,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewPriceGenerator(),
 		generatorsPkg.NewConsumerInfoGenerator(appConfig.Chains),
 		generatorsPkg.NewConsumerNeedsToSignGenerator(appConfig.Chains),
+		generatorsPkg.NewValidatorActiveGenerator(appConfig.Chains, logger),
 	}
 
 	return &App{

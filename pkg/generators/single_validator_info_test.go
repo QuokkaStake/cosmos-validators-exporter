@@ -61,7 +61,7 @@ func TestSingleValidatorInfoGeneratorNotFound(t *testing.T) {
 	})
 	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
-	assert.Len(t, results, 7)
+	assert.Len(t, results, 6)
 
 	for _, metric := range results {
 		gauge, ok := metric.(*prometheus.GaugeVec)
@@ -119,7 +119,7 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 	})
 	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
-	assert.Len(t, results, 7)
+	assert.Len(t, results, 6)
 
 	validatorInfoGauge, ok := results[0].(*prometheus.GaugeVec)
 	assert.True(t, ok)
@@ -140,35 +140,28 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 	})))
 
-	isActive, ok := results[2].(*prometheus.GaugeVec)
-	assert.True(t, ok)
-	assert.InEpsilon(t, 1, testutil.ToFloat64(isActive.With(prometheus.Labels{
-		"chain":   "chain",
-		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
-	})), 0.01)
-
-	commissionGauge, ok := results[3].(*prometheus.GaugeVec)
+	commissionGauge, ok := results[2].(*prometheus.GaugeVec)
 	assert.True(t, ok)
 	assert.InEpsilon(t, 0.05, testutil.ToFloat64(commissionGauge.With(prometheus.Labels{
 		"chain":   "chain",
 		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 	})), 0.01)
 
-	commissionMaxGauge, ok := results[4].(*prometheus.GaugeVec)
+	commissionMaxGauge, ok := results[3].(*prometheus.GaugeVec)
 	assert.True(t, ok)
 	assert.InEpsilon(t, 0.2, testutil.ToFloat64(commissionMaxGauge.With(prometheus.Labels{
 		"chain":   "chain",
 		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 	})), 0.01)
 
-	commissionMaxChangeGauge, ok := results[5].(*prometheus.GaugeVec)
+	commissionMaxChangeGauge, ok := results[4].(*prometheus.GaugeVec)
 	assert.True(t, ok)
 	assert.InEpsilon(t, 0.01, testutil.ToFloat64(commissionMaxChangeGauge.With(prometheus.Labels{
 		"chain":   "chain",
 		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 	})), 0.01)
 
-	delegationsGauge, ok := results[6].(*prometheus.GaugeVec)
+	delegationsGauge, ok := results[5].(*prometheus.GaugeVec)
 	assert.True(t, ok)
 	assert.InEpsilon(t, float64(2), testutil.ToFloat64(delegationsGauge.With(prometheus.Labels{
 		"chain":   "chain",

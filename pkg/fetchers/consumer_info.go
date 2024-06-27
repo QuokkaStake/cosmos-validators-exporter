@@ -36,7 +36,7 @@ func NewConsumerInfoFetcher(
 	tracer trace.Tracer,
 ) *ConsumerInfoFetcher {
 	return &ConsumerInfoFetcher{
-		Logger: logger.With().Str("component", "validators_fetcher").Logger(),
+		Logger: logger.With().Str("component", "consumer_info_fetcher").Logger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
