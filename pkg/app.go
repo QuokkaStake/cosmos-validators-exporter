@@ -152,7 +152,9 @@ func (a *App) Start() {
 
 func (a *App) Stop() {
 	a.Logger.Info().Str("addr", a.Config.ListenAddress).Msg("Shutting down server...")
-	_ = a.Server.Shutdown(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = a.Server.Shutdown(ctx)
 }
 
 func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
