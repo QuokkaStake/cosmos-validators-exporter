@@ -2,6 +2,7 @@
 
 ![Latest release](https://img.shields.io/github/v/release/QuokkaStake/cosmos-validators-exporter)
 [![Actions Status](https://github.com/QuokkaStake/cosmos-validators-exporter/workflows/test/badge.svg)](https://github.com/QuokkaStake/cosmos-validators-exporter/actions)
+[![codecov](https://codecov.io/gh/QuokkaStake/cosmos-validators-exporter/graph/badge.svg?token=WALLM02IEC)](https://codecov.io/gh/QuokkaStake/cosmos-validators-exporter)
 
 cosmos-validators-exporter is a Prometheus scraper that fetches validators stats from an LCD server
 exposed by a fullnode.

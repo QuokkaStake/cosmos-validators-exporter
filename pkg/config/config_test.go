@@ -132,7 +132,7 @@ func TestLoadConfigValid(t *testing.T) {
 	t.Parallel()
 
 	filesystem := &fs.TestFS{}
-	config, err := GetConfig("valid.toml", filesystem)
+	config, err := GetConfig("config-valid.toml", filesystem)
 	require.NoError(t, err)
 	require.NotNil(t, config)
 }

@@ -1,9 +1,10 @@
+listen-address = "invalid"
+
 [[chains]]
 name = "sentinel"
 lcd-endpoint = "https://api.sentinel.quokkastake.io"
 coingecko-currency = "sentinel"
 base-denom = "udvpn"
-denom = "dvpn"
 bech-wallet-prefix = "sent"
 validators = [
     { address = "sentvaloper1rw9wtyhsus7jvx55v3qv5nzun054ma6kz4237k" }
