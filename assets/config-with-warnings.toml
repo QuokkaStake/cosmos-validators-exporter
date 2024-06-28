@@ -1,0 +1,11 @@
+[[chains]]
+name = "sentinel"
+lcd-endpoint = "https://api.sentinel.quokkastake.io"
+base-denom = "udvpn"
+bech-wallet-prefix = "sent"
+denoms = [
+    { denom = "udvpn", display-denom = "dvpn" }
+]
+validators = [
+    { address = "sentvaloper1rw9wtyhsus7jvx55v3qv5nzun054ma6kz4237k" }
+]
