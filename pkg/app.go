@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	fetchersPkg "main/pkg/fetchers"
 	"main/pkg/fs"
 	generatorsPkg "main/pkg/generators"
@@ -30,6 +31,7 @@ type App struct {
 	Tracer trace.Tracer
 	Config *config.Config
 	Logger *zerolog.Logger
+	Server *http.Server
 
 	RPCs map[string]*tendermint.RPCWithConsumers
 
@@ -48,11 +50,11 @@ type App struct {
 func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	appConfig, err := config.GetConfig(configPath, filesystem)
 	if err != nil {
-		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Could not load config")
+		loggerPkg.GetDefaultLogger().Panic().Err(err).Msg("Could not load config")
 	}
 
 	if err = appConfig.Validate(); err != nil {
-		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Provided config is invalid!")
+		loggerPkg.GetDefaultLogger().Panic().Err(err).Msg("Provided config is invalid!")
 	}
 
 	logger := loggerPkg.GetLogger(appConfig.LogConfig)
@@ -66,11 +68,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		entry.Msg(warning.Message)
 	}
 
-	tracer, err := tracing.InitTracer(appConfig.TracingConfig, version)
-	if err != nil {
-		loggerPkg.GetDefaultLogger().Fatal().Err(err).Msg("Error setting up tracing")
-	}
-
+	tracer := tracing.InitTracer(appConfig.TracingConfig, version)
 	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 
 	rpcs := make(map[string]*tendermint.RPCWithConsumers, len(appConfig.Chains))
@@ -124,6 +122,8 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewValidatorCommissionRateGenerator(appConfig.Chains, logger),
 	}
 
+	server := &http.Server{Addr: appConfig.ListenAddress, Handler: nil}
+
 	return &App{
 		Logger:     logger,
 		Config:     appConfig,
@@ -131,18 +131,28 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		RPCs:       rpcs,
 		Fetchers:   fetchers,
 		Generators: generators,
+		Server:     server,
 	}
 }
 
 func (a *App) Start() {
 	otelHandler := otelhttp.NewHandler(http.HandlerFunc(a.Handler), "prometheus")
-	http.Handle("/metrics", otelHandler)
+	handler := http.NewServeMux()
+	handler.Handle("/metrics", otelHandler)
+	handler.HandleFunc("/healthcheck", a.Healthcheck)
+	a.Server.Handler = handler
 
 	a.Logger.Info().Str("addr", a.Config.ListenAddress).Msg("Listening")
-	err := http.ListenAndServe(a.Config.ListenAddress, nil)
+
+	err := a.Server.ListenAndServe()
 	if err != nil {
-		a.Logger.Fatal().Err(err).Msg("Could not start application")
+		a.Logger.Panic().Err(err).Msg("Could not start application")
 	}
+}
+
+func (a *App) Stop() {
+	a.Logger.Info().Str("addr", a.Config.ListenAddress).Msg("Shutting down server...")
+	_ = a.Server.Shutdown(context.Background())
 }
 
 func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
@@ -208,4 +218,8 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 		Str("endpoint", "/metrics").
 		Float64("request-time", time.Since(requestStart).Seconds()).
 		Msg("Request processed")
+}
+
+func (a *App) Healthcheck(w http.ResponseWriter, r *http.Request) {
+	_, _ = w.Write([]byte("ok"))
 }
