@@ -56,7 +56,7 @@ func TestAppFailToStart(t *testing.T) {
 }
 
 //nolint:paralleltest // disabled
-func TestAppFailToStop(t *testing.T) {
+func TestAppStopOperation(t *testing.T) {
 	filesystem := &fs.TestFS{}
 
 	app := NewApp("config-valid.toml", filesystem, "1.2.3")
