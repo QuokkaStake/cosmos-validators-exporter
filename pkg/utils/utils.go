@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/btcsuite/btcutil/bech32"
+	"github.com/tnakagawa/goref/bech32m"
 )
 
 func BoolToFloat64(b bool) float64 {
@@ -27,12 +27,12 @@ func StrToFloat64(s string) float64 {
 }
 
 func ChangeBech32Prefix(source, newPrefix string) (string, error) {
-	_, bytes, err := bech32.Decode(source)
+	_, bytes, _, err := bech32m.Decode(source)
 	if err != nil {
 		return "", err
 	}
 
-	return bech32.Encode(newPrefix, bytes)
+	return bech32m.Encode(newPrefix, bytes, bech32m.Bech32), nil
 }
 
 func Filter[T any](slice []T, f func(T) bool) []T {
@@ -73,12 +73,12 @@ func FindIndex[T any](slice []T, predicate func(T) bool) (int, bool) {
 }
 
 func CompareTwoBech32(first, second string) (bool, error) {
-	_, firstBytes, err := bech32.Decode(first)
+	_, firstBytes, _, err := bech32m.Decode(first)
 	if err != nil {
 		return false, err
 	}
 
-	_, secondBytes, err := bech32.Decode(second)
+	_, secondBytes, _, err := bech32m.Decode(second)
 	if err != nil {
 		return false, err
 	}

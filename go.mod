@@ -7,7 +7,6 @@ toolchain go1.22.1
 require (
 	cosmossdk.io/math v1.3.0
 	github.com/BurntSushi/toml v1.4.0
-	github.com/btcsuite/btcutil v1.0.2
 	github.com/creasty/defaults v1.7.0
 	github.com/google/uuid v1.6.0
 	github.com/guregu/null/v5 v5.0.0
@@ -16,6 +15,7 @@ require (
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
+	github.com/tnakagawa/goref v0.0.0-20210115084929-99e685247789
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
 	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.27.0
