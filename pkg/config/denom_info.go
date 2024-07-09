@@ -4,13 +4,16 @@ import (
 	"errors"
 	"main/pkg/types"
 	"math"
+
+	"github.com/guregu/null/v5"
 )
 
 type DenomInfo struct {
-	Denom             string `toml:"denom"`
-	DenomExponent     int64  `default:"6"               toml:"denom-exponent"`
-	DisplayDenom      string `toml:"display-denom"`
-	CoingeckoCurrency string `toml:"coingecko-currency"`
+	Denom             string    `toml:"denom"`
+	DenomExponent     int64     `default:"6"               toml:"denom-exponent"`
+	DisplayDenom      string    `toml:"display-denom"`
+	CoingeckoCurrency string    `toml:"coingecko-currency"`
+	Ignore            null.Bool `default:"false"           toml:"ignore"`
 }
 
 func (d *DenomInfo) Validate() error {
@@ -18,7 +21,7 @@ func (d *DenomInfo) Validate() error {
 		return errors.New("empty denom name")
 	}
 
-	if d.DisplayDenom == "" {
+	if d.DisplayDenom == "" && !d.Ignore.Bool {
 		return errors.New("empty display denom name")
 	}
 
@@ -55,6 +58,10 @@ func (d DenomInfos) Find(denom string) *DenomInfo {
 func (d DenomInfos) Convert(amount *types.Amount) *types.Amount {
 	for _, info := range d {
 		if info.Denom == amount.Denom {
+			if info.Ignore.Bool {
+				return nil
+			}
+
 			return &types.Amount{
 				Amount: amount.Amount / math.Pow(10, float64(info.DenomExponent)),
 				Denom:  info.DisplayDenom,

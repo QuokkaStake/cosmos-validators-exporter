@@ -46,6 +46,10 @@ func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.C
 			}
 
 			amountConverted := chain.Denoms.Convert(validatorSelfDelegation)
+			if amountConverted == nil {
+				continue
+			}
+
 			selfDelegatedTokensGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validator.Address,

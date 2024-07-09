@@ -76,6 +76,9 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 			Denom:  chain.BaseDenom,
 		}
 		totalBondedAmountConverted := chain.Denoms.Convert(totalBondedAmount)
+		if totalBondedAmountConverted == nil {
+			continue
+		}
 
 		totalBondedTokensGauge.With(prometheus.Labels{
 			"chain": chain.Name,

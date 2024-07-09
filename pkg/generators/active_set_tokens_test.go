@@ -8,6 +8,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/guregu/null/v5"
+
 	"cosmossdk.io/math"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -146,4 +148,40 @@ func TestActiveSetTokensGeneratorEnoughValidators(t *testing.T) {
 		"chain": "chain",
 		"denom": "atom",
 	})), 0.01)
+}
+
+func TestActiveSetTokensGeneratorDenomIgnored(t *testing.T) {
+	t.Parallel()
+
+	chains := []*config.Chain{{
+		Name:      "chain",
+		BaseDenom: "uatom",
+		Denoms:    config.DenomInfos{{Denom: "uatom", Ignore: null.BoolFrom(true)}},
+	}}
+	state := statePkg.NewState()
+	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
+		Validators: map[string]*types.ValidatorsResponse{
+			"chain": {
+				Validators: []types.Validator{
+					{DelegatorShares: math.LegacyMustNewDecFromStr("2000000"), Status: constants.ValidatorStatusBonded},
+					{DelegatorShares: math.LegacyMustNewDecFromStr("1000000")},
+					{DelegatorShares: math.LegacyMustNewDecFromStr("3000000"), Status: constants.ValidatorStatusBonded},
+				},
+			},
+		},
+	})
+	state.Set(constants.FetcherNameStakingParams, fetchers.StakingParamsData{
+		Params: map[string]*types.StakingParamsResponse{
+			"chain": {
+				StakingParams: types.StakingParams{MaxValidators: 2},
+			},
+		},
+	})
+	generator := NewActiveSetTokensGenerator(chains)
+	results := generator.Generate(state)
+	assert.NotEmpty(t, results)
+
+	gauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.Zero(t, testutil.CollectAndCount(gauge))
 }

@@ -36,11 +36,21 @@ base-denom = "uatom"
 # 4. denom-exponent
 # The exponent of a coefficient you need to multiply base denom to get 1 token on Coingecko.
 # Optional, defaults to 6 (so a coefficient == 1_000_000).
+# 5. ignore
+# Whether the denom should be ignored and not returned in metrics.
+# If specified as true, the exporter would not export this value as metric value in all the places
+# when it does a denom conversion (rewards, commission, self-delegation, voting power etc.)
+# Ignoring a base denom is quite pointless as it would effectively strip most of the useful metrics.
+# Useful for chains where there are tokens of really low value (see Cosmos Hub and their stXXX dust
+# tokens for example).
+# Optional, defaults to false (so, not ignored).
+# Keep in mind that if ignore = false, but coingecko-currency is provided, it will still fetch
+# Coingecko price for this token.
 #
 # You can calculate the actual price of something by multiplying the metric that has denoms by the
 # `cosmos_validators_exporter_price` metric (by chain + denom).
 denoms = [
-    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-exponent = 6 },
+    { denom = "uatom", display-denom = "atom", coingecko-currency = "cosmos", denom-exponent = 6, ignore = false },
 ]
 # Bech32 prefix for a wallet address (example: "cosmos" for a Cosmos wallet). If omitted,
 # the self-delegation metric will not be present.

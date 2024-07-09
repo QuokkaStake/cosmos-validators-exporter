@@ -8,6 +8,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/guregu/null/v5"
+
 	"cosmossdk.io/math"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -83,6 +85,54 @@ func TestValidatorsInfoGeneratorNotConsumer(t *testing.T) {
 		"chain": "chain",
 		"denom": "atom",
 	})), 0.01)
+}
+
+func TestValidatorsInfoGeneratorNotConsumerIgnoredBaseDenom(t *testing.T) {
+	t.Parallel()
+
+	state := statePkg.NewState()
+	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
+		Validators: map[string]*types.ValidatorsResponse{
+			"chain": {
+				Validators: []types.Validator{
+					{
+						DelegatorShares: math.LegacyMustNewDecFromStr("2000000"),
+						OperatorAddress: "cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en",
+						Status:          constants.ValidatorStatusBonded,
+					},
+					{
+						DelegatorShares: math.LegacyMustNewDecFromStr("1000000"),
+						OperatorAddress: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+					},
+					{
+						DelegatorShares: math.LegacyMustNewDecFromStr("3000000"),
+						OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+						Status:          constants.ValidatorStatusBonded,
+					},
+				},
+			},
+		},
+	})
+	state.Set(constants.FetcherNameConsumerValidators, fetchers.ConsumerValidatorsData{})
+
+	chains := []*config.Chain{{
+		Name:      "chain",
+		BaseDenom: "uatom",
+		Denoms:    config.DenomInfos{{Denom: "uatom", Ignore: null.BoolFrom(true)}},
+	}, {Name: "chain2"}}
+	generator := NewValidatorsInfoGenerator(chains)
+	results := generator.Generate(state)
+	assert.Len(t, results, 2)
+
+	validatorsCountGauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, float64(2), testutil.ToFloat64(validatorsCountGauge.With(prometheus.Labels{
+		"chain": "chain",
+	})), 0.01)
+
+	totalBondedGauge, ok := results[1].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.Zero(t, testutil.CollectAndCount(totalBondedGauge))
 }
 
 func TestValidatorsInfoGeneratorConsumer(t *testing.T) {
