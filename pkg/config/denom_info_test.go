@@ -3,6 +3,8 @@ package config
 import (
 	"testing"
 
+	"github.com/guregu/null/v5"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/stretchr/testify/require"
@@ -24,6 +26,14 @@ func TestDenomInfoValidateNoDisplayDenom(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestDenomInfoValidateNoDisplayDenomIgnored(t *testing.T) {
+	t.Parallel()
+
+	denom := DenomInfo{Denom: "ustake", Ignore: null.BoolFrom(true)}
+	err := denom.Validate()
+	require.NoError(t, err)
+}
+
 func TestDenomInfoValidateValid(t *testing.T) {
 	t.Parallel()
 
@@ -38,6 +48,14 @@ func TestDenomInfoDisplayWarningNoCoingecko(t *testing.T) {
 	denom := DenomInfo{Denom: "ustake", DisplayDenom: "stake"}
 	warnings := denom.DisplayWarnings(&Chain{Name: "test"})
 	assert.NotEmpty(t, warnings)
+}
+
+func TestDenomInfoDisplayWarningNoCoingeckoDisabled(t *testing.T) {
+	t.Parallel()
+
+	denom := DenomInfo{Denom: "ustake", DisplayDenom: "stake", Ignore: null.BoolFrom(true)}
+	warnings := denom.DisplayWarnings(&Chain{Name: "test"})
+	assert.Empty(t, warnings)
 }
 
 func TestDenomInfoDisplayWarningEmpty(t *testing.T) {

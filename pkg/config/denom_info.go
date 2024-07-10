@@ -30,7 +30,7 @@ func (d *DenomInfo) Validate() error {
 
 func (d *DenomInfo) DisplayWarnings(chain *Chain) []Warning {
 	warnings := []Warning{}
-	if d.CoingeckoCurrency == "" {
+	if d.CoingeckoCurrency == "" && !d.Ignore.Bool {
 		warnings = append(warnings, Warning{
 			Message: "Currency code not set, not fetching exchange rate.",
 			Labels: map[string]string{
