@@ -67,6 +67,10 @@ func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.
 			Denom:  chain.BaseDenom,
 		})
 
+		if lastValidatorAmount == nil {
+			continue
+		}
+
 		if chainStakingParams != nil && len(activeValidators) >= chainStakingParams.StakingParams.MaxValidators {
 			activeSetTokensGauge.With(prometheus.Labels{
 				"chain": chain.Name,

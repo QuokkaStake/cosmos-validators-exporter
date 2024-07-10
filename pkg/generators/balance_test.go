@@ -8,6 +8,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/guregu/null/v5"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
@@ -33,12 +35,14 @@ func TestBalanceGeneratorNotEmptyState(t *testing.T) {
 				"validator": {
 					{Amount: 100000, Denom: "uatom"},
 					{Amount: 200000, Denom: "ustake"},
+					{Amount: 300000, Denom: "uignored"},
 				},
 			},
 			"consumer": {
 				"validator": {
 					{Amount: 100000, Denom: "untrn"},
 					{Amount: 200000, Denom: "ustake"},
+					{Amount: 300000, Denom: "uignored"},
 				},
 			},
 		},
@@ -50,11 +54,13 @@ func TestBalanceGeneratorNotEmptyState(t *testing.T) {
 			Validators: []config.Validator{{Address: "validator"}, {Address: "validator2"}},
 			Denoms: config.DenomInfos{
 				{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6},
+				{Denom: "uignored", Ignore: null.BoolFrom(true)},
 			},
 			ConsumerChains: []*config.ConsumerChain{{
 				Name: "consumer",
 				Denoms: config.DenomInfos{
 					{Denom: "untrn", DisplayDenom: "ntrn", DenomExponent: 6},
+					{Denom: "uignored", Ignore: null.BoolFrom(true)},
 				},
 			}},
 		},
@@ -72,6 +78,7 @@ func TestBalanceGeneratorNotEmptyState(t *testing.T) {
 
 	gauge, ok := results[0].(*prometheus.GaugeVec)
 	assert.True(t, ok)
+	assert.Equal(t, 4, testutil.CollectAndCount(gauge))
 	assert.InEpsilon(t, 0.1, testutil.ToFloat64(gauge.With(prometheus.Labels{
 		"chain":   "chain",
 		"address": "validator",

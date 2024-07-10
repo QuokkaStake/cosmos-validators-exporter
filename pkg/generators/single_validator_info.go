@@ -148,6 +148,10 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 				Denom:  chain.BaseDenom,
 			})
 
+			if delegationsAmount == nil {
+				continue
+			}
+
 			delegationsGauge.With(prometheus.Labels{
 				"chain":   chain.Name,
 				"address": validatorAddr.Address,

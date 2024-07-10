@@ -9,6 +9,8 @@ import (
 	"main/pkg/types"
 	"testing"
 
+	"github.com/guregu/null/v5"
+
 	"cosmossdk.io/math"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
@@ -161,4 +163,93 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 		"denom":   "atom",
 	})), 0.01)
+}
+
+func TestSingleValidatorInfoIgnoredBaseDenom(t *testing.T) {
+	t.Parallel()
+
+	chains := []*config.Chain{{
+		Name:       "chain",
+		BaseDenom:  "uatom",
+		Denoms:     config.DenomInfos{{Denom: "uatom", Ignore: null.BoolFrom(true)}},
+		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
+	}}
+	state := statePkg.NewState()
+	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
+		Validators: map[string]*types.ValidatorsResponse{
+			"chain": {
+				Validators: []types.Validator{
+					{
+						DelegatorShares: math.LegacyMustNewDecFromStr("3000000"),
+						OperatorAddress: "cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en",
+						Status:          constants.ValidatorStatusBonded,
+					},
+					{
+						DelegatorShares: math.LegacyMustNewDecFromStr("2000000"),
+						OperatorAddress: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+						Status:          constants.ValidatorStatusBonded,
+						Description: types.ValidatorDescription{
+							Moniker:         "moniker",
+							SecurityContact: "contact",
+							Website:         "website",
+							Details:         "details",
+							Identity:        "identity",
+						},
+						Commission: types.ValidatorCommission{
+							CommissionRates: types.ValidatorCommissionRates{
+								Rate:          math.LegacyMustNewDecFromStr("0.05"),
+								MaxRate:       math.LegacyMustNewDecFromStr("0.2"),
+								MaxChangeRate: math.LegacyMustNewDecFromStr("0.01"),
+							},
+						},
+					},
+					{
+						DelegatorShares: math.LegacyMustNewDecFromStr("1000000"),
+						OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+						Status:          constants.ValidatorStatusBonded,
+					},
+				},
+			},
+		},
+	})
+	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
+	results := generator.Generate(state)
+	assert.Len(t, results, 5)
+
+	validatorInfoGauge, ok := results[0].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, float64(1), testutil.ToFloat64(validatorInfoGauge.With(prometheus.Labels{
+		"chain":            "chain",
+		"address":          "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+		"moniker":          "moniker",
+		"details":          "details",
+		"identity":         "identity",
+		"security_contact": "contact",
+		"website":          "website",
+	})), 0.01)
+
+	isJailed, ok := results[1].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.Zero(t, testutil.ToFloat64(isJailed.With(prometheus.Labels{
+		"chain":   "chain",
+		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+	})))
+
+	commissionMaxGauge, ok := results[2].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, 0.2, testutil.ToFloat64(commissionMaxGauge.With(prometheus.Labels{
+		"chain":   "chain",
+		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+	})), 0.01)
+
+	commissionMaxChangeGauge, ok := results[3].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.InEpsilon(t, 0.01, testutil.ToFloat64(commissionMaxChangeGauge.With(prometheus.Labels{
+		"chain":   "chain",
+		"address": "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
+	})), 0.01)
+
+	delegationsGauge, ok := results[4].(*prometheus.GaugeVec)
+	assert.True(t, ok)
+	assert.Zero(t, testutil.CollectAndCount(delegationsGauge))
 }

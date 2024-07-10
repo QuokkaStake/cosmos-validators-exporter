@@ -47,6 +47,10 @@ func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Colle
 
 			for _, balance := range validatorCommissions {
 				amountConverted := chain.Denoms.Convert(&balance)
+				if amountConverted == nil {
+					continue
+				}
+
 				commissionUnclaimedTokens.With(prometheus.Labels{
 					"chain":   chain.Name,
 					"address": validator.Address,

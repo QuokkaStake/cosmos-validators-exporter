@@ -47,6 +47,10 @@ func (g *RewardsGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 
 			for _, balance := range validatorRewards {
 				amountConverted := chain.Denoms.Convert(&balance)
+				if amountConverted == nil {
+					continue
+				}
+
 				selfDelegationRewardsTokens.With(prometheus.Labels{
 					"chain":   chain.Name,
 					"address": validator.Address,

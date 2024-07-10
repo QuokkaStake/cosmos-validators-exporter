@@ -48,6 +48,10 @@ func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 
 				for _, balance := range validatorBalances {
 					amountConverted := consumer.Denoms.Convert(&balance)
+					if amountConverted == nil {
+						continue
+					}
+
 					walletBalanceTokens.With(prometheus.Labels{
 						"chain":   consumer.Name,
 						"address": validator.Address,
@@ -70,6 +74,10 @@ func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 
 			for _, balance := range validatorBalances {
 				amountConverted := chain.Denoms.Convert(&balance)
+				if amountConverted == nil {
+					continue
+				}
+
 				walletBalanceTokens.With(prometheus.Labels{
 					"chain":   chain.Name,
 					"address": validator.Address,
