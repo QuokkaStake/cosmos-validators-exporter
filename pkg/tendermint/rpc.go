@@ -648,6 +648,35 @@ func (rpc *RPC) GetInflation(ctx context.Context) (*types.InflationResponse, *ty
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetTotalSupply(ctx context.Context) ([]types.Amount, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("supply") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching chain supply",
+	)
+	defer span.End()
+
+	url := rpc.ChainHost + "/cosmos/bank/v1beta1/supply?pagination.limit=10000&pagination.offset=0"
+
+	var response *types.SupplyResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return []types.Amount{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return utils.Map(response.Supply, func(amount types.ResponseAmount) types.Amount {
+		return amount.ToAmount()
+	}), &info, nil
+}
+
 func (rpc *RPC) Get(
 	url string,
 	target interface{},

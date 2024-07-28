@@ -204,3 +204,8 @@ type InflationResponse struct {
 	Code      int            `json:"code"`
 	Inflation math.LegacyDec `json:"inflation"`
 }
+
+type SupplyResponse struct {
+	Code   int              `json:"code"`
+	Supply []ResponseAmount `json:"supply"`
+}
