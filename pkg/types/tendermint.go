@@ -199,3 +199,8 @@ type ConsumerCommissionResponse struct {
 	Code int            `json:"code"`
 	Rate math.LegacyDec `json:"rate"`
 }
+
+type InflationResponse struct {
+	Code      int            `json:"code"`
+	Inflation math.LegacyDec `json:"inflation"`
+}

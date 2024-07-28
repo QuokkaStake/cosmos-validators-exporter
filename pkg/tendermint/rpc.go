@@ -621,6 +621,33 @@ func (rpc *RPC) GetConsumerCommission(
 	return response, &info, nil
 }
 
+func (rpc *RPC) GetInflation(ctx context.Context) (*types.InflationResponse, *types.QueryInfo, error) {
+	if !rpc.ChainQueries.Enabled("inflation") {
+		return nil, nil, nil
+	}
+
+	childQuerierCtx, span := rpc.Tracer.Start(
+		ctx,
+		"Fetching chain inflation",
+	)
+	defer span.End()
+
+	url := rpc.ChainHost + "/cosmos/mint/v1beta1/inflation"
+
+	var response *types.InflationResponse
+	info, err := rpc.Get(url, &response, childQuerierCtx)
+	if err != nil {
+		return nil, &info, err
+	}
+
+	if response.Code != 0 {
+		info.Success = false
+		return &types.InflationResponse{}, &info, fmt.Errorf("expected code 0, but got %d", response.Code)
+	}
+
+	return response, &info, nil
+}
+
 func (rpc *RPC) Get(
 	url string,
 	target interface{},
