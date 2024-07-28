@@ -95,6 +95,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewValidatorConsumersFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerCommissionFetcher(logger, appConfig.Chains, rpcs, tracer),
+		fetchersPkg.NewInflationFetcher(logger, appConfig.Chains, rpcs, tracer),
 	}
 
 	generators := []generatorsPkg.Generator{
@@ -120,6 +121,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewConsumerNeedsToSignGenerator(appConfig.Chains),
 		generatorsPkg.NewValidatorActiveGenerator(appConfig.Chains, logger),
 		generatorsPkg.NewValidatorCommissionRateGenerator(appConfig.Chains, logger),
+		generatorsPkg.NewInflationGenerator(),
 	}
 
 	server := &http.Server{Addr: appConfig.ListenAddress, Handler: nil}
