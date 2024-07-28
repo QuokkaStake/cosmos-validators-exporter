@@ -1,0 +1,12 @@
+{
+  "supply": [
+    {
+      "denom": "uatom",
+      "amount": "123456"
+    }
+  ],
+  "pagination": {
+    "next_key": null,
+    "total": "1"
+  }
+}
