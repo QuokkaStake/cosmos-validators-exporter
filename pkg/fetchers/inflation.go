@@ -2,12 +2,13 @@ package fetchers
 
 import (
 	"context"
-	"cosmossdk.io/math"
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/tendermint"
 	"main/pkg/types"
 	"sync"
+
+	"cosmossdk.io/math"
 
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
