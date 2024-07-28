@@ -73,7 +73,9 @@ func TestAppLoadConfigOk(t *testing.T) {
 
 	for {
 		request, err := http.Get("http://localhost:9560/healthcheck")
-		_ = request.Body.Close()
+		if request.Body != nil {
+			_ = request.Body.Close()
+		}
 		if err == nil {
 			break
 		}
