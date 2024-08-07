@@ -69,7 +69,7 @@ func (q *InflationFetcher) Fetch(
 				q.Logger.Error().
 					Err(err).
 					Str("chain", chain.Name).
-					Msg("Error querying validator delegators count")
+					Msg("Error querying inflation")
 				return
 			}
 
