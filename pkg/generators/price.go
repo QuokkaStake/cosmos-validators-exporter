@@ -26,7 +26,7 @@ func (g *PriceGenerator) Generate(state *statePkg.State) []prometheus.Collector 
 			Name: constants.MetricsPrefix + "price",
 			Help: "Price of 1 token in display denom in USD",
 		},
-		[]string{"chain", "denom"},
+		[]string{"chain", "denom", "source", "base_currency"},
 	)
 
 	data, _ := dataRaw.(fetchersPkg.PriceData)
@@ -34,9 +34,11 @@ func (g *PriceGenerator) Generate(state *statePkg.State) []prometheus.Collector 
 	for chainName, chainPrices := range data.Prices {
 		for denom, price := range chainPrices {
 			tokenPriceGauge.With(prometheus.Labels{
-				"chain": chainName,
-				"denom": denom,
-			}).Set(price)
+				"chain":         chainName,
+				"denom":         denom,
+				"source":        string(price.Source),
+				"base_currency": price.BaseCurrency,
+			}).Set(price.Value)
 		}
 	}
 

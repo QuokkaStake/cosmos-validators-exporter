@@ -88,30 +88,6 @@ func TestDisplayWarningsEmpty(t *testing.T) {
 	require.Empty(t, warnings)
 }
 
-func TestCoingeckoCurrencies(t *testing.T) {
-	t.Parallel()
-
-	config := Config{
-		Chains: []*Chain{{
-			Denoms: DenomInfos{
-				{Denom: "denom1", CoingeckoCurrency: "denom1"},
-				{Denom: "denom2"},
-			},
-			ConsumerChains: []*ConsumerChain{{
-				Denoms: DenomInfos{
-					{Denom: "denom3", CoingeckoCurrency: "denom3"},
-					{Denom: "denom4"},
-				},
-			}},
-		}},
-	}
-
-	currencies := config.GetCoingeckoCurrencies()
-	require.Len(t, currencies, 2)
-	require.Contains(t, currencies, "denom1")
-	require.Contains(t, currencies, "denom3")
-}
-
 func TestLoadConfigNotFound(t *testing.T) {
 	t.Parallel()
 

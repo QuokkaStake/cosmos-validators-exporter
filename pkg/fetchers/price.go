@@ -4,81 +4,116 @@ import (
 	"context"
 	"main/pkg/config"
 	"main/pkg/constants"
+	"main/pkg/price_fetchers"
 	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	"main/pkg/types"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/trace"
 )
 
 type PriceFetcher struct {
-	Logger    zerolog.Logger
-	Config    *config.Config
-	Tracer    trace.Tracer
-	Coingecko *coingeckoPkg.Coingecko
+	Logger zerolog.Logger
+	Config *config.Config
+	Tracer trace.Tracer
 
-	CurrenciesRatesToChains map[string]map[string]float64
+	Fetchers map[constants.PriceFetcherName]price_fetchers.PriceFetcher
+}
+
+type PriceInfo struct {
+	Source       constants.PriceFetcherName
+	BaseCurrency string
+	Value        float64
 }
 
 type PriceData struct {
-	Prices map[string]map[string]float64
+	Prices map[string]map[string]PriceInfo
 }
 
 func NewPriceFetcher(
 	logger *zerolog.Logger,
 	config *config.Config,
 	tracer trace.Tracer,
-	coingecko *coingeckoPkg.Coingecko,
 ) *PriceFetcher {
+	fetchers := map[constants.PriceFetcherName]price_fetchers.PriceFetcher{
+		constants.PriceFetcherNameCoingecko: coingeckoPkg.NewCoingecko(config, logger, tracer),
+	}
+
 	return &PriceFetcher{
-		Logger:    logger.With().Str("component", "price_fetcher").Logger(),
-		Config:    config,
-		Tracer:    tracer,
-		Coingecko: coingecko,
+		Logger:   logger.With().Str("component", "price_fetcher").Logger(),
+		Config:   config,
+		Tracer:   tracer,
+		Fetchers: fetchers,
 	}
 }
 
 func (q *PriceFetcher) Fetch(
 	ctx context.Context,
 ) (interface{}, []*types.QueryInfo) {
-	currenciesList := q.Config.GetCoingeckoCurrencies()
-
-	var currenciesRates map[string]float64
-	var currenciesQuery *types.QueryInfo
-
-	var queries []*types.QueryInfo
-
-	if len(currenciesList) > 0 {
-		currenciesRates, currenciesQuery = q.Coingecko.FetchPrices(currenciesList, ctx)
-	}
-
-	if currenciesQuery != nil {
-		queries = append(queries, currenciesQuery)
-	}
-
-	q.CurrenciesRatesToChains = map[string]map[string]float64{}
+	queries := []*types.QueryInfo{}
+	denomsByPriceFetcher := map[constants.PriceFetcherName][]price_fetchers.ChainWithDenom{}
 
 	for _, chain := range q.Config.Chains {
-		q.CurrenciesRatesToChains[chain.Name] = make(map[string]float64)
-		q.ProcessDenoms(chain.Name, chain.Denoms, currenciesRates)
+		for _, denom := range chain.Denoms {
+			for _, priceFetcher := range denom.PriceFetchers() {
+				denomsByPriceFetcher[priceFetcher] = append(denomsByPriceFetcher[priceFetcher], price_fetchers.ChainWithDenom{
+					Chain:     chain.Name,
+					DenomInfo: denom,
+				})
+			}
+		}
 
 		for _, consumer := range chain.ConsumerChains {
-			q.CurrenciesRatesToChains[consumer.Name] = make(map[string]float64)
-			q.ProcessDenoms(consumer.Name, consumer.Denoms, currenciesRates)
+			for _, denom := range consumer.Denoms {
+				for _, priceFetcher := range denom.PriceFetchers() {
+					denomsByPriceFetcher[priceFetcher] = append(denomsByPriceFetcher[priceFetcher], price_fetchers.ChainWithDenom{
+						Chain:     consumer.Name,
+						DenomInfo: denom,
+					})
+				}
+			}
 		}
 	}
 
-	return PriceData{Prices: q.CurrenciesRatesToChains}, queries
-}
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
+	var denomsPrices = map[constants.PriceFetcherName][]price_fetchers.PriceInfo{}
 
-func (q *PriceFetcher) ProcessDenoms(chainName string, denoms config.DenomInfos, currenciesRates map[string]float64) {
-	for _, denom := range denoms {
-		// using coingecko response
-		if rate, ok := currenciesRates[denom.CoingeckoCurrency]; ok {
-			q.CurrenciesRatesToChains[chainName][denom.DisplayDenom] = rate
-			continue
+	for priceFetcher, denoms := range denomsByPriceFetcher {
+		wg.Add(1)
+
+		go func(priceFetcher constants.PriceFetcherName, denoms []price_fetchers.ChainWithDenom) {
+			defer wg.Done()
+
+			priceFetcherDenoms, priceFetcherQuery := q.Fetchers[priceFetcher].FetchPrices(denoms, ctx)
+
+			mutex.Lock()
+			queries = append(queries, priceFetcherQuery)
+			denomsPrices[priceFetcher] = priceFetcherDenoms
+			mutex.Unlock()
+		}(priceFetcher, denoms)
+	}
+
+	wg.Wait()
+
+	prices := map[string]map[string]PriceInfo{}
+
+	for priceFetcher, denomInfos := range denomsPrices {
+		for _, denomInfo := range denomInfos {
+			if _, ok := prices[denomInfo.Chain]; !ok {
+				prices[denomInfo.Chain] = map[string]PriceInfo{}
+			}
+
+			prices[denomInfo.Chain][denomInfo.Denom] = PriceInfo{
+				Source:       priceFetcher,
+				BaseCurrency: denomInfo.BaseCurrency,
+				Value:        denomInfo.Price,
+			}
 		}
 	}
+
+	return PriceData{Prices: prices}, queries
 }
 
 func (q *PriceFetcher) Name() constants.FetcherName {
