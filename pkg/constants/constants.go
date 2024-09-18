@@ -5,12 +5,11 @@ type FetcherName string
 type PriceFetcherName string
 
 const (
-	FetcherNameSlashingParams      FetcherName = "slashing-params"
-	FetcherNameSoftOptOutThreshold FetcherName = "soft-opt-out-threshold"
-	FetcherNameCommission          FetcherName = "commission"
-	FetcherNameDelegations         FetcherName = "delegations"
-	FetcherNameValidatorConsumers  FetcherName = "validator-consumers"
-	FetcherNameConsumerCommission  FetcherName = "consumer-commission"
+	FetcherNameSlashingParams     FetcherName = "slashing-params"
+	FetcherNameCommission         FetcherName = "commission"
+	FetcherNameDelegations        FetcherName = "delegations"
+	FetcherNameValidatorConsumers FetcherName = "validator-consumers"
+	FetcherNameConsumerCommission FetcherName = "consumer-commission"
 
 	FetcherNameUnbonds            FetcherName = "unbonds"
 	FetcherNameSigningInfo        FetcherName = "signing-info"
