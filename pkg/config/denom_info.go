@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"main/pkg/constants"
 	"main/pkg/types"
 	"math"
 
@@ -41,6 +42,14 @@ func (d *DenomInfo) DisplayWarnings(chain *Chain) []Warning {
 	}
 
 	return warnings
+}
+
+func (d *DenomInfo) PriceFetchers() []constants.PriceFetcherName {
+	if d.CoingeckoCurrency != "" {
+		return []constants.PriceFetcherName{constants.PriceFetcherNameCoingecko}
+	}
+
+	return []constants.PriceFetcherName{}
 }
 
 type DenomInfos []*DenomInfo

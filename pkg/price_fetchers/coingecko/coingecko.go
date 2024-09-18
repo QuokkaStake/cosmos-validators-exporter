@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"main/pkg/config"
+	"main/pkg/constants"
 	"main/pkg/http"
+	"main/pkg/price_fetchers"
 	"main/pkg/types"
+	"main/pkg/utils"
 	"strings"
 
 	"go.opentelemetry.io/otel/trace"
@@ -36,17 +39,25 @@ func NewCoingecko(
 }
 
 func (c *Coingecko) FetchPrices(
-	currencies []string,
+	denoms []price_fetchers.ChainWithDenom,
 	ctx context.Context,
-) (map[string]float64, *types.QueryInfo) {
+) ([]price_fetchers.PriceInfo, *types.QueryInfo) {
 	childCtx, querierSpan := c.Tracer.Start(
 		ctx,
 		"Fetching Coingecko prices",
 	)
 	defer querierSpan.End()
 
+	currencies := utils.Map(denoms, func(c price_fetchers.ChainWithDenom) string {
+		return c.DenomInfo.CoingeckoCurrency
+	})
+
 	ids := strings.Join(currencies, ",")
-	url := fmt.Sprintf("https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=usd", ids)
+	url := fmt.Sprintf(
+		"https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=%s",
+		ids,
+		constants.CoingeckoBaseCurrency,
+	)
 
 	var response Response
 	queryInfo, _, err := c.Client.Get(url, &response, types.HTTPPredicateAlwaysPass(), childCtx)
@@ -57,13 +68,26 @@ func (c *Coingecko) FetchPrices(
 		return nil, &queryInfo
 	}
 
-	prices := map[string]float64{}
+	pricesInfo := []price_fetchers.PriceInfo{}
 
-	for currencyKey, currencyValue := range response {
-		for _, baseCurrencyValue := range currencyValue {
-			prices[currencyKey] = baseCurrencyValue
+	for _, denom := range denoms {
+		currency, ok := response[denom.DenomInfo.CoingeckoCurrency]
+		if !ok {
+			continue
 		}
+
+		value, ok := currency[constants.CoingeckoBaseCurrency]
+		if !ok {
+			continue
+		}
+
+		pricesInfo = append(pricesInfo, price_fetchers.PriceInfo{
+			Chain:        denom.Chain,
+			Denom:        denom.DenomInfo.DisplayDenom,
+			BaseCurrency: constants.CoingeckoBaseCurrency,
+			Price:        value,
+		})
 	}
 
-	return prices, &queryInfo
+	return pricesInfo, &queryInfo
 }

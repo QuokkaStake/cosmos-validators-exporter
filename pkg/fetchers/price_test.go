@@ -7,7 +7,6 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	loggerPkg "main/pkg/logger"
-	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	"main/pkg/tracing"
 	"testing"
 
@@ -25,13 +24,11 @@ func TestPriceFetcherBase(t *testing.T) {
 	config := &configPkg.Config{Chains: chains}
 	logger := loggerPkg.GetNopLogger()
 	tracer := tracing.InitNoopTracer()
-	coingecko := coingeckoPkg.NewCoingecko(config, logger, tracer)
 
 	fetcher := NewPriceFetcher(
 		logger,
 		config,
 		tracer,
-		coingecko,
 	)
 
 	assert.NotNil(t, fetcher)
@@ -56,13 +53,11 @@ func TestPriceFetcherProviderCoingeckoError(t *testing.T) {
 	config := &configPkg.Config{Chains: chains}
 	logger := loggerPkg.GetNopLogger()
 	tracer := tracing.InitNoopTracer()
-	coingecko := coingeckoPkg.NewCoingecko(config, logger, tracer)
 
 	fetcher := NewPriceFetcher(
 		logger,
 		config,
 		tracer,
-		coingecko,
 	)
 	data, queries := fetcher.Fetch(context.Background())
 	assert.Len(t, queries, 1)
@@ -70,10 +65,7 @@ func TestPriceFetcherProviderCoingeckoError(t *testing.T) {
 
 	balanceData, ok := data.(PriceData)
 	assert.True(t, ok)
-
-	chainData, ok := balanceData.Prices["chain"]
-	assert.True(t, ok)
-	assert.Empty(t, chainData)
+	assert.Empty(t, balanceData.Prices)
 }
 
 //nolint:paralleltest // disabled due to httpmock usage
@@ -94,13 +86,11 @@ func TestPriceFetcherProviderCoingeckoSuccess(t *testing.T) {
 	config := &configPkg.Config{Chains: chains}
 	logger := loggerPkg.GetNopLogger()
 	tracer := tracing.InitNoopTracer()
-	coingecko := coingeckoPkg.NewCoingecko(config, logger, tracer)
 
 	fetcher := NewPriceFetcher(
 		logger,
 		config,
 		tracer,
-		coingecko,
 	)
 	data, queries := fetcher.Fetch(context.Background())
 	assert.Len(t, queries, 1)
@@ -114,7 +104,9 @@ func TestPriceFetcherProviderCoingeckoSuccess(t *testing.T) {
 
 	denomData, ok := chainData["atom"]
 	assert.True(t, ok)
-	assert.InEpsilon(t, 6.71, denomData, 0.01)
+	assert.InEpsilon(t, 6.71, denomData.Value, 0.01)
+	assert.Equal(t, constants.CoingeckoBaseCurrency, denomData.BaseCurrency)
+	assert.Equal(t, constants.PriceFetcherNameCoingecko, denomData.Source)
 }
 
 //nolint:paralleltest // disabled due to httpmock usage
@@ -124,27 +116,29 @@ func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.coingecko.com/api/v3/simple/price?ids=cosmos&vs_currencies=usd",
+		"https://api.coingecko.com/api/v3/simple/price?ids=cosmos,test&vs_currencies=usd",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("coingecko.json")),
 	)
 
 	chains := []*configPkg.Chain{{
 		Name: "chain",
 		ConsumerChains: []*configPkg.ConsumerChain{{
-			Name:   "consumer",
-			Denoms: configPkg.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", CoingeckoCurrency: "cosmos"}},
+			Name: "consumer",
+			Denoms: configPkg.DenomInfos{
+				{Denom: "uatom", DisplayDenom: "atom", CoingeckoCurrency: "cosmos"},
+				{Denom: "utest", DisplayDenom: "test", CoingeckoCurrency: "test"},
+				{Denom: "ustake", DisplayDenom: "stake"},
+			},
 		}},
 	}}
 	config := &configPkg.Config{Chains: chains}
 	logger := loggerPkg.GetNopLogger()
 	tracer := tracing.InitNoopTracer()
-	coingecko := coingeckoPkg.NewCoingecko(config, logger, tracer)
 
 	fetcher := NewPriceFetcher(
 		logger,
 		config,
 		tracer,
-		coingecko,
 	)
 	data, queries := fetcher.Fetch(context.Background())
 	assert.Len(t, queries, 1)
@@ -158,5 +152,7 @@ func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 
 	denomData, ok := chainData["atom"]
 	assert.True(t, ok)
-	assert.InEpsilon(t, 6.71, denomData, 0.01)
+	assert.InEpsilon(t, 6.71, denomData.Value, 0.01)
+	assert.Equal(t, constants.CoingeckoBaseCurrency, denomData.BaseCurrency)
+	assert.Equal(t, constants.PriceFetcherNameCoingecko, denomData.Source)
 }

@@ -50,28 +50,6 @@ func (c *Config) DisplayWarnings() []Warning {
 	return warnings
 }
 
-func (c *Config) GetCoingeckoCurrencies() []string {
-	currencies := []string{}
-
-	for _, chain := range c.Chains {
-		for _, denom := range chain.Denoms {
-			if denom.CoingeckoCurrency != "" {
-				currencies = append(currencies, denom.CoingeckoCurrency)
-			}
-		}
-
-		for _, consumerChain := range chain.ConsumerChains {
-			for _, denom := range consumerChain.Denoms {
-				if denom.CoingeckoCurrency != "" {
-					currencies = append(currencies, denom.CoingeckoCurrency)
-				}
-			}
-		}
-	}
-
-	return currencies
-}
-
 func GetConfig(path string, filesystem fs.FS) (*Config, error) {
 	configBytes, err := filesystem.ReadFile(path)
 	if err != nil {

@@ -5,7 +5,6 @@ import (
 	fetchersPkg "main/pkg/fetchers"
 	"main/pkg/fs"
 	generatorsPkg "main/pkg/generators"
-	coingeckoPkg "main/pkg/price_fetchers/coingecko"
 	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/tracing"
@@ -69,7 +68,6 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	}
 
 	tracer := tracing.InitTracer(appConfig.TracingConfig, version)
-	coingecko := coingeckoPkg.NewCoingecko(appConfig, logger, tracer)
 
 	rpcs := make(map[string]*tendermint.RPCWithConsumers, len(appConfig.Chains))
 
@@ -90,7 +88,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		fetchersPkg.NewValidatorsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerValidatorsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewStakingParamsFetcher(logger, appConfig.Chains, rpcs, tracer),
-		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer, coingecko),
+		fetchersPkg.NewPriceFetcher(logger, appConfig, tracer),
 		fetchersPkg.NewNodeInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewConsumerInfoFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewValidatorConsumersFetcher(logger, appConfig.Chains, rpcs, tracer),

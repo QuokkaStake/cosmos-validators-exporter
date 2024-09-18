@@ -26,9 +26,13 @@ func TestPriceGeneratorNotEmptyState(t *testing.T) {
 
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNamePrice, fetchers.PriceData{
-		Prices: map[string]map[string]float64{
+		Prices: map[string]map[string]fetchers.PriceInfo{
 			"chain": {
-				"denom": 0.01,
+				"denom": fetchers.PriceInfo{
+					Value:        0.01,
+					Source:       constants.PriceFetcherNameCoingecko,
+					BaseCurrency: constants.CoingeckoBaseCurrency,
+				},
 			},
 		},
 	})
@@ -40,7 +44,9 @@ func TestPriceGeneratorNotEmptyState(t *testing.T) {
 	gauge, ok := results[0].(*prometheus.GaugeVec)
 	assert.True(t, ok)
 	assert.InEpsilon(t, 0.01, testutil.ToFloat64(gauge.With(prometheus.Labels{
-		"chain": "chain",
-		"denom": "denom",
+		"chain":         "chain",
+		"denom":         "denom",
+		"source":        string(constants.PriceFetcherNameCoingecko),
+		"base_currency": constants.CoingeckoBaseCurrency,
 	})), 0.01)
 }
