@@ -116,7 +116,7 @@ func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.coingecko.com/api/v3/simple/price?ids=cosmos&vs_currencies=usd",
+		"https://api.coingecko.com/api/v3/simple/price?ids=cosmos,test&vs_currencies=usd",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("coingecko.json")),
 	)
 
@@ -126,6 +126,7 @@ func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 			Name: "consumer",
 			Denoms: configPkg.DenomInfos{
 				{Denom: "uatom", DisplayDenom: "atom", CoingeckoCurrency: "cosmos"},
+				{Denom: "utest", DisplayDenom: "test", CoingeckoCurrency: "test"},
 				{Denom: "ustake", DisplayDenom: "stake"},
 			},
 		}},
