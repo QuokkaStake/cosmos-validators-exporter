@@ -77,7 +77,6 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 
 	fetchers := []fetchersPkg.Fetcher{
 		fetchersPkg.NewSlashingParamsFetcher(logger, appConfig.Chains, rpcs, tracer),
-		fetchersPkg.NewSoftOptOutThresholdFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewCommissionFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewDelegationsFetcher(logger, appConfig.Chains, rpcs, tracer),
 		fetchersPkg.NewUnbondsFetcher(logger, appConfig.Chains, rpcs, tracer),
@@ -99,7 +98,6 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 
 	generators := []generatorsPkg.Generator{
 		generatorsPkg.NewSlashingParamsGenerator(),
-		generatorsPkg.NewSoftOptOutThresholdGenerator(),
 		generatorsPkg.NewIsConsumerGenerator(appConfig.Chains),
 		generatorsPkg.NewUptimeGenerator(),
 		generatorsPkg.NewCommissionGenerator(appConfig.Chains),
