@@ -39,9 +39,18 @@ func (c *Client) Get(
 	childCtx, span := c.tracer.Start(ctx, "HTTP request")
 	defer span.End()
 
+	var transport http.RoundTripper
+
+	transportRaw, ok := http.DefaultTransport.(*http.Transport)
+	if ok {
+		transport = transportRaw.Clone()
+	} else {
+		transport = http.DefaultTransport
+	}
+
 	client := &http.Client{
-		Timeout:   10 * 1000000000,
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
+		Timeout:   10 * time.Second,
+		Transport: otelhttp.NewTransport(transport),
 	}
 	start := time.Now()
 
