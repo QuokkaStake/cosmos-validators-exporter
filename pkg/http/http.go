@@ -49,7 +49,7 @@ func (c *Client) Get(
 	}
 
 	client := &http.Client{
-		Timeout:   10 * 1000000000,
+		Timeout:   10 * time.Second,
 		Transport: otelhttp.NewTransport(transport),
 	}
 	start := time.Now()
