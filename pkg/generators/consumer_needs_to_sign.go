@@ -24,16 +24,21 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 		return []prometheus.Collector{}
 	}
 
+	consumerInfosRaw, ok := state.Get(constants.FetcherNameConsumerInfo)
+	if !ok {
+		return []prometheus.Collector{}
+	}
+
 	allValidatorsConsumers, _ := allValidatorsConsumersRaw.(fetchersPkg.ValidatorConsumersData)
+	consumerInfos, _ := consumerInfosRaw.(fetchersPkg.ConsumerInfoData)
 
 	needsToSignGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: constants.MetricsPrefix + "needs_to_sign",
+			Name: constants.MetricsPrefix + "consumer_needs_to_sign",
 			Help: "Top-N percent threshold for consumer chains.",
 		},
 		[]string{
-			"chain",
-			"chain_id",
+			"consumer_id",
 			"provider",
 			"address",
 		},
@@ -45,20 +50,24 @@ func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometh
 			continue
 		}
 
+		chainConsumers, ok := consumerInfos.Info[chain.Name]
+		if !ok {
+			continue
+		}
+
 		for _, validator := range chain.Validators {
 			validatorConsumers, ok := chainInfos[validator.Address]
 			if !ok {
 				continue
 			}
 
-			for _, consumer := range chain.ConsumerChains {
-				_, needsToSign := validatorConsumers[consumer.ChainID]
+			for _, consumer := range chainConsumers {
+				_, needsToSign := validatorConsumers[consumer.ConsumerID]
 
 				needsToSignGauge.With(prometheus.Labels{
-					"chain":    consumer.Name,
-					"chain_id": consumer.ChainID,
-					"provider": chain.Name,
-					"address":  validator.Address,
+					"consumer_id": consumer.ConsumerID,
+					"provider":    chain.Name,
+					"address":     validator.Address,
 				}).Set(utils.BoolToFloat64(needsToSign))
 			}
 		}

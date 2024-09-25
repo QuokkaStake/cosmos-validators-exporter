@@ -88,7 +88,7 @@ func (f *ConsumerInfoFetcher) processChain(
 		f.Logger.Error().
 			Err(err).
 			Str("chain", chain.Name).
-			Msg("Error querying consumer validators")
+			Msg("Error querying consumer info")
 		return
 	}
 
@@ -99,6 +99,6 @@ func (f *ConsumerInfoFetcher) processChain(
 	f.allInfos[chain.Name] = map[string]types.ConsumerChainInfo{}
 
 	for _, consumerInfo := range allInfosList.Chains {
-		f.allInfos[chain.Name][consumerInfo.ChainID] = consumerInfo
+		f.allInfos[chain.Name][consumerInfo.ConsumerID] = consumerInfo
 	}
 }

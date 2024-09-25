@@ -113,7 +113,7 @@ func (q *ValidatorConsumersFetcher) processChain(
 	}
 
 	q.allValidatorsConsumers[chainName][validator.Address] = map[string]bool{}
-	for _, chainID := range validatorConsumers.ConsumerChainIds {
-		q.allValidatorsConsumers[chainName][validator.Address][chainID] = true
+	for _, consumerID := range validatorConsumers.ConsumerIds {
+		q.allValidatorsConsumers[chainName][validator.Address][consumerID] = true
 	}
 }

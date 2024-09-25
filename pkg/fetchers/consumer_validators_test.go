@@ -59,8 +59,8 @@ func TestConsumerValidatorsFetcherQueryDisabled(t *testing.T) {
 		Queries:          map[string]bool{"consumer-validators": false},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -96,7 +96,7 @@ func TestConsumerValidatorsFetcherQueryError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_validators/consumer",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_validators/0",
 		httpmock.NewErrorResponder(errors.New("error")),
 	)
 
@@ -107,8 +107,8 @@ func TestConsumerValidatorsFetcherQueryError(t *testing.T) {
 		Validators:       []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -142,7 +142,7 @@ func TestConsumerValidatorsFetcherNodeError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_validators/consumer",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_validators/0",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("error.json")),
 	)
 
@@ -153,8 +153,8 @@ func TestConsumerValidatorsFetcherNodeError(t *testing.T) {
 		Validators:       []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -188,7 +188,7 @@ func TestConsumerValidatorsFetcherQuerySuccess(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_validators/consumer",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_validators/0",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("consumer-validators.json")),
 	)
 
@@ -199,8 +199,8 @@ func TestConsumerValidatorsFetcherQuerySuccess(t *testing.T) {
 		Validators:       []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}

@@ -321,7 +321,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyQueryError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr?chain_id=consumer&provider_address=cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewErrorResponder(errors.New("error")),
 	)
 
@@ -337,7 +337,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyQueryError(t *testing.T) {
 		ConsumerChains: []*config.ConsumerChain{
 			{
 				Name:                "consumer",
-				ChainID:             "consumer",
+				ConsumerID:          "0",
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
@@ -378,7 +378,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyNodeError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr?chain_id=consumer&provider_address=cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("error.json")),
 	)
 
@@ -394,7 +394,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyNodeError(t *testing.T) {
 		ConsumerChains: []*config.ConsumerChain{
 			{
 				Name:                "consumer",
-				ChainID:             "consumer",
+				ConsumerID:          "0",
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
@@ -485,7 +485,7 @@ func TestSigningInfoFetcherConsumerInvalidValoper(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr?chain_id=consumer&provider_address=cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("assigned-key.json")),
 	)
 
@@ -501,7 +501,7 @@ func TestSigningInfoFetcherConsumerInvalidValoper(t *testing.T) {
 		ConsumerChains: []*config.ConsumerChain{
 			{
 				Name:                "consumer",
-				ChainID:             "consumer",
+				ConsumerID:          "0",
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
@@ -542,7 +542,7 @@ func TestSigningInfoFetcherConsumerSuccessWithAssignedKey(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr?chain_id=consumer&provider_address=cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("assigned-key.json")),
 	)
 
@@ -564,7 +564,7 @@ func TestSigningInfoFetcherConsumerSuccessWithAssignedKey(t *testing.T) {
 		ConsumerChains: []*config.ConsumerChain{
 			{
 				Name:                "consumer",
-				ChainID:             "consumer",
+				ConsumerID:          "0",
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
@@ -609,7 +609,7 @@ func TestSigningInfoFetcherConsumerSuccessWithoutAssignedKey(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr?chain_id=consumer&provider_address=cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/validator_consumer_addr/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("assigned-key-empty.json")),
 	)
 
@@ -631,7 +631,7 @@ func TestSigningInfoFetcherConsumerSuccessWithoutAssignedKey(t *testing.T) {
 		ConsumerChains: []*config.ConsumerChain{
 			{
 				Name:                "consumer",
-				ChainID:             "consumer",
+				ConsumerID:          "0",
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
@@ -692,7 +692,7 @@ func TestSigningInfoFetcherConsumerSuccessWithAssignedKeyQueryDisabled(t *testin
 		ConsumerChains: []*config.ConsumerChain{
 			{
 				Name:                "consumer",
-				ChainID:             "consumer",
+				ConsumerID:          "0",
 				LCDEndpoint:         "https://api.neutron.quokkastake.io",
 				BechWalletPrefix:    "neutron",
 				BechConsensusPrefix: "neutronvalcons",
