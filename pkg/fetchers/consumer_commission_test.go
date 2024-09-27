@@ -60,8 +60,8 @@ func TestConsumerCommissionFetcherNoConsensusAddress(t *testing.T) {
 		}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -104,8 +104,8 @@ func TestConsumerCommissionFetcherQueryDisabled(t *testing.T) {
 		Queries: map[string]bool{"consumer-commission": false},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -141,7 +141,7 @@ func TestConsumerCommissionFetcherQueryError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_commission_rate/consumer/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_commission_rate/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewErrorResponder(errors.New("error")),
 	)
 
@@ -155,8 +155,8 @@ func TestConsumerCommissionFetcherQueryError(t *testing.T) {
 		}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -193,7 +193,7 @@ func TestConsumerCommissionFetcherNodeError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_commission_rate/consumer/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_commission_rate/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("error.json")),
 	)
 
@@ -207,8 +207,8 @@ func TestConsumerCommissionFetcherNodeError(t *testing.T) {
 		}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}
@@ -245,7 +245,7 @@ func TestConsumerCommissionFetcherQuerySuccess(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_commission_rate/consumer/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_commission_rate/0/cosmosvalcons1rt4g447zhv6jcqwdl447y88guwm0eevnrelgzc",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("consumer-commission.json")),
 	)
 
@@ -259,8 +259,8 @@ func TestConsumerCommissionFetcherQuerySuccess(t *testing.T) {
 		}},
 		ConsumerChains: []*config.ConsumerChain{
 			{
-				Name:    "consumer",
-				ChainID: "consumer",
+				Name:       "consumer",
+				ConsumerID: "0",
 			},
 		},
 	}}

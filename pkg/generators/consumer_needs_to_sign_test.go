@@ -5,6 +5,7 @@ import (
 	"main/pkg/constants"
 	"main/pkg/fetchers"
 	statePkg "main/pkg/state"
+	"main/pkg/types"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,6 +23,25 @@ func TestConsumerNeedsToSignGeneratorNoState(t *testing.T) {
 	assert.Empty(t, results)
 }
 
+func TestConsumerNeedsToSignGeneratorNoConsumerInfo(t *testing.T) {
+	t.Parallel()
+
+	state := statePkg.NewState()
+	state.Set(constants.FetcherNameValidatorConsumers, fetchers.ValidatorConsumersData{
+		Infos: map[string]map[string]map[string]bool{
+			"provider": {
+				"validator": map[string]bool{
+					"consumer-id": true,
+				},
+			},
+		},
+	})
+
+	generator := NewConsumerNeedsToSignGenerator([]*config.Chain{})
+	results := generator.Generate(state)
+	assert.Empty(t, results)
+}
+
 func TestConsumerNeedsToSignGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
@@ -30,7 +50,17 @@ func TestConsumerNeedsToSignGeneratorNotEmptyState(t *testing.T) {
 		Infos: map[string]map[string]map[string]bool{
 			"provider": {
 				"validator": map[string]bool{
-					"consumer-chain-id": true,
+					"consumer-id": true,
+				},
+			},
+		},
+	})
+
+	state.Set(constants.FetcherNameConsumerInfo, fetchers.ConsumerInfoData{
+		Info: map[string]map[string]types.ConsumerChainInfo{
+			"provider": {
+				"consumer-id": types.ConsumerChainInfo{
+					ConsumerID: "consumer-id",
 				},
 			},
 		},
@@ -39,13 +69,6 @@ func TestConsumerNeedsToSignGeneratorNotEmptyState(t *testing.T) {
 	chains := []*config.Chain{{
 		Name:       "provider",
 		Validators: []config.Validator{{Address: "validator"}, {Address: "othervalidator"}},
-		ConsumerChains: []*config.ConsumerChain{{
-			Name:    "consumer",
-			ChainID: "consumer-chain-id",
-		}, {
-			Name:    "otherconsumer",
-			ChainID: "otherconsumer-chain-id",
-		}},
 	}, {Name: "otherprovider"}}
 
 	generator := NewConsumerNeedsToSignGenerator(chains)
@@ -54,17 +77,10 @@ func TestConsumerNeedsToSignGeneratorNotEmptyState(t *testing.T) {
 
 	gauge, ok := results[0].(*prometheus.GaugeVec)
 	assert.True(t, ok)
-	assert.Equal(t, 2, testutil.CollectAndCount(gauge))
+	assert.Equal(t, 1, testutil.CollectAndCount(gauge))
 	assert.InEpsilon(t, float64(1), testutil.ToFloat64(gauge.With(prometheus.Labels{
-		"chain":    "consumer",
-		"chain_id": "consumer-chain-id",
-		"provider": "provider",
-		"address":  "validator",
+		"consumer_id": "consumer-id",
+		"provider":    "provider",
+		"address":     "validator",
 	})), 0.01)
-	assert.Zero(t, testutil.ToFloat64(gauge.With(prometheus.Labels{
-		"chain":    "otherconsumer",
-		"chain_id": "otherconsumer-chain-id",
-		"provider": "provider",
-		"address":  "validator",
-	})))
 }

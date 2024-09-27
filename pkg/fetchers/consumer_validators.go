@@ -75,7 +75,7 @@ func (f *ConsumerValidatorsFetcher) processChain(
 ) {
 	defer f.wg.Done()
 
-	allValidatorsList, queryInfo, err := rpc.GetConsumerValidators(ctx, chain.ChainID)
+	allValidatorsList, queryInfo, err := rpc.GetConsumerValidators(ctx, chain.ConsumerID)
 
 	f.mutex.Lock()
 	defer f.mutex.Unlock()

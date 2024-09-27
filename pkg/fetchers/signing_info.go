@@ -152,7 +152,7 @@ func (q *SigningInfoFetcher) processConsumerChain(
 	// 1. Fetching assigned key.
 	assignedKey, queryInfo, err := providerRPC.GetConsumerAssignedKey(
 		validator.ConsensusAddress,
-		chain.ChainID,
+		chain.ConsumerID,
 		ctx,
 	)
 

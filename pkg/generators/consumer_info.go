@@ -1,10 +1,12 @@
 package generators
 
 import (
+	"fmt"
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
+	"main/pkg/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -25,26 +27,38 @@ func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Col
 
 	consumerInfos, _ := consumerInfosRaw.(fetchersPkg.ConsumerInfoData)
 
+	consumerInfoGauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: constants.MetricsPrefix + "consumer_info",
+			Help: "Consumer chain info",
+		},
+		[]string{
+			"chain_id",
+			"consumer_id",
+			"phase",
+			"allow_inactive_vals",
+			"provider",
+		},
+	)
+
 	thresholdPercentGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: constants.MetricsPrefix + "threshold_percent",
+			Name: constants.MetricsPrefix + "consumer_top_n",
 			Help: "Top-N percent threshold for consumer chains.",
 		},
 		[]string{
-			"chain",
-			"chain_id",
+			"consumer_id",
 			"provider",
 		},
 	)
 
 	minStakeGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: constants.MetricsPrefix + "minimal_stake",
+			Name: constants.MetricsPrefix + "consumer_minimal_stake",
 			Help: "Minimal stake to be required to sign blocks on this consumer chain",
 		},
 		[]string{
-			"chain",
-			"chain_id",
+			"consumer_id",
 			"provider",
 		},
 	)
@@ -55,25 +69,26 @@ func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Col
 			continue
 		}
 
-		for _, consumer := range chain.ConsumerChains {
-			consumerInfo, ok := consumersInfo[consumer.ChainID]
-			if !ok {
-				continue
-			}
+		for _, consumerInfo := range consumersInfo {
+			consumerInfoGauge.With(prometheus.Labels{
+				"chain_id":            consumerInfo.ChainID,
+				"consumer_id":         consumerInfo.ConsumerID,
+				"phase":               consumerInfo.Phase,
+				"allow_inactive_vals": fmt.Sprintf("%.0f", utils.BoolToFloat64(consumerInfo.AllowInactiveVals)),
+				"provider":            chain.Name,
+			}).Set(1)
 
 			thresholdPercentGauge.With(prometheus.Labels{
-				"chain":    consumer.Name,
-				"chain_id": consumer.ChainID,
-				"provider": chain.Name,
+				"consumer_id": consumerInfo.ConsumerID,
+				"provider":    chain.Name,
 			}).Set(float64(consumerInfo.TopN) / 100)
 
 			minStakeGauge.With(prometheus.Labels{
-				"chain":    consumer.Name,
-				"chain_id": consumer.ChainID,
-				"provider": chain.Name,
+				"consumer_id": consumerInfo.ConsumerID,
+				"provider":    chain.Name,
 			}).Set(float64(consumerInfo.MinPowerInTopN.Int64()))
 		}
 	}
 
-	return []prometheus.Collector{thresholdPercentGauge, minStakeGauge}
+	return []prometheus.Collector{consumerInfoGauge, thresholdPercentGauge, minStakeGauge}
 }

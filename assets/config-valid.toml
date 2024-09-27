@@ -29,7 +29,7 @@ denoms = [
 [[chains.consumers]]
 name = "neutron"
 lcd-endpoint = "https://api.neutron.quokkastake.io"
-chain-id = "neutron-1"
+consumer-id = "0"
 base-denom = "untrn"
 bech-wallet-prefix = "neutron"
 bech-validator-prefix = "neutronvaloper"

@@ -10,7 +10,7 @@ type ConsumerChain struct {
 	LCDEndpoint         string     `toml:"lcd-endpoint"`
 	BaseDenom           string     `toml:"base-denom"`
 	Denoms              DenomInfos `toml:"denoms"`
-	ChainID             string     `toml:"chain-id"`
+	ConsumerID          string     `toml:"consumer-id"`
 	BechWalletPrefix    string     `toml:"bech-wallet-prefix"`
 	BechValidatorPrefix string     `toml:"bech-validator-prefix"`
 	BechConsensusPrefix string     `toml:"bech-consensus-prefix"`
@@ -38,8 +38,8 @@ func (c *ConsumerChain) Validate() error {
 		return errors.New("no LCD endpoint provided")
 	}
 
-	if c.ChainID == "" {
-		return errors.New("no chain-id provided")
+	if c.ConsumerID == "" {
+		return errors.New("no consumer-id provided")
 	}
 
 	if c.BaseDenom == "" {

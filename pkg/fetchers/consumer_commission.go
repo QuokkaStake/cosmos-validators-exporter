@@ -87,7 +87,7 @@ func (f *ConsumerCommissionFetcher) processChain(
 ) {
 	defer f.wg.Done()
 
-	commission, queryInfo, err := rpc.GetConsumerCommission(ctx, validator.ConsensusAddress, chain.ChainID)
+	commission, queryInfo, err := rpc.GetConsumerCommission(ctx, validator.ConsensusAddress, chain.ConsumerID)
 
 	f.mutex.Lock()
 	defer f.mutex.Unlock()

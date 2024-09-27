@@ -8,7 +8,9 @@
       "validators_power_cap": 0,
       "validator_set_cap": 0,
       "allowlist": [],
-      "denylist": []
+      "denylist": [],
+      "consumer_id": "0",
+      "phase": "CONSUMER_PHASE_LAUNCHED"
     }
   ]
 }

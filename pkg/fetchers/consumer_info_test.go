@@ -121,8 +121,8 @@ func TestConsumerInfoFetcherQueryError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_chains",
-		httpmock.NewErrorResponder(errors.New("error")),
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_chains/0",
+		httpmock.NewErrorResponder(errors.New("custom error")),
 	)
 
 	chains := []*config.Chain{{
@@ -162,7 +162,7 @@ func TestConsumerInfoFetcherNodeError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_chains",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_chains/0",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("error.json")),
 	)
 
@@ -203,7 +203,7 @@ func TestConsumerInfoFetcherQuerySuccess(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_chains",
+		"https://api.cosmos.quokkastake.io/interchain_security/ccv/provider/consumer_chains/0",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("consumer-info.json")),
 	)
 

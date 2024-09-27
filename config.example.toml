@@ -118,8 +118,8 @@ node-info = true
 name = "neutron"
 # LCD endpoint of a consumer chain. Required.
 lcd-endpoint = "https://api.neutron.quokkastake.io"
-# Consumer chain's chain-id. Required.
-chain-id = "neutron-1"
+# Consumer chain's consumer-id. Required.
+consumer-id = "0"
 # Base denom, same as in provider config.
 base-denom = "untrn"
 # Bech32 prefix of a wallet on this consumer chain. Required for getting validators' wallet balance.

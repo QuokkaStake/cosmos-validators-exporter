@@ -48,7 +48,7 @@ func TestConsumerChainValidateNoChainId(t *testing.T) {
 func TestConsumerChainValidateNoBaseDenom(t *testing.T) {
 	t.Parallel()
 
-	chain := ConsumerChain{Name: "test", LCDEndpoint: "test", ChainID: "test"}
+	chain := ConsumerChain{Name: "test", LCDEndpoint: "test", ConsumerID: "0"}
 	err := chain.Validate()
 	require.Error(t, err)
 }
@@ -59,7 +59,7 @@ func TestConsumerChainValidateInvalidDenom(t *testing.T) {
 	chain := ConsumerChain{
 		Name:        "test",
 		LCDEndpoint: "test",
-		ChainID:     "test",
+		ConsumerID:  "0",
 		BaseDenom:   "denom",
 		Denoms:      DenomInfos{{}},
 	}
@@ -73,7 +73,7 @@ func TestConsumerChainValidateValid(t *testing.T) {
 	chain := ConsumerChain{
 		Name:        "test",
 		LCDEndpoint: "test",
-		ChainID:     "test",
+		ConsumerID:  "0",
 		BaseDenom:   "denom",
 		Denoms:      DenomInfos{{Denom: "ustake", DisplayDenom: "stake"}},
 	}

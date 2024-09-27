@@ -190,7 +190,7 @@ func (rpc *RPC) GetAllValidators(
 
 func (rpc *RPC) GetConsumerValidators(
 	ctx context.Context,
-	chainId string,
+	consumerID string,
 ) (*types.ConsumerValidatorsResponse, *types.QueryInfo, error) {
 	if !rpc.ChainQueries.Enabled("consumer-validators") {
 		return nil, nil, nil
@@ -202,7 +202,7 @@ func (rpc *RPC) GetConsumerValidators(
 	)
 	defer span.End()
 
-	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_validators/" + chainId
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_validators/" + consumerID
 
 	var response *types.ConsumerValidatorsResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)
@@ -231,7 +231,7 @@ func (rpc *RPC) GetConsumerInfo(
 	)
 	defer span.End()
 
-	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_chains"
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_chains/0" // "CONSUMER_PHASE_UNSPECIFIED"
 
 	var response *types.ConsumerInfoResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)
@@ -364,7 +364,7 @@ func (rpc *RPC) GetWalletBalance(
 
 func (rpc *RPC) GetConsumerAssignedKey(
 	valcons string,
-	chainID string,
+	consumerID string,
 	ctx context.Context,
 ) (*types.AssignedKeyResponse, *types.QueryInfo, error) {
 	if !rpc.ChainQueries.Enabled("assigned-key") {
@@ -376,15 +376,15 @@ func (rpc *RPC) GetConsumerAssignedKey(
 		"Fetching validator assigned key",
 		trace.WithAttributes(
 			attribute.String("valcons", valcons),
-			attribute.String("chain-id", chainID),
+			attribute.String("consumer-id", consumerID),
 		),
 	)
 	defer span.End()
 
 	url := fmt.Sprintf(
-		"%s/interchain_security/ccv/provider/validator_consumer_addr?chain_id=%s&provider_address=%s",
+		"%s/interchain_security/ccv/provider/validator_consumer_addr/%s/%s",
 		rpc.ChainHost,
-		chainID,
+		consumerID,
 		valcons,
 	)
 
@@ -553,7 +553,7 @@ func (rpc *RPC) GetValidatorConsumerChains(
 func (rpc *RPC) GetConsumerCommission(
 	ctx context.Context,
 	valcons string,
-	chainID string,
+	consumerID string,
 ) (*types.ConsumerCommissionResponse, *types.QueryInfo, error) {
 	if !rpc.ChainQueries.Enabled("consumer-commission") {
 		return nil, nil, nil
@@ -565,7 +565,7 @@ func (rpc *RPC) GetConsumerCommission(
 	)
 	defer span.End()
 
-	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_commission_rate/" + chainID + "/" + valcons
+	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_commission_rate/" + consumerID + "/" + valcons
 
 	var response *types.ConsumerCommissionResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)

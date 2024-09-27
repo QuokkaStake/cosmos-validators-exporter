@@ -180,9 +180,12 @@ type ConsumerValidatorsResponse struct {
 }
 
 type ConsumerChainInfo struct {
-	ChainID        string   `json:"chain_id"`
-	TopN           int      `json:"top_n"`
-	MinPowerInTopN math.Int `json:"min_power_in_top_N"`
+	ChainID           string   `json:"chain_id"`
+	ConsumerID        string   `json:"consumer_id"`
+	TopN              int      `json:"top_n"`
+	MinPowerInTopN    math.Int `json:"min_power_in_top_N"`
+	AllowInactiveVals bool     `json:"allow_inactive_vals"`
+	Phase             string   `json:"phase"`
 }
 
 type ConsumerInfoResponse struct {
@@ -191,8 +194,8 @@ type ConsumerInfoResponse struct {
 }
 
 type ValidatorConsumerChains struct {
-	Code             int      `json:"code"`
-	ConsumerChainIds []string `json:"consumer_chain_ids"`
+	Code        int      `json:"code"`
+	ConsumerIds []string `json:"consumer_ids"`
 }
 
 type ConsumerCommissionResponse struct {
