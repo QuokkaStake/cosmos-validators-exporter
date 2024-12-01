@@ -52,9 +52,9 @@ func TestValidatorRankGeneratorNotFound(t *testing.T) {
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
 				Validators: []types.Validator{
-					{DelegatorShares: math.LegacyMustNewDecFromStr("2"), OperatorAddress: "first"},
-					{DelegatorShares: math.LegacyMustNewDecFromStr("1"), OperatorAddress: "second"},
-					{DelegatorShares: math.LegacyMustNewDecFromStr("3"), OperatorAddress: "third"},
+					{Tokens: math.LegacyMustNewDecFromStr("2"), OperatorAddress: "first"},
+					{Tokens: math.LegacyMustNewDecFromStr("1"), OperatorAddress: "second"},
+					{Tokens: math.LegacyMustNewDecFromStr("3"), OperatorAddress: "third"},
 				},
 			},
 		},
@@ -81,15 +81,15 @@ func TestValidatorRankGeneratorNotActive(t *testing.T) {
 			"chain": {
 				Validators: []types.Validator{
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("2"),
+						Tokens:          math.LegacyMustNewDecFromStr("2"),
 						OperatorAddress: "cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en",
 					},
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("1"),
+						Tokens:          math.LegacyMustNewDecFromStr("1"),
 						OperatorAddress: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 					},
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("3"),
+						Tokens:          math.LegacyMustNewDecFromStr("3"),
 						OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
 					},
 				},
@@ -118,17 +118,17 @@ func TestValidatorRankGeneratorActive(t *testing.T) {
 			"chain": {
 				Validators: []types.Validator{
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("3"),
+						Tokens:          math.LegacyMustNewDecFromStr("3"),
 						OperatorAddress: "cosmosvaloper1c4k24jzduc365kywrsvf5ujz4ya6mwympnc4en",
 						Status:          constants.ValidatorStatusBonded,
 					},
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("2"),
+						Tokens:          math.LegacyMustNewDecFromStr("2"),
 						OperatorAddress: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e",
 						Status:          constants.ValidatorStatusBonded,
 					},
 					{
-						DelegatorShares: math.LegacyMustNewDecFromStr("1"),
+						Tokens:          math.LegacyMustNewDecFromStr("1"),
 						OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
 						Status:          constants.ValidatorStatusBonded,
 					},
