@@ -36,7 +36,7 @@ type Validator struct {
 	ConsensusPubkey   ConsensusPubkey      `json:"consensus_pubkey"`
 	Jailed            bool                 `json:"jailed"`
 	Status            string               `json:"status"`
-	Tokens            string               `json:"tokens"`
+	Tokens            math.LegacyDec       `json:"tokens"`
 	DelegatorShares   math.LegacyDec       `json:"delegator_shares"`
 	Description       ValidatorDescription `json:"description"`
 	UnbondingHeight   string               `json:"unbonding_height"`

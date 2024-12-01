@@ -172,7 +172,7 @@ func (rpc *RPC) GetAllValidators(
 	)
 	defer span.End()
 
-	url := rpc.ChainHost + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000"
+	url := rpc.ChainHost + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=10000"
 
 	var response *types.ValidatorsResponse
 	info, err := rpc.Get(url, &response, childQuerierCtx)

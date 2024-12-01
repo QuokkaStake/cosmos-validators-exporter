@@ -90,7 +90,7 @@ func TestValidatorsFetcherQueryError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000",
+		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=10000",
 		httpmock.NewErrorResponder(errors.New("error")),
 	)
 
@@ -130,7 +130,7 @@ func TestValidatorsFetcherNodeError(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000",
+		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=10000",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("error.json")),
 	)
 
@@ -170,7 +170,7 @@ func TestValidatorsFetcherQuerySuccess(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000",
+		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=10000",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("validators.json")),
 	)
 

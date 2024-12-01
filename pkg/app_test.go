@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,12 +55,11 @@ func TestAppFailToStart(t *testing.T) {
 }
 
 //nolint:paralleltest // disabled
-func TestAppStopOperation(t *testing.T) {
+func TestAppStopOperation(_ *testing.T) {
 	filesystem := &fs.TestFS{}
 
 	app := NewApp("config-valid.toml", filesystem, "1.2.3")
 	app.Stop()
-	assert.True(t, true)
 }
 
 //nolint:paralleltest // disabled
@@ -88,7 +86,7 @@ func TestAppLoadConfigOk(t *testing.T) {
 
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=1000",
+		"https://api.cosmos.quokkastake.io/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=10000",
 		httpmock.NewBytesResponder(200, assets.GetBytesOrPanic("validators.json")),
 	)
 
