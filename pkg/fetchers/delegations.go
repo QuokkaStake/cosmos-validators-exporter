@@ -37,8 +37,13 @@ func NewDelegationsFetcher(
 	}
 }
 
+func (q *DelegationsFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *DelegationsFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 

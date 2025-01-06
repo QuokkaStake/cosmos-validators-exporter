@@ -1,12 +1,10 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type BalanceGenerator struct {
@@ -17,8 +15,8 @@ func NewBalanceGenerator(chains []*config.Chain) *BalanceGenerator {
 	return &BalanceGenerator{Chains: chains}
 }
 
-func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameBalance)
+func (g *BalanceGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.BalanceData](state, constants.FetcherNameBalance)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +28,6 @@ func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 		},
 		[]string{"chain", "address", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.BalanceData)
 
 	for _, chain := range g.Chains {
 		for _, consumer := range chain.ConsumerChains {

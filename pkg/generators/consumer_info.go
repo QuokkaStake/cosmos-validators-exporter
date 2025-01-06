@@ -5,7 +5,6 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -19,13 +18,11 @@ func NewConsumerInfoGenerator(chains []*config.Chain) *ConsumerInfoGenerator {
 	return &ConsumerInfoGenerator{Chains: chains}
 }
 
-func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	consumerInfosRaw, ok := state.Get(constants.FetcherNameConsumerInfo)
+func (g *ConsumerInfoGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	consumerInfos, ok := fetchersPkg.StateGet[fetchersPkg.ConsumerInfoData](state, constants.FetcherNameConsumerInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	consumerInfos, _ := consumerInfosRaw.(fetchersPkg.ConsumerInfoData)
 
 	consumerInfoGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

@@ -1,11 +1,9 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SigningInfoGenerator struct {
@@ -15,8 +13,8 @@ func NewSigningInfoGenerator() *SigningInfoGenerator {
 	return &SigningInfoGenerator{}
 }
 
-func (g *SigningInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSigningInfo)
+func (g *SigningInfoGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.SigningInfoData](state, constants.FetcherNameSigningInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +26,6 @@ func (g *SigningInfoGenerator) Generate(state *statePkg.State) []prometheus.Coll
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SigningInfoData)
 
 	for chain, commissions := range data.SigningInfos {
 		for validator, signingInfo := range commissions {

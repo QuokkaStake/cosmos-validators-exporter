@@ -48,8 +48,13 @@ func NewPriceFetcher(
 	}
 }
 
+func (q *PriceFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *PriceFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	queries := []*types.QueryInfo{}
 	denomsByPriceFetcher := map[constants.PriceFetcherName][]price_fetchers.ChainWithDenom{}

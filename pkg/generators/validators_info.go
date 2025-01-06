@@ -4,7 +4,6 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 
@@ -21,13 +20,13 @@ func NewValidatorsInfoGenerator(chains []*config.Chain) *ValidatorsInfoGenerator
 	return &ValidatorsInfoGenerator{Chains: chains}
 }
 
-func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameValidators)
+func (g *ValidatorsInfoGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	consumersDataRaw, ok := state.Get(constants.FetcherNameConsumerValidators)
+	consumersData, ok := fetchersPkg.StateGet[fetchersPkg.ConsumerValidatorsData](state, constants.FetcherNameConsumerValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -47,9 +46,6 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 		},
 		[]string{"chain", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
-	consumersData, _ := consumersDataRaw.(fetchersPkg.ConsumerValidatorsData)
 
 	for _, chain := range g.Chains {
 		validators, ok := data.Validators[chain.Name]

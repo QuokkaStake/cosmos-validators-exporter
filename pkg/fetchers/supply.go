@@ -43,8 +43,13 @@ func NewSupplyFetcher(
 	}
 }
 
+func (q *SupplyFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *SupplyFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allSupplies = map[string][]types.Amount{}

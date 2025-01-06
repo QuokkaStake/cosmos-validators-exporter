@@ -1,11 +1,9 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type StakingParamsGenerator struct {
@@ -15,8 +13,8 @@ func NewStakingParamsGenerator() *StakingParamsGenerator {
 	return &StakingParamsGenerator{}
 }
 
-func (g *StakingParamsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameStakingParams)
+func (g *StakingParamsGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.StakingParamsData](state, constants.FetcherNameStakingParams)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +26,6 @@ func (g *StakingParamsGenerator) Generate(state *statePkg.State) []prometheus.Co
 		},
 		[]string{"chain"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.StakingParamsData)
 
 	for chain, params := range data.Params {
 		maxValidators := int64(params.StakingParams.MaxValidators)

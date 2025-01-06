@@ -4,7 +4,6 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
@@ -29,8 +28,8 @@ func NewValidatorRankGenerator(
 	}
 }
 
-func (g *ValidatorRankGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameValidators)
+func (g *ValidatorRankGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -42,8 +41,6 @@ func (g *ValidatorRankGenerator) Generate(state *statePkg.State) []prometheus.Co
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
 
 	for _, chain := range g.Chains {
 		chainValidators, ok := data.Validators[chain.Name]

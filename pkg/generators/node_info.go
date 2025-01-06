@@ -1,11 +1,9 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type NodeInfoGenerator struct {
@@ -15,13 +13,11 @@ func NewNodeInfoGenerator() *NodeInfoGenerator {
 	return &NodeInfoGenerator{}
 }
 
-func (g *NodeInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	nodeInfosRaw, ok := state.Get(constants.FetcherNameNodeInfo)
+func (g *NodeInfoGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	nodeInfos, ok := fetchersPkg.StateGet[fetchersPkg.NodeInfoData](state, constants.FetcherNameNodeInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	nodeInfos, _ := nodeInfosRaw.(fetchersPkg.NodeInfoData)
 
 	networkInfoGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

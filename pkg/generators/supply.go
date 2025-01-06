@@ -1,12 +1,10 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SupplyGenerator struct {
@@ -17,8 +15,8 @@ func NewSupplyGenerator(chains []*config.Chain) *SupplyGenerator {
 	return &SupplyGenerator{Chains: chains}
 }
 
-func (g *SupplyGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSupply)
+func (g *SupplyGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.SupplyData](state, constants.FetcherNameSupply)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +28,6 @@ func (g *SupplyGenerator) Generate(state *statePkg.State) []prometheus.Collector
 		},
 		[]string{"chain", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SupplyData)
 
 	for _, chain := range g.Chains {
 		for _, consumer := range chain.ConsumerChains {

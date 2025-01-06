@@ -1,11 +1,10 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/constants"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
+	fetchersPkg "main/pkg/fetchers"
 )
 
 type IsConsumerGenerator struct {
@@ -16,7 +15,7 @@ func NewIsConsumerGenerator(chains []*config.Chain) *IsConsumerGenerator {
 	return &IsConsumerGenerator{Chains: chains}
 }
 
-func (g *IsConsumerGenerator) Generate(state *statePkg.State) []prometheus.Collector {
+func (g *IsConsumerGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
 	isConsumerGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: constants.MetricsPrefix + "is_consumer",

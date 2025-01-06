@@ -1,12 +1,10 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type CommissionGenerator struct {
@@ -17,8 +15,8 @@ func NewCommissionGenerator(chains []*config.Chain) *CommissionGenerator {
 	return &CommissionGenerator{Chains: chains}
 }
 
-func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameCommission)
+func (g *CommissionGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.CommissionData](state, constants.FetcherNameCommission)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +28,6 @@ func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Colle
 		},
 		[]string{"chain", "address", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.CommissionData)
 
 	for _, chain := range g.Chains {
 		chainCommissions, ok := data.Commissions[chain.Name]

@@ -43,8 +43,13 @@ func NewSlashingParamsFetcher(
 	}
 }
 
+func (q *SlashingParamsFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *SlashingParamsFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allParams = map[string]*types.SlashingParamsResponse{}

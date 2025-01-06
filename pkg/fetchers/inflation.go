@@ -39,8 +39,12 @@ func NewInflationFetcher(
 	}
 }
 
+func (q *InflationFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
 func (q *InflationFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 

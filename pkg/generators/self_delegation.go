@@ -1,12 +1,10 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SelfDelegationGenerator struct {
@@ -17,8 +15,8 @@ func NewSelfDelegationGenerator(chains []*config.Chain) *SelfDelegationGenerator
 	return &SelfDelegationGenerator{Chains: chains}
 }
 
-func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSelfDelegation)
+func (g *SelfDelegationGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.SelfDelegationData](state, constants.FetcherNameSelfDelegation)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +28,6 @@ func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.C
 		},
 		[]string{"chain", "address", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SelfDelegationData)
 
 	for _, chain := range g.Chains {
 		chainDelegations, ok := data.Delegations[chain.Name]

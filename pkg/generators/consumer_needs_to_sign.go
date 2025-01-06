@@ -4,7 +4,6 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/utils"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,19 +17,16 @@ func NewConsumerNeedsToSignGenerator(chains []*config.Chain) *ConsumerNeedsToSig
 	return &ConsumerNeedsToSignGenerator{Chains: chains}
 }
 
-func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	allValidatorsConsumersRaw, ok := state.Get(constants.FetcherNameValidatorConsumers)
+func (g *ConsumerNeedsToSignGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	allValidatorsConsumers, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorConsumersData](state, constants.FetcherNameValidatorConsumers)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	consumerInfosRaw, ok := state.Get(constants.FetcherNameConsumerInfo)
+	consumerInfos, ok := fetchersPkg.StateGet[fetchersPkg.ConsumerInfoData](state, constants.FetcherNameConsumerInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	allValidatorsConsumers, _ := allValidatorsConsumersRaw.(fetchersPkg.ValidatorConsumersData)
-	consumerInfos, _ := consumerInfosRaw.(fetchersPkg.ConsumerInfoData)
 
 	needsToSignGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

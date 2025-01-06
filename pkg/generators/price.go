@@ -1,11 +1,9 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type PriceGenerator struct {
@@ -15,8 +13,8 @@ func NewPriceGenerator() *PriceGenerator {
 	return &PriceGenerator{}
 }
 
-func (g *PriceGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNamePrice)
+func (g *PriceGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.PriceData](state, constants.FetcherNamePrice)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +26,6 @@ func (g *PriceGenerator) Generate(state *statePkg.State) []prometheus.Collector 
 		},
 		[]string{"chain", "denom", "source", "base_currency"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.PriceData)
 
 	for chainName, chainPrices := range data.Prices {
 		for denom, price := range chainPrices {

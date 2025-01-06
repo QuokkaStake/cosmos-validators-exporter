@@ -4,7 +4,6 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 
@@ -28,13 +27,13 @@ func NewValidatorCommissionRateGenerator(
 	}
 }
 
-func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	consumerCommissionsRaw, ok := state.Get(constants.FetcherNameConsumerCommission)
+func (g *ValidatorCommissionRateGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	consumerCommissions, ok := fetchersPkg.StateGet[fetchersPkg.ConsumerCommissionData](state, constants.FetcherNameConsumerCommission)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	validatorsRaw, ok := state.Get(constants.FetcherNameValidators)
+	validators, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -46,9 +45,6 @@ func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []pro
 		},
 		[]string{"chain", "address"},
 	)
-
-	consumerCommission, _ := consumerCommissionsRaw.(fetchersPkg.ConsumerCommissionData)
-	validators, _ := validatorsRaw.(fetchersPkg.ValidatorsData)
 
 	for _, chain := range g.Chains {
 		chainValidators, ok := validators.Validators[chain.Name]
@@ -87,7 +83,7 @@ func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []pro
 			}
 
 			for _, consumer := range chain.ConsumerChains {
-				consumerValidators, ok := consumerCommission.Commissions[consumer.Name]
+				consumerValidators, ok := consumerCommissions.Commissions[consumer.Name]
 				if !ok {
 					continue
 				}

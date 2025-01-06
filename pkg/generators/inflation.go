@@ -1,11 +1,9 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type InflationGenerator struct {
@@ -15,8 +13,8 @@ func NewInflationGenerator() *InflationGenerator {
 	return &InflationGenerator{}
 }
 
-func (g *InflationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameInflation)
+func (g *InflationGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.InflationData](state, constants.FetcherNameInflation)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +26,6 @@ func (g *InflationGenerator) Generate(state *statePkg.State) []prometheus.Collec
 		},
 		[]string{"chain"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.InflationData)
 
 	for chain, inflation := range data.Inflation {
 		inflationGauge.With(prometheus.Labels{

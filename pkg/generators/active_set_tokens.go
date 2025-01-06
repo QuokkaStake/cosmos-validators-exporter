@@ -4,7 +4,6 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 	"sort"
@@ -20,19 +19,16 @@ func NewActiveSetTokensGenerator(chains []*configPkg.Chain) *ActiveSetTokensGene
 	return &ActiveSetTokensGenerator{Chains: chains}
 }
 
-func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	validatorsRaw, ok := state.Get(constants.FetcherNameValidators)
+func (g *ActiveSetTokensGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	validators, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	stakingParamsRaw, ok := state.Get(constants.FetcherNameStakingParams)
+	stakingParams, ok := fetchersPkg.StateGet[fetchersPkg.StakingParamsData](state, constants.FetcherNameStakingParams)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	validators, _ := validatorsRaw.(fetchersPkg.ValidatorsData)
-	stakingParams, _ := stakingParamsRaw.(fetchersPkg.StakingParamsData)
 
 	activeSetTokensGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

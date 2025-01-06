@@ -1,11 +1,9 @@
 package generators
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
-	statePkg "main/pkg/state"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type DelegationsGenerator struct {
@@ -15,8 +13,8 @@ func NewDelegationsGenerator() *DelegationsGenerator {
 	return &DelegationsGenerator{}
 }
 
-func (g *DelegationsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameDelegations)
+func (g *DelegationsGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+	data, ok := fetchersPkg.StateGet[fetchersPkg.DelegationsData](state, constants.FetcherNameDelegations)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +26,6 @@ func (g *DelegationsGenerator) Generate(state *statePkg.State) []prometheus.Coll
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.DelegationsData)
 
 	for chain, allDelegations := range data.Delegations {
 		for validator, delegations := range allDelegations {
