@@ -20,7 +20,7 @@ import (
 func TestValidatorsInfoGeneratorNoValidators(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewValidatorsInfoGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -29,7 +29,7 @@ func TestValidatorsInfoGeneratorNoValidators(t *testing.T) {
 func TestValidatorsInfoGeneratorNoConsumerValidators(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	generator := NewValidatorsInfoGenerator([]*config.Chain{})
 	results := generator.Generate(state)
@@ -39,7 +39,7 @@ func TestValidatorsInfoGeneratorNoConsumerValidators(t *testing.T) {
 func TestValidatorsInfoGeneratorNotConsumer(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -90,7 +90,7 @@ func TestValidatorsInfoGeneratorNotConsumer(t *testing.T) {
 func TestValidatorsInfoGeneratorNotConsumerIgnoredBaseDenom(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -138,7 +138,7 @@ func TestValidatorsInfoGeneratorNotConsumerIgnoredBaseDenom(t *testing.T) {
 func TestValidatorsInfoGeneratorConsumer(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	state.Set(constants.FetcherNameConsumerValidators, fetchers.ConsumerValidatorsData{
 		Validators: map[string]*types.ConsumerValidatorsResponse{

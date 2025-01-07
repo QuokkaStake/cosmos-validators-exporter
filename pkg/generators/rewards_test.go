@@ -19,7 +19,7 @@ import (
 func TestRewardsGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewRewardsGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -28,7 +28,7 @@ func TestRewardsGeneratorNoState(t *testing.T) {
 func TestRewardsGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameRewards, fetchers.RewardsData{
 		Rewards: map[string]map[string][]types.Amount{
 			"chain": {

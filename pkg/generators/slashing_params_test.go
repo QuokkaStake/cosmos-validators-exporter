@@ -18,7 +18,7 @@ import (
 func TestSlashingParamsGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewSlashingParamsGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -27,7 +27,7 @@ func TestSlashingParamsGeneratorNoState(t *testing.T) {
 func TestSlashingParamsGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameSlashingParams, fetchers.SlashingParamsData{
 		Params: map[string]*types.SlashingParamsResponse{
 			"chain": {

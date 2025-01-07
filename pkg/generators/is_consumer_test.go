@@ -14,7 +14,7 @@ import (
 func TestIsConsumerGenerator(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	chains := []*config.Chain{
 		{
 			Name: "chain",

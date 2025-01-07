@@ -1,31 +1,57 @@
 package state
 
 import (
+	"fmt"
 	"main/pkg/constants"
-	"sync"
+	"reflect"
 )
 
-type State struct {
-	state map[constants.FetcherName]interface{}
-	mutex sync.Mutex
-}
+type State map[constants.FetcherName]interface{}
 
-func NewState() *State {
-	return &State{
-		state: map[constants.FetcherName]interface{}{},
+func (s State) GetData(fetcherNames []constants.FetcherName) []interface{} {
+	data := make([]interface{}, len(fetcherNames))
+
+	for index, fetcherName := range fetcherNames {
+		data[index] = s[fetcherName]
 	}
+
+	return data
 }
 
-func (s *State) Set(key constants.FetcherName, value interface{}) {
-	s.mutex.Lock()
-	s.state[key] = value
-	s.mutex.Unlock()
+func (s State) Set(fetcherName constants.FetcherName, data interface{}) {
+	s[fetcherName] = data
 }
 
-func (s *State) Get(key constants.FetcherName) (interface{}, bool) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+func StateGet[T any](state State, fetcherName constants.FetcherName) (T, bool) {
+	var zero T
 
-	value, found := s.state[key]
-	return value, found
+	dataRaw, found := state[fetcherName]
+	if !found {
+		return zero, false
+	}
+
+	return Convert[T](dataRaw)
+}
+
+func Convert[T any](input interface{}) (T, bool) {
+	var zero T
+
+	if input == nil {
+		return zero, false
+	}
+
+	data, converted := input.(T)
+	if !converted {
+		panic(fmt.Sprintf(
+			"Error converting data: expected %s, got %s",
+			reflect.TypeOf(zero).String(),
+			reflect.TypeOf(input).String(),
+		))
+	}
+
+	if reflect.ValueOf(data).Kind() == reflect.Ptr && reflect.ValueOf(data).IsNil() {
+		return zero, false
+	}
+
+	return data, true
 }

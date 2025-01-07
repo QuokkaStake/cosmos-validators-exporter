@@ -19,7 +19,7 @@ import (
 func TestBalanceGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewBalanceGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -28,7 +28,7 @@ func TestBalanceGeneratorNoState(t *testing.T) {
 func TestBalanceGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameBalance, fetchers.BalanceData{
 		Balances: map[string]map[string][]types.Amount{
 			"chain": {

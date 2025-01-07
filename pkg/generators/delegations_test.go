@@ -15,7 +15,7 @@ import (
 func TestDelegationsGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewDelegationsGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -24,7 +24,7 @@ func TestDelegationsGeneratorNoState(t *testing.T) {
 func TestDelegationsGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameDelegations, fetchers.DelegationsData{
 		Delegations: map[string]map[string]uint64{
 			"chain": {

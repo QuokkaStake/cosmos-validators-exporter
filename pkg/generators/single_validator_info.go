@@ -4,6 +4,7 @@ import (
 	configPkg "main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
+	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 
@@ -27,8 +28,8 @@ func NewSingleValidatorInfoGenerator(
 	}
 }
 
-func (g *SingleValidatorInfoGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
-	data, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
+func (g *SingleValidatorInfoGenerator) Generate(state statePkg.State) []prometheus.Collector {
+	data, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}

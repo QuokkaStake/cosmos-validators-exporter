@@ -15,7 +15,7 @@ import (
 func TestPriceGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewPriceGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -24,7 +24,7 @@ func TestPriceGeneratorNoState(t *testing.T) {
 func TestPriceGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNamePrice, fetchers.PriceData{
 		Prices: map[string]map[string]fetchers.PriceInfo{
 			"chain": {

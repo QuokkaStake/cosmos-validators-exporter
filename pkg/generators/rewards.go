@@ -1,10 +1,12 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
+	statePkg "main/pkg/state"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type RewardsGenerator struct {
@@ -15,8 +17,8 @@ func NewRewardsGenerator(chains []*config.Chain) *RewardsGenerator {
 	return &RewardsGenerator{Chains: chains}
 }
 
-func (g *RewardsGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
-	data, ok := fetchersPkg.StateGet[fetchersPkg.RewardsData](state, constants.FetcherNameRewards)
+func (g *RewardsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+	data, ok := statePkg.StateGet[fetchersPkg.RewardsData](state, constants.FetcherNameRewards)
 	if !ok {
 		return []prometheus.Collector{}
 	}

@@ -13,7 +13,7 @@ import (
 func TestUptimeGenerator(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewUptimeGenerator()
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)

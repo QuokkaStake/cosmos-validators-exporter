@@ -17,7 +17,7 @@ import (
 func TestInflationGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewInflationGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -26,7 +26,7 @@ func TestInflationGeneratorNoState(t *testing.T) {
 func TestInflationGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameInflation, fetchers.InflationData{
 		Inflation: map[string]math.LegacyDec{
 			"chain": math.LegacyMustNewDecFromStr("0.1"),

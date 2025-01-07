@@ -21,7 +21,7 @@ import (
 func TestSingleValidatorInfoGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewSingleValidatorInfoGenerator([]*config.Chain{}, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -31,7 +31,7 @@ func TestSingleValidatorInfoGeneratorNoChainValidators(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	generator := NewSingleValidatorInfoGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
@@ -49,7 +49,7 @@ func TestSingleValidatorInfoGeneratorNotFound(t *testing.T) {
 		Name:       "chain",
 		Validators: []config.Validator{{Address: "validator"}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -81,7 +81,7 @@ func TestSingleValidatorInfoGeneratorActive(t *testing.T) {
 		Denoms:     config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6}},
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -174,7 +174,7 @@ func TestSingleValidatorInfoIgnoredBaseDenom(t *testing.T) {
 		Denoms:     config.DenomInfos{{Denom: "uatom", Ignore: null.BoolFrom(true)}},
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {

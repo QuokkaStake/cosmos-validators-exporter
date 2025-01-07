@@ -18,7 +18,7 @@ import (
 func TestSigningInfoGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewSigningInfoGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -27,7 +27,7 @@ func TestSigningInfoGeneratorNoState(t *testing.T) {
 func TestSigningInfoGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameSigningInfo, fetchers.SigningInfoData{
 		SigningInfos: map[string]map[string]*types.SigningInfoResponse{
 			"chain": {

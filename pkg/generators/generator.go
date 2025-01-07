@@ -1,10 +1,11 @@
 package generators
 
 import (
+	statePkg "main/pkg/state"
+
 	"github.com/prometheus/client_golang/prometheus"
-	"main/pkg/fetchers"
 )
 
 type Generator interface {
-	Generate(state fetchers.State) []prometheus.Collector
+	Generate(state statePkg.State) []prometheus.Collector
 }

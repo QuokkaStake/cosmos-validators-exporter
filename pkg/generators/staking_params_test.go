@@ -16,7 +16,7 @@ import (
 func TestStakingParamsGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewStakingParamsGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -25,7 +25,7 @@ func TestStakingParamsGeneratorNoState(t *testing.T) {
 func TestStakingParamsGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameStakingParams, fetchers.StakingParamsData{
 		Params: map[string]*types.StakingParamsResponse{
 			"chain": {

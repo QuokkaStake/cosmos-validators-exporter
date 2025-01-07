@@ -2,7 +2,7 @@ package generators
 
 import (
 	"main/pkg/constants"
-	fetchersPkg "main/pkg/fetchers"
+	statePkg "main/pkg/state"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,7 +16,7 @@ func NewUptimeGenerator() *UptimeGenerator {
 	return &UptimeGenerator{StartTime: time.Now()}
 }
 
-func (g *UptimeGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
+func (g *UptimeGenerator) Generate(state statePkg.State) []prometheus.Collector {
 	uptimeMetricsGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: constants.MetricsPrefix + "start_time",

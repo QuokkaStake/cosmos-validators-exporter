@@ -1,9 +1,11 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
+	statePkg "main/pkg/state"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type SlashingParamsGenerator struct {
@@ -13,8 +15,8 @@ func NewSlashingParamsGenerator() *SlashingParamsGenerator {
 	return &SlashingParamsGenerator{}
 }
 
-func (g *SlashingParamsGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
-	data, ok := fetchersPkg.StateGet[fetchersPkg.SlashingParamsData](state, constants.FetcherNameSlashingParams)
+func (g *SlashingParamsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+	data, ok := statePkg.StateGet[fetchersPkg.SlashingParamsData](state, constants.FetcherNameSlashingParams)
 	if !ok {
 		return []prometheus.Collector{}
 	}

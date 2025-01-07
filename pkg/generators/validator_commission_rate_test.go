@@ -19,7 +19,7 @@ import (
 func TestValidatorCommissionRateGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewValidatorCommissionRateGenerator([]*config.Chain{}, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -29,7 +29,7 @@ func TestValidatorCommissionRateGeneratorNoConsumerCommissions(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameConsumerCommission, fetchers.ConsumerCommissionData{})
 	generator := NewValidatorCommissionRateGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
@@ -46,7 +46,7 @@ func TestValidatorCommissionRateInvalidConsumer(t *testing.T) {
 			{Address: "test"},
 		},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -82,7 +82,7 @@ func TestValidatorCommissionRateGeneratorSuccess(t *testing.T) {
 			{Name: "anotherconsumer"},
 		},
 	}, {Name: "otherchain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {

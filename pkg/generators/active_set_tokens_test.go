@@ -4,9 +4,10 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"testing"
+
+	statePkg "main/pkg/state"
 
 	"github.com/guregu/null/v5"
 
@@ -20,7 +21,7 @@ import (
 func TestActiveSetTokensGeneratorNoValidators(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewActiveSetTokensGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -29,7 +30,7 @@ func TestActiveSetTokensGeneratorNoValidators(t *testing.T) {
 func TestActiveSetTokensGeneratorNoStakingParams(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	generator := NewActiveSetTokensGenerator([]*config.Chain{})
 	results := generator.Generate(state)
@@ -40,7 +41,7 @@ func TestActiveSetTokensGeneratorNoChainValidators(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	state.Set(constants.FetcherNameStakingParams, fetchers.StakingParamsData{})
 	generator := NewActiveSetTokensGenerator(chains)
@@ -56,7 +57,7 @@ func TestActiveSetTokensGeneratorNoChainStakingParams(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {},
@@ -80,7 +81,7 @@ func TestActiveSetTokensGeneratorNotEnoughValidators(t *testing.T) {
 		BaseDenom: "uatom",
 		Denoms:    config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -119,7 +120,7 @@ func TestActiveSetTokensGeneratorEnoughValidators(t *testing.T) {
 		BaseDenom: "uatom",
 		Denoms:    config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -158,7 +159,7 @@ func TestActiveSetTokensGeneratorDenomIgnored(t *testing.T) {
 		BaseDenom: "uatom",
 		Denoms:    config.DenomInfos{{Denom: "uatom", Ignore: null.BoolFrom(true)}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {

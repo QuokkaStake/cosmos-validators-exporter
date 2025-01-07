@@ -19,7 +19,7 @@ import (
 func TestValidatorActiveGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewValidatorActiveGenerator([]*config.Chain{}, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -29,7 +29,7 @@ func TestValidatorActiveGeneratorNoConsumerValidators(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
@@ -40,7 +40,7 @@ func TestValidatorActiveGeneratorNoChainValidators(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	state.Set(constants.FetcherNameConsumerValidators, fetchers.ConsumerValidatorsData{})
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
@@ -59,7 +59,7 @@ func TestValidatorActiveGeneratorNotFound(t *testing.T) {
 		Name:       "chain",
 		Validators: []config.Validator{{Address: "validator"}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -90,7 +90,7 @@ func TestValidatorActiveGeneratorProvider(t *testing.T) {
 		Denoms:     config.DenomInfos{{Denom: "uatom", DisplayDenom: "atom", DenomExponent: 6}},
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -138,7 +138,7 @@ func TestValidatorActiveGeneratorConsumer(t *testing.T) {
 			{Name: "otherconsumer"},
 		},
 	}}
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {

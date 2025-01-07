@@ -1,9 +1,11 @@
 package generators
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
+	statePkg "main/pkg/state"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type DelegationsGenerator struct {
@@ -13,8 +15,8 @@ func NewDelegationsGenerator() *DelegationsGenerator {
 	return &DelegationsGenerator{}
 }
 
-func (g *DelegationsGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
-	data, ok := fetchersPkg.StateGet[fetchersPkg.DelegationsData](state, constants.FetcherNameDelegations)
+func (g *DelegationsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+	data, ok := statePkg.StateGet[fetchersPkg.DelegationsData](state, constants.FetcherNameDelegations)
 	if !ok {
 		return []prometheus.Collector{}
 	}

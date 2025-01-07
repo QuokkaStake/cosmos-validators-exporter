@@ -17,7 +17,7 @@ import (
 func TestConsumerNeedsToSignGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	generator := NewConsumerNeedsToSignGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -26,7 +26,7 @@ func TestConsumerNeedsToSignGeneratorNoState(t *testing.T) {
 func TestConsumerNeedsToSignGeneratorNoConsumerInfo(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidatorConsumers, fetchers.ValidatorConsumersData{
 		Infos: map[string]map[string]map[string]bool{
 			"provider": {
@@ -45,7 +45,7 @@ func TestConsumerNeedsToSignGeneratorNoConsumerInfo(t *testing.T) {
 func TestConsumerNeedsToSignGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.NewState()
+	state := statePkg.State{}
 	state.Set(constants.FetcherNameValidatorConsumers, fetchers.ValidatorConsumersData{
 		Infos: map[string]map[string]map[string]bool{
 			"provider": {

@@ -4,6 +4,7 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	fetchersPkg "main/pkg/fetchers"
+	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"main/pkg/utils"
 
@@ -27,13 +28,13 @@ func NewValidatorCommissionRateGenerator(
 	}
 }
 
-func (g *ValidatorCommissionRateGenerator) Generate(state fetchersPkg.State) []prometheus.Collector {
-	consumerCommissions, ok := fetchersPkg.StateGet[fetchersPkg.ConsumerCommissionData](state, constants.FetcherNameConsumerCommission)
+func (g *ValidatorCommissionRateGenerator) Generate(state statePkg.State) []prometheus.Collector {
+	consumerCommissions, ok := statePkg.StateGet[fetchersPkg.ConsumerCommissionData](state, constants.FetcherNameConsumerCommission)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	validators, ok := fetchersPkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
+	validators, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
