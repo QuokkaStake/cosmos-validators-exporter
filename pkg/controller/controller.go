@@ -1,8 +1,9 @@
-package fetchers
+package controller
 
 import (
 	"context"
 	"main/pkg/constants"
+	fetchersPkg "main/pkg/fetchers"
 	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"sync"
@@ -23,12 +24,12 @@ func (s FetchersStatuses) IsAllDone(fetcherNames []constants.FetcherName) bool {
 }
 
 type Controller struct {
-	Fetchers Fetchers
+	Fetchers fetchersPkg.Fetchers
 	Logger   zerolog.Logger
 }
 
 func NewController(
-	fetchers Fetchers,
+	fetchers fetchersPkg.Fetchers,
 	logger *zerolog.Logger,
 ) *Controller {
 	return &Controller{
@@ -50,7 +51,7 @@ func (c *Controller) Fetch(ctx context.Context) (
 	var mutex sync.Mutex
 	var wg sync.WaitGroup
 
-	processFetcher := func(fetcher Fetcher) {
+	processFetcher := func(fetcher fetchersPkg.Fetcher) {
 		defer wg.Done()
 
 		c.Logger.Trace().Str("name", string(fetcher.Name())).Msg("Processing fetcher...")
@@ -80,7 +81,7 @@ func (c *Controller) Fetch(ctx context.Context) (
 			break
 		}
 
-		fetchersToStart := Fetchers{}
+		fetchersToStart := fetchersPkg.Fetchers{}
 
 		for _, fetcher := range c.Fetchers {
 			if _, ok := fetchersStatus[fetcher.Name()]; ok {

@@ -1,9 +1,10 @@
-package fetchers
+package controller
 
 import (
 	"context"
 	"main/assets"
 	configPkg "main/pkg/config"
+	fetchersPkg "main/pkg/fetchers"
 	loggerPkg "main/pkg/logger"
 	"main/pkg/tendermint"
 	"main/pkg/tracing"
@@ -44,20 +45,20 @@ func TestControllerFetcherEnabled(t *testing.T) {
 			tracing.InitNoopTracer(),
 		),
 	}
-	fetcher1 := NewNodeInfoFetcher(
+	fetcher1 := fetchersPkg.NewNodeInfoFetcher(
 		loggerPkg.GetNopLogger(),
 		chains,
 		rpcs,
 		tracing.InitNoopTracer(),
 	)
-	fetcher2 := NewRewardsFetcher(
+	fetcher2 := fetchersPkg.NewRewardsFetcher(
 		loggerPkg.GetNopLogger(),
 		chains,
 		rpcs,
 		tracing.InitNoopTracer(),
 	)
 	logger := loggerPkg.GetNopLogger()
-	controller := NewController(Fetchers{fetcher1, fetcher2}, logger)
+	controller := NewController(fetchersPkg.Fetchers{fetcher1, fetcher2}, logger)
 
 	data, queryInfos := controller.Fetch(context.Background())
 	assert.Len(t, queryInfos, 2)

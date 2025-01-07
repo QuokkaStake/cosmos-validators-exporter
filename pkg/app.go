@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	controllerPkg "main/pkg/controller"
 	fetchersPkg "main/pkg/fetchers"
 	"main/pkg/fs"
 	generatorsPkg "main/pkg/generators"
@@ -42,7 +43,7 @@ type App struct {
 	// based on ValidatorsFetcher and StakingParamsFetcher.
 	Generators []generatorsPkg.Generator
 
-	Controller *fetchersPkg.Controller
+	Controller *controllerPkg.Controller
 }
 
 func NewApp(configPath string, filesystem fs.FS, version string) *App {
@@ -121,7 +122,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewSupplyGenerator(appConfig.Chains),
 	}
 
-	controller := fetchersPkg.NewController(fetchers, logger)
+	controller := controllerPkg.NewController(fetchers, logger)
 
 	server := &http.Server{Addr: appConfig.ListenAddress, Handler: nil}
 
