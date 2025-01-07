@@ -20,12 +20,10 @@ func NewConsumerInfoGenerator(chains []*config.Chain) *ConsumerInfoGenerator {
 }
 
 func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	consumerInfosRaw, ok := state.Get(constants.FetcherNameConsumerInfo)
+	consumerInfos, ok := statePkg.StateGet[fetchersPkg.ConsumerInfoData](state, constants.FetcherNameConsumerInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	consumerInfos, _ := consumerInfosRaw.(fetchersPkg.ConsumerInfoData)
 
 	consumerInfoGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

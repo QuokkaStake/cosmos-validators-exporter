@@ -44,8 +44,13 @@ func NewSigningInfoFetcher(
 	}
 }
 
+func (q *SigningInfoFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *SigningInfoFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allSigningInfos = map[string]map[string]*types.SigningInfoResponse{}

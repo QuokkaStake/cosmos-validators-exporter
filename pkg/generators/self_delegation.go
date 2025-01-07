@@ -18,7 +18,7 @@ func NewSelfDelegationGenerator(chains []*config.Chain) *SelfDelegationGenerator
 }
 
 func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSelfDelegation)
+	data, ok := statePkg.StateGet[fetchersPkg.SelfDelegationData](state, constants.FetcherNameSelfDelegation)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +30,6 @@ func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.C
 		},
 		[]string{"chain", "address", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SelfDelegationData)
 
 	for _, chain := range g.Chains {
 		chainDelegations, ok := data.Delegations[chain.Name]

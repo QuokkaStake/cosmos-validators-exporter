@@ -16,7 +16,7 @@ func NewSlashingParamsGenerator() *SlashingParamsGenerator {
 }
 
 func (g *SlashingParamsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSlashingParams)
+	data, ok := statePkg.StateGet[fetchersPkg.SlashingParamsData](state, constants.FetcherNameSlashingParams)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +28,6 @@ func (g *SlashingParamsGenerator) Generate(state *statePkg.State) []prometheus.C
 		},
 		[]string{"chain"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SlashingParamsData)
 
 	for chain, params := range data.Params {
 		blocksWindowGauge.With(prometheus.Labels{

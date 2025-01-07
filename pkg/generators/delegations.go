@@ -16,7 +16,7 @@ func NewDelegationsGenerator() *DelegationsGenerator {
 }
 
 func (g *DelegationsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameDelegations)
+	data, ok := statePkg.StateGet[fetchersPkg.DelegationsData](state, constants.FetcherNameDelegations)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +28,6 @@ func (g *DelegationsGenerator) Generate(state *statePkg.State) []prometheus.Coll
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.DelegationsData)
 
 	for chain, allDelegations := range data.Delegations {
 		for validator, delegations := range allDelegations {

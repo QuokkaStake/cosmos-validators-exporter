@@ -19,18 +19,15 @@ func NewConsumerNeedsToSignGenerator(chains []*config.Chain) *ConsumerNeedsToSig
 }
 
 func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	allValidatorsConsumersRaw, ok := state.Get(constants.FetcherNameValidatorConsumers)
+	allValidatorsConsumers, ok := statePkg.StateGet[fetchersPkg.ValidatorConsumersData](state, constants.FetcherNameValidatorConsumers)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	consumerInfosRaw, ok := state.Get(constants.FetcherNameConsumerInfo)
+	consumerInfos, ok := statePkg.StateGet[fetchersPkg.ConsumerInfoData](state, constants.FetcherNameConsumerInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	allValidatorsConsumers, _ := allValidatorsConsumersRaw.(fetchersPkg.ValidatorConsumersData)
-	consumerInfos, _ := consumerInfosRaw.(fetchersPkg.ConsumerInfoData)
 
 	needsToSignGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

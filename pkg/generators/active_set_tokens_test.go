@@ -4,9 +4,10 @@ import (
 	"main/pkg/config"
 	"main/pkg/constants"
 	"main/pkg/fetchers"
-	statePkg "main/pkg/state"
 	"main/pkg/types"
 	"testing"
+
+	statePkg "main/pkg/state"
 
 	"github.com/guregu/null/v5"
 

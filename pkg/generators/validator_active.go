@@ -29,12 +29,12 @@ func NewValidatorActiveGenerator(
 }
 
 func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameValidators)
+	validators, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	consumersDataRaw, ok := state.Get(constants.FetcherNameConsumerValidators)
+	allConsumerValidators, ok := statePkg.StateGet[fetchersPkg.ConsumerValidatorsData](state, constants.FetcherNameConsumerValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -47,11 +47,8 @@ func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.
 		[]string{"chain", "address"},
 	)
 
-	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
-	consumersData, _ := consumersDataRaw.(fetchersPkg.ConsumerValidatorsData)
-
 	for _, chain := range g.Chains {
-		chainValidators, ok := data.Validators[chain.Name]
+		chainValidators, ok := validators.Validators[chain.Name]
 		if !ok {
 			g.Logger.Warn().
 				Str("chain", chain.Name).
@@ -94,7 +91,7 @@ func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.
 			}
 
 			for _, consumer := range chain.ConsumerChains {
-				consumerValidators, ok := consumersData.Validators[consumer.Name]
+				consumerValidators, ok := allConsumerValidators.Validators[consumer.Name]
 				if !ok {
 					continue
 				}

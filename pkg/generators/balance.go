@@ -18,7 +18,7 @@ func NewBalanceGenerator(chains []*config.Chain) *BalanceGenerator {
 }
 
 func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameBalance)
+	data, ok := statePkg.StateGet[fetchersPkg.BalanceData](state, constants.FetcherNameBalance)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +30,6 @@ func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 		},
 		[]string{"chain", "address", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.BalanceData)
 
 	for _, chain := range g.Chains {
 		for _, consumer := range chain.ConsumerChains {

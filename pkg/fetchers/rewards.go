@@ -38,8 +38,13 @@ func NewRewardsFetcher(
 	}
 }
 
+func (q *RewardsFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *RewardsFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 

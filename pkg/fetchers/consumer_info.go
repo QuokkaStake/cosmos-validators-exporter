@@ -43,8 +43,12 @@ func NewConsumerInfoFetcher(
 	}
 }
 
+func (f *ConsumerInfoFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
 func (f *ConsumerInfoFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	f.queryInfos = []*types.QueryInfo{}
 	f.allInfos = map[string]map[string]types.ConsumerChainInfo{}

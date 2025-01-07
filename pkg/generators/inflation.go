@@ -16,7 +16,7 @@ func NewInflationGenerator() *InflationGenerator {
 }
 
 func (g *InflationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameInflation)
+	data, ok := statePkg.StateGet[fetchersPkg.InflationData](state, constants.FetcherNameInflation)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +28,6 @@ func (g *InflationGenerator) Generate(state *statePkg.State) []prometheus.Collec
 		},
 		[]string{"chain"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.InflationData)
 
 	for chain, inflation := range data.Inflation {
 		inflationGauge.With(prometheus.Labels{

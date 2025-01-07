@@ -43,8 +43,13 @@ func NewNodeInfoFetcher(
 	}
 }
 
+func (q *NodeInfoFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *NodeInfoFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allNodeInfos = map[string]*types.NodeInfoResponse{}

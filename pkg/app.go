@@ -2,15 +2,13 @@ package pkg
 
 import (
 	"context"
+	controllerPkg "main/pkg/controller"
 	fetchersPkg "main/pkg/fetchers"
 	"main/pkg/fs"
 	generatorsPkg "main/pkg/generators"
-	statePkg "main/pkg/state"
 	"main/pkg/tendermint"
 	"main/pkg/tracing"
-	"main/pkg/types"
 	"net/http"
-	"sync"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -44,6 +42,8 @@ type App struct {
 	// Example: ActiveSetTokenGenerator generates a metric
 	// based on ValidatorsFetcher and StakingParamsFetcher.
 	Generators []generatorsPkg.Generator
+
+	Controller *controllerPkg.Controller
 }
 
 func NewApp(configPath string, filesystem fs.FS, version string) *App {
@@ -122,6 +122,8 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		generatorsPkg.NewSupplyGenerator(appConfig.Chains),
 	}
 
+	controller := controllerPkg.NewController(fetchers, logger)
+
 	server := &http.Server{Addr: appConfig.ListenAddress, Handler: nil}
 
 	return &App{
@@ -132,6 +134,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 		Fetchers:   fetchers,
 		Generators: generators,
 		Server:     server,
+		Controller: controller,
 	}
 }
 
@@ -174,35 +177,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 
 	registry := prometheus.NewRegistry()
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-
-	var queryInfos []*types.QueryInfo
-
-	state := statePkg.NewState()
-
-	for _, fetchersExt := range a.Fetchers {
-		wg.Add(1)
-
-		go func(fetcher fetchersPkg.Fetcher) {
-			childQuerierCtx, fetcherSpan := a.Tracer.Start(
-				rootSpanCtx,
-				"Fetcher "+string(fetcher.Name()),
-				trace.WithAttributes(attribute.String("fetcher", string(fetcher.Name()))),
-			)
-			defer fetcherSpan.End()
-
-			defer wg.Done()
-			data, fetcherQueryInfos := fetcher.Fetch(childQuerierCtx)
-
-			mutex.Lock()
-			state.Set(fetcher.Name(), data)
-			queryInfos = append(queryInfos, fetcherQueryInfos...)
-			mutex.Unlock()
-		}(fetchersExt)
-	}
-
-	wg.Wait()
+	state, queryInfos := a.Controller.Fetch(rootSpanCtx)
 
 	queriesMetrics := NewQueriesMetrics(a.Config.Chains, queryInfos)
 	registry.MustRegister(queriesMetrics.GetMetrics(rootSpanCtx)...)

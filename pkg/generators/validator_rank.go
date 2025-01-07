@@ -30,7 +30,7 @@ func NewValidatorRankGenerator(
 }
 
 func (g *ValidatorRankGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameValidators)
+	data, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -42,8 +42,6 @@ func (g *ValidatorRankGenerator) Generate(state *statePkg.State) []prometheus.Co
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
 
 	for _, chain := range g.Chains {
 		chainValidators, ok := data.Validators[chain.Name]

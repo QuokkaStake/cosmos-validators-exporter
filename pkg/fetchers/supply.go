@@ -36,15 +36,20 @@ func NewSupplyFetcher(
 	tracer trace.Tracer,
 ) *SupplyFetcher {
 	return &SupplyFetcher{
-		Logger: logger.With().Str("component", "balance_fetcher").Logger(),
+		Logger: logger.With().Str("component", "supply_fetcher").Logger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
 	}
 }
 
+func (q *SupplyFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *SupplyFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allSupplies = map[string][]types.Amount{}

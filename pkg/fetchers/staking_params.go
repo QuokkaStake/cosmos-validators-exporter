@@ -37,8 +37,13 @@ func NewStakingParamsFetcher(
 	}
 }
 
+func (q *StakingParamsFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *StakingParamsFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 

@@ -16,7 +16,7 @@ func NewStakingParamsGenerator() *StakingParamsGenerator {
 }
 
 func (g *StakingParamsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameStakingParams)
+	data, ok := statePkg.StateGet[fetchersPkg.StakingParamsData](state, constants.FetcherNameStakingParams)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +28,6 @@ func (g *StakingParamsGenerator) Generate(state *statePkg.State) []prometheus.Co
 		},
 		[]string{"chain"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.StakingParamsData)
 
 	for chain, params := range data.Params {
 		maxValidators := int64(params.StakingParams.MaxValidators)

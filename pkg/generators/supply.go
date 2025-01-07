@@ -18,7 +18,7 @@ func NewSupplyGenerator(chains []*config.Chain) *SupplyGenerator {
 }
 
 func (g *SupplyGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSupply)
+	data, ok := statePkg.StateGet[fetchersPkg.SupplyData](state, constants.FetcherNameSupply)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +30,6 @@ func (g *SupplyGenerator) Generate(state *statePkg.State) []prometheus.Collector
 		},
 		[]string{"chain", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SupplyData)
 
 	for _, chain := range g.Chains {
 		for _, consumer := range chain.ConsumerChains {

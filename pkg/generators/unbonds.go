@@ -16,7 +16,7 @@ func NewUnbondsGenerator() *UnbondsGenerator {
 }
 
 func (g *UnbondsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameUnbonds)
+	data, ok := statePkg.StateGet[fetchersPkg.UnbondsData](state, constants.FetcherNameUnbonds)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +28,6 @@ func (g *UnbondsGenerator) Generate(state *statePkg.State) []prometheus.Collecto
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.UnbondsData)
 
 	for chain, commissions := range data.Unbonds {
 		for validator, unbonds := range commissions {

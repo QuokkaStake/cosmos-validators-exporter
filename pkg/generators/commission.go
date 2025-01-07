@@ -18,7 +18,7 @@ func NewCommissionGenerator(chains []*config.Chain) *CommissionGenerator {
 }
 
 func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameCommission)
+	data, ok := statePkg.StateGet[fetchersPkg.CommissionData](state, constants.FetcherNameCommission)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -30,8 +30,6 @@ func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Colle
 		},
 		[]string{"chain", "address", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.CommissionData)
 
 	for _, chain := range g.Chains {
 		chainCommissions, ok := data.Commissions[chain.Name]

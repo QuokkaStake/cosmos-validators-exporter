@@ -44,8 +44,13 @@ func NewBalanceFetcher(
 	}
 }
 
+func (q *BalanceFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *BalanceFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allBalances = map[string]map[string][]types.Amount{}

@@ -16,12 +16,10 @@ func NewNodeInfoGenerator() *NodeInfoGenerator {
 }
 
 func (g *NodeInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	nodeInfosRaw, ok := state.Get(constants.FetcherNameNodeInfo)
+	nodeInfos, ok := statePkg.StateGet[fetchersPkg.NodeInfoData](state, constants.FetcherNameNodeInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
-
-	nodeInfos, _ := nodeInfosRaw.(fetchersPkg.NodeInfoData)
 
 	networkInfoGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{

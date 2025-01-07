@@ -38,8 +38,13 @@ func NewSelfDelegationFetcher(
 	}
 }
 
+func (q *SelfDelegationFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *SelfDelegationFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 

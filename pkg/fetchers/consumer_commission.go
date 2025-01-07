@@ -43,8 +43,12 @@ func NewConsumerCommissionFetcher(
 	}
 }
 
+func (f *ConsumerCommissionFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
 func (f *ConsumerCommissionFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	f.queryInfos = []*types.QueryInfo{}
 	f.data = map[string]map[string]*types.ConsumerCommissionResponse{}

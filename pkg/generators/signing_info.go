@@ -16,7 +16,7 @@ func NewSigningInfoGenerator() *SigningInfoGenerator {
 }
 
 func (g *SigningInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameSigningInfo)
+	data, ok := statePkg.StateGet[fetchersPkg.SigningInfoData](state, constants.FetcherNameSigningInfo)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -28,8 +28,6 @@ func (g *SigningInfoGenerator) Generate(state *statePkg.State) []prometheus.Coll
 		},
 		[]string{"chain", "address"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.SigningInfoData)
 
 	for chain, commissions := range data.SigningInfos {
 		for validator, signingInfo := range commissions {

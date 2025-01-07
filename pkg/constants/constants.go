@@ -24,6 +24,8 @@ const (
 	FetcherNameNodeInfo           FetcherName = "node_info"
 	FetcherNameInflation          FetcherName = "inflation"
 	FetcherNameSupply             FetcherName = "supply"
+	FetcherNameStub1              FetcherName = "stub1"
+	FetcherNameStub2              FetcherName = "stub2"
 
 	MetricsPrefix string = "cosmos_validators_exporter_"
 

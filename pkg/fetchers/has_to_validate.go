@@ -43,8 +43,13 @@ func NewValidatorConsumersFetcher(
 	}
 }
 
+func (q *ValidatorConsumersFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
+
 func (q *ValidatorConsumersFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allValidatorsConsumers = map[string]map[string]map[string]bool{}

@@ -37,8 +37,12 @@ func NewUnbondsFetcher(
 	}
 }
 
+func (q *UnbondsFetcher) Dependencies() []constants.FetcherName {
+	return []constants.FetcherName{}
+}
 func (q *UnbondsFetcher) Fetch(
 	ctx context.Context,
+	data ...interface{},
 ) (interface{}, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 

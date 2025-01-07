@@ -22,12 +22,12 @@ func NewValidatorsInfoGenerator(chains []*config.Chain) *ValidatorsInfoGenerator
 }
 
 func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
-	dataRaw, ok := state.Get(constants.FetcherNameValidators)
+	data, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
 
-	consumersDataRaw, ok := state.Get(constants.FetcherNameConsumerValidators)
+	consumersData, ok := statePkg.StateGet[fetchersPkg.ConsumerValidatorsData](state, constants.FetcherNameConsumerValidators)
 	if !ok {
 		return []prometheus.Collector{}
 	}
@@ -47,9 +47,6 @@ func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.C
 		},
 		[]string{"chain", "denom"},
 	)
-
-	data, _ := dataRaw.(fetchersPkg.ValidatorsData)
-	consumersData, _ := consumersDataRaw.(fetchersPkg.ConsumerValidatorsData)
 
 	for _, chain := range g.Chains {
 		validators, ok := data.Validators[chain.Name]
