@@ -36,7 +36,7 @@ func NewSupplyFetcher(
 	tracer trace.Tracer,
 ) *SupplyFetcher {
 	return &SupplyFetcher{
-		Logger: logger.With().Str("component", "balance_fetcher").Logger(),
+		Logger: logger.With().Str("component", "supply_fetcher").Logger(),
 		Chains: chains,
 		RPCs:   rpcs,
 		Tracer: tracer,
