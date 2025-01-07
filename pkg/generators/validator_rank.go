@@ -29,7 +29,7 @@ func NewValidatorRankGenerator(
 	}
 }
 
-func (g *ValidatorRankGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ValidatorRankGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}

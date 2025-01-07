@@ -15,7 +15,7 @@ func NewDelegationsGenerator() *DelegationsGenerator {
 	return &DelegationsGenerator{}
 }
 
-func (g *DelegationsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *DelegationsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.DelegationsData](state, constants.FetcherNameDelegations)
 	if !ok {
 		return []prometheus.Collector{}

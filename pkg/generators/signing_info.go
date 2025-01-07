@@ -15,7 +15,7 @@ func NewSigningInfoGenerator() *SigningInfoGenerator {
 	return &SigningInfoGenerator{}
 }
 
-func (g *SigningInfoGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *SigningInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.SigningInfoData](state, constants.FetcherNameSigningInfo)
 	if !ok {
 		return []prometheus.Collector{}

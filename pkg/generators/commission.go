@@ -17,7 +17,7 @@ func NewCommissionGenerator(chains []*config.Chain) *CommissionGenerator {
 	return &CommissionGenerator{Chains: chains}
 }
 
-func (g *CommissionGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *CommissionGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.CommissionData](state, constants.FetcherNameCommission)
 	if !ok {
 		return []prometheus.Collector{}

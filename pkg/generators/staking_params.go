@@ -15,7 +15,7 @@ func NewStakingParamsGenerator() *StakingParamsGenerator {
 	return &StakingParamsGenerator{}
 }
 
-func (g *StakingParamsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *StakingParamsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.StakingParamsData](state, constants.FetcherNameStakingParams)
 	if !ok {
 		return []prometheus.Collector{}

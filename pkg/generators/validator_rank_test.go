@@ -19,7 +19,7 @@ import (
 func TestValidatorRankGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewValidatorRankGenerator([]*config.Chain{}, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -29,7 +29,7 @@ func TestValidatorRankGeneratorNoChainValidators(t *testing.T) {
 	t.Parallel()
 
 	chains := []*config.Chain{{Name: "chain"}}
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	generator := NewValidatorRankGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
@@ -47,7 +47,7 @@ func TestValidatorRankGeneratorNotFound(t *testing.T) {
 		Name:       "chain",
 		Validators: []config.Validator{{Address: "validator"}},
 	}}
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -75,7 +75,7 @@ func TestValidatorRankGeneratorNotActive(t *testing.T) {
 		Name:       "chain",
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {
@@ -112,7 +112,7 @@ func TestValidatorRankGeneratorActive(t *testing.T) {
 		Name:       "chain",
 		Validators: []config.Validator{{Address: "cosmosvaloper1xqz9pemz5e5zycaa89kys5aw6m8rhgsvw4328e"}},
 	}}
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{
 		Validators: map[string]*types.ValidatorsResponse{
 			"chain": {

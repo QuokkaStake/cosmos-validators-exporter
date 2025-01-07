@@ -41,10 +41,10 @@ func NewController(
 }
 
 func (c *Controller) Fetch(ctx context.Context) (
-	statePkg.State,
+	*statePkg.State,
 	[]*types.QueryInfo,
 ) {
-	data := statePkg.State{}
+	data := statePkg.NewState()
 	queries := []*types.QueryInfo{}
 	fetchersStatus := FetchersStatuses{}
 
@@ -63,7 +63,7 @@ func (c *Controller) Fetch(ctx context.Context) (
 		fetcherData, fetcherQueries := fetcher.Fetch(ctx, fetcherDependenciesData...)
 
 		mutex.Lock()
-		data[fetcher.Name()] = fetcherData
+		data.Set(fetcher.Name(), fetcherData)
 		queries = append(queries, fetcherQueries...)
 		fetchersStatus[fetcher.Name()] = true
 		mutex.Unlock()

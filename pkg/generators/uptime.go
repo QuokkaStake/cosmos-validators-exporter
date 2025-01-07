@@ -16,7 +16,7 @@ func NewUptimeGenerator() *UptimeGenerator {
 	return &UptimeGenerator{StartTime: time.Now()}
 }
 
-func (g *UptimeGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *UptimeGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	uptimeMetricsGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: constants.MetricsPrefix + "start_time",

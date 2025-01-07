@@ -17,7 +17,7 @@ func NewBalanceGenerator(chains []*config.Chain) *BalanceGenerator {
 	return &BalanceGenerator{Chains: chains}
 }
 
-func (g *BalanceGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *BalanceGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.BalanceData](state, constants.FetcherNameBalance)
 	if !ok {
 		return []prometheus.Collector{}

@@ -19,7 +19,7 @@ import (
 func TestSelfDelegationGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewSelfDelegationGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -28,7 +28,7 @@ func TestSelfDelegationGeneratorNoState(t *testing.T) {
 func TestSelfDelegationGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameSelfDelegation, fetchers.SelfDelegationData{
 		Delegations: map[string]map[string]*types.Amount{
 			"chain": {

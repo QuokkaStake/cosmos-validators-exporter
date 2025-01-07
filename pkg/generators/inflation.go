@@ -15,7 +15,7 @@ func NewInflationGenerator() *InflationGenerator {
 	return &InflationGenerator{}
 }
 
-func (g *InflationGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *InflationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.InflationData](state, constants.FetcherNameInflation)
 	if !ok {
 		return []prometheus.Collector{}

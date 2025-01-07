@@ -28,7 +28,7 @@ func NewValidatorActiveGenerator(
 	}
 }
 
-func (g *ValidatorActiveGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	validators, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}

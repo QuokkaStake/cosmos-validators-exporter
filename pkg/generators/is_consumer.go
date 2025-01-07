@@ -16,7 +16,7 @@ func NewIsConsumerGenerator(chains []*config.Chain) *IsConsumerGenerator {
 	return &IsConsumerGenerator{Chains: chains}
 }
 
-func (g *IsConsumerGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *IsConsumerGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	isConsumerGauge := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: constants.MetricsPrefix + "is_consumer",

@@ -15,7 +15,7 @@ func NewPriceGenerator() *PriceGenerator {
 	return &PriceGenerator{}
 }
 
-func (g *PriceGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *PriceGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.PriceData](state, constants.FetcherNamePrice)
 	if !ok {
 		return []prometheus.Collector{}

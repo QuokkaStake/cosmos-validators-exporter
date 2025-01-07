@@ -15,7 +15,7 @@ import (
 func TestUnbondsGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewUnbondsGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -24,7 +24,7 @@ func TestUnbondsGeneratorNoState(t *testing.T) {
 func TestUnbondsGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameUnbonds, fetchers.UnbondsData{
 		Unbonds: map[string]map[string]uint64{
 			"chain": {

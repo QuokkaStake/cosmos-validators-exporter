@@ -19,7 +19,7 @@ import (
 func TestSupplyGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewSupplyGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -28,7 +28,7 @@ func TestSupplyGeneratorNoState(t *testing.T) {
 func TestSupplyGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameSupply, fetchers.SupplyData{
 		Supplies: map[string][]types.Amount{
 			"chain": {

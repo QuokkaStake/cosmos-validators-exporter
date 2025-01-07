@@ -21,7 +21,7 @@ func NewValidatorsInfoGenerator(chains []*config.Chain) *ValidatorsInfoGenerator
 	return &ValidatorsInfoGenerator{Chains: chains}
 }
 
-func (g *ValidatorsInfoGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ValidatorsInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}

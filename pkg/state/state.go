@@ -4,28 +4,59 @@ import (
 	"fmt"
 	"main/pkg/constants"
 	"reflect"
+	"sync"
 )
 
-type State map[constants.FetcherName]interface{}
+type State struct {
+	mutex sync.Mutex
+	data  map[constants.FetcherName]interface{}
+}
 
-func (s State) GetData(fetcherNames []constants.FetcherName) []interface{} {
+func NewState() *State {
+	return &State{
+		data: map[constants.FetcherName]interface{}{},
+	}
+}
+
+func (s *State) GetData(fetcherNames []constants.FetcherName) []interface{} {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	data := make([]interface{}, len(fetcherNames))
 
 	for index, fetcherName := range fetcherNames {
-		data[index] = s[fetcherName]
+		data[index] = s.data[fetcherName]
 	}
 
 	return data
 }
 
-func (s State) Set(fetcherName constants.FetcherName, data interface{}) {
-	s[fetcherName] = data
+func (s *State) Set(fetcherName constants.FetcherName, data interface{}) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.data[fetcherName] = data
 }
 
-func StateGet[T any](state State, fetcherName constants.FetcherName) (T, bool) {
+func (s *State) Get(fetcherName constants.FetcherName) (interface{}, bool) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	data, found := s.data[fetcherName]
+	return data, found
+}
+
+func (s *State) Length() int {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	return len(s.data)
+}
+
+func StateGet[T any](state *State, fetcherName constants.FetcherName) (T, bool) {
 	var zero T
 
-	dataRaw, found := state[fetcherName]
+	dataRaw, found := state.Get(fetcherName)
 	if !found {
 		return zero, false
 	}

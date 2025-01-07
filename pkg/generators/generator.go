@@ -7,5 +7,5 @@ import (
 )
 
 type Generator interface {
-	Generate(state statePkg.State) []prometheus.Collector
+	Generate(state *statePkg.State) []prometheus.Collector
 }

@@ -20,5 +20,5 @@ func TestControllerFetcherEnabled(t *testing.T) {
 
 	data, queryInfos := controller.Fetch(context.Background())
 	assert.Empty(t, queryInfos)
-	assert.Len(t, data, 2)
+	assert.Equal(t, 2, data.Length())
 }

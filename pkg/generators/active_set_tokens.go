@@ -20,7 +20,7 @@ func NewActiveSetTokensGenerator(chains []*configPkg.Chain) *ActiveSetTokensGene
 	return &ActiveSetTokensGenerator{Chains: chains}
 }
 
-func (g *ActiveSetTokensGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ActiveSetTokensGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	validators, ok := statePkg.StateGet[fetchersPkg.ValidatorsData](state, constants.FetcherNameValidators)
 	if !ok {
 		return []prometheus.Collector{}

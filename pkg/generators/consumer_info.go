@@ -19,7 +19,7 @@ func NewConsumerInfoGenerator(chains []*config.Chain) *ConsumerInfoGenerator {
 	return &ConsumerInfoGenerator{Chains: chains}
 }
 
-func (g *ConsumerInfoGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ConsumerInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	consumerInfos, ok := statePkg.StateGet[fetchersPkg.ConsumerInfoData](state, constants.FetcherNameConsumerInfo)
 	if !ok {
 		return []prometheus.Collector{}

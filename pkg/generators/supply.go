@@ -17,7 +17,7 @@ func NewSupplyGenerator(chains []*config.Chain) *SupplyGenerator {
 	return &SupplyGenerator{Chains: chains}
 }
 
-func (g *SupplyGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *SupplyGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.SupplyData](state, constants.FetcherNameSupply)
 	if !ok {
 		return []prometheus.Collector{}

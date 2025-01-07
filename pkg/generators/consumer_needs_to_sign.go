@@ -18,7 +18,7 @@ func NewConsumerNeedsToSignGenerator(chains []*config.Chain) *ConsumerNeedsToSig
 	return &ConsumerNeedsToSignGenerator{Chains: chains}
 }
 
-func (g *ConsumerNeedsToSignGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ConsumerNeedsToSignGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	allValidatorsConsumers, ok := statePkg.StateGet[fetchersPkg.ValidatorConsumersData](state, constants.FetcherNameValidatorConsumers)
 	if !ok {
 		return []prometheus.Collector{}

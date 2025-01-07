@@ -15,7 +15,7 @@ func NewUnbondsGenerator() *UnbondsGenerator {
 	return &UnbondsGenerator{}
 }
 
-func (g *UnbondsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *UnbondsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.UnbondsData](state, constants.FetcherNameUnbonds)
 	if !ok {
 		return []prometheus.Collector{}

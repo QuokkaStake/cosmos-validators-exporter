@@ -17,7 +17,7 @@ func NewRewardsGenerator(chains []*config.Chain) *RewardsGenerator {
 	return &RewardsGenerator{Chains: chains}
 }
 
-func (g *RewardsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *RewardsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.RewardsData](state, constants.FetcherNameRewards)
 	if !ok {
 		return []prometheus.Collector{}

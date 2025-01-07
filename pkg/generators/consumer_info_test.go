@@ -19,7 +19,7 @@ import (
 func TestConsumerInfoGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewConsumerInfoGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -28,7 +28,7 @@ func TestConsumerInfoGeneratorNoState(t *testing.T) {
 func TestConsumerInfoGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameConsumerInfo, fetchers.ConsumerInfoData{
 		Info: map[string]map[string]types.ConsumerChainInfo{
 			"provider": {

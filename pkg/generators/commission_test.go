@@ -19,7 +19,7 @@ import (
 func TestCommissionGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewCommissionGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -28,7 +28,7 @@ func TestCommissionGeneratorNoState(t *testing.T) {
 func TestCommissionGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameCommission, fetchers.CommissionData{
 		Commissions: map[string]map[string][]types.Amount{
 			"chain": {

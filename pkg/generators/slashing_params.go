@@ -15,7 +15,7 @@ func NewSlashingParamsGenerator() *SlashingParamsGenerator {
 	return &SlashingParamsGenerator{}
 }
 
-func (g *SlashingParamsGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *SlashingParamsGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.SlashingParamsData](state, constants.FetcherNameSlashingParams)
 	if !ok {
 		return []prometheus.Collector{}

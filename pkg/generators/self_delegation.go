@@ -17,7 +17,7 @@ func NewSelfDelegationGenerator(chains []*config.Chain) *SelfDelegationGenerator
 	return &SelfDelegationGenerator{Chains: chains}
 }
 
-func (g *SelfDelegationGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *SelfDelegationGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	data, ok := statePkg.StateGet[fetchersPkg.SelfDelegationData](state, constants.FetcherNameSelfDelegation)
 	if !ok {
 		return []prometheus.Collector{}

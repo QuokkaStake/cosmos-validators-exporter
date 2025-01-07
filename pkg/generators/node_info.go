@@ -15,7 +15,7 @@ func NewNodeInfoGenerator() *NodeInfoGenerator {
 	return &NodeInfoGenerator{}
 }
 
-func (g *NodeInfoGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *NodeInfoGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	nodeInfos, ok := statePkg.StateGet[fetchersPkg.NodeInfoData](state, constants.FetcherNameNodeInfo)
 	if !ok {
 		return []prometheus.Collector{}

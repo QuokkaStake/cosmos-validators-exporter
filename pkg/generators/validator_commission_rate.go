@@ -28,7 +28,7 @@ func NewValidatorCommissionRateGenerator(
 	}
 }
 
-func (g *ValidatorCommissionRateGenerator) Generate(state statePkg.State) []prometheus.Collector {
+func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []prometheus.Collector {
 	consumerCommissions, ok := statePkg.StateGet[fetchersPkg.ConsumerCommissionData](state, constants.FetcherNameConsumerCommission)
 	if !ok {
 		return []prometheus.Collector{}

@@ -16,7 +16,7 @@ import (
 func TestNodeInfoGeneratorNoState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	generator := NewNodeInfoGenerator()
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -25,7 +25,7 @@ func TestNodeInfoGeneratorNoState(t *testing.T) {
 func TestNodeInfoGeneratorNotEmptyState(t *testing.T) {
 	t.Parallel()
 
-	state := statePkg.State{}
+	state := statePkg.NewState()
 	state.Set(constants.FetcherNameNodeInfo, fetchers.NodeInfoData{
 		NodeInfos: map[string]*types.NodeInfoResponse{
 			"chain": {
