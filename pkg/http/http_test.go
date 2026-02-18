@@ -55,6 +55,8 @@ func TestHttpClientPredicateFail(t *testing.T) {
 // across requests, rather than creating a new one per request. A new transport
 // per request leaks goroutines (read/write loops per connection pool) that
 // linger for IdleConnTimeout (default 90s).
+//
+//nolint:paralleltest // goroutine count measurement is incompatible with parallel test execution
 func TestTransportReuse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
