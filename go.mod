@@ -2,8 +2,6 @@ module main
 
 go 1.25.8
 
-toolchain go1.25.8
-
 require (
 	cosmossdk.io/math v1.3.0
 	github.com/BurntSushi/toml v1.4.0
