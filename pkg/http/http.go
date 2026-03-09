@@ -14,12 +14,22 @@ import (
 )
 
 type Client struct {
-	logger zerolog.Logger
-	chain  string
-	tracer trace.Tracer
+	logger     zerolog.Logger
+	chain      string
+	tracer     trace.Tracer
+	httpClient *http.Client
 }
 
 func NewClient(logger *zerolog.Logger, chain string, tracer trace.Tracer) *Client {
+	var transport http.RoundTripper
+
+	transportRaw, ok := http.DefaultTransport.(*http.Transport)
+	if ok {
+		transport = transportRaw.Clone()
+	} else {
+		transport = http.DefaultTransport
+	}
+
 	return &Client{
 		logger: logger.With().
 			Str("component", "http").
@@ -27,6 +37,10 @@ func NewClient(logger *zerolog.Logger, chain string, tracer trace.Tracer) *Clien
 			Logger(),
 		chain:  chain,
 		tracer: tracer,
+		httpClient: &http.Client{
+			Timeout:   10 * time.Second,
+			Transport: otelhttp.NewTransport(transport),
+		},
 	}
 }
 
@@ -39,19 +53,6 @@ func (c *Client) Get(
 	childCtx, span := c.tracer.Start(ctx, "HTTP request")
 	defer span.End()
 
-	var transport http.RoundTripper
-
-	transportRaw, ok := http.DefaultTransport.(*http.Transport)
-	if ok {
-		transport = transportRaw.Clone()
-	} else {
-		transport = http.DefaultTransport
-	}
-
-	client := &http.Client{
-		Timeout:   10 * time.Second,
-		Transport: otelhttp.NewTransport(transport),
-	}
 	start := time.Now()
 
 	queryInfo := types.QueryInfo{
@@ -70,7 +71,7 @@ func (c *Client) Get(
 
 	c.logger.Debug().Str("url", url).Msg("Doing a query...")
 
-	res, err := client.Do(req)
+	res, err := c.httpClient.Do(req)
 	queryInfo.Duration = time.Since(start)
 	if err != nil {
 		c.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
