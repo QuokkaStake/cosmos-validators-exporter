@@ -38,6 +38,7 @@ func TestPriceFetcherBase(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestPriceFetcherProviderCoingeckoError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -71,6 +72,7 @@ func TestPriceFetcherProviderCoingeckoError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestPriceFetcherProviderCoingeckoSuccess(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -112,6 +114,7 @@ func TestPriceFetcherProviderCoingeckoSuccess(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestPriceFetcherConsumerCoingeckoSuccess(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(

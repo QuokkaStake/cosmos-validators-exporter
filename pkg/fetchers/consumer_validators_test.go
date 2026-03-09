@@ -92,6 +92,7 @@ func TestConsumerValidatorsFetcherQueryDisabled(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestConsumerValidatorsFetcherQueryError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -138,6 +139,7 @@ func TestConsumerValidatorsFetcherQueryError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestConsumerValidatorsFetcherNodeError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -184,6 +186,7 @@ func TestConsumerValidatorsFetcherNodeError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestConsumerValidatorsFetcherQuerySuccess(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(

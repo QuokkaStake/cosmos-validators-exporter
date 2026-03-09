@@ -74,6 +74,7 @@ func TestAppLoadConfigOk(t *testing.T) {
 		if request.Body != nil {
 			_ = request.Body.Close()
 		}
+
 		if err == nil {
 			break
 		}
@@ -82,6 +83,7 @@ func TestAppLoadConfigOk(t *testing.T) {
 	}
 
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(

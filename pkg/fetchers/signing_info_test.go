@@ -128,6 +128,7 @@ func TestSigningInfoFetcherQueryDisabled(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherQueryError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -174,6 +175,7 @@ func TestSigningInfoFetcherQueryError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherNodeError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -220,6 +222,7 @@ func TestSigningInfoFetcherNodeError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherQuerySuccess(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -317,6 +320,7 @@ func TestSigningInfoFetcherConsumerNoBechConsensusPrefix(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherConsumerAssignedKeyQueryError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -374,6 +378,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyQueryError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherConsumerAssignedKeyNodeError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -481,6 +486,7 @@ func TestSigningInfoFetcherConsumerAssignedKeyInvalidValcons(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherConsumerInvalidValoper(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -538,6 +544,7 @@ func TestSigningInfoFetcherConsumerInvalidValoper(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherConsumerSuccessWithAssignedKey(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -605,6 +612,7 @@ func TestSigningInfoFetcherConsumerSuccessWithAssignedKey(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherConsumerSuccessWithoutAssignedKey(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -672,6 +680,7 @@ func TestSigningInfoFetcherConsumerSuccessWithoutAssignedKey(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSigningInfoFetcherConsumerSuccessWithAssignedKeyQueryDisabled(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(

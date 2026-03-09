@@ -153,6 +153,7 @@ func TestSelfDelegationFetcherQueryDisabled(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSelfDelegationFetcherQueryError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -196,6 +197,7 @@ func TestSelfDelegationFetcherQueryError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSelfDelegationFetcherNodeError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -239,6 +241,7 @@ func TestSelfDelegationFetcherNodeError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestSelfDelegationFetcherQuerySuccess(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(

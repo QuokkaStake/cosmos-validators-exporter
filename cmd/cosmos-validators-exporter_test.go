@@ -16,6 +16,7 @@ func TestValidateConfigNoConfigProvided(t *testing.T) {
 	}()
 
 	os.Args = []string{"cmd", "validate-config"}
+
 	main()
 }
 
@@ -28,6 +29,7 @@ func TestValidateConfigFailedToLoad(t *testing.T) {
 	}()
 
 	os.Args = []string{"cmd", "validate-config", "--config", "../assets/config-not-found.toml"}
+
 	main()
 }
 
@@ -40,18 +42,21 @@ func TestValidateConfigInvalid(t *testing.T) {
 	}()
 
 	os.Args = []string{"cmd", "validate-config", "--config", "../assets/config-invalid.toml"}
+
 	main()
 }
 
 //nolint:paralleltest // disabled
 func TestValidateConfigWithWarnings(_ *testing.T) {
 	os.Args = []string{"cmd", "validate-config", "--config", "../assets/config-with-warnings.toml"}
+
 	main()
 }
 
 //nolint:paralleltest // disabled
 func TestValidateConfigValid(_ *testing.T) {
 	os.Args = []string{"cmd", "validate-config", "--config", "../assets/config-valid.toml"}
+
 	main()
 }
 
@@ -64,6 +69,7 @@ func TestStartNoConfigProvided(t *testing.T) {
 	}()
 
 	os.Args = []string{"cmd"}
+
 	main()
 }
 
@@ -76,5 +82,6 @@ func TestStartConfigProvided(t *testing.T) {
 	}()
 
 	os.Args = []string{"cmd", "--config", "../assets/config-invalid.toml"}
+
 	main()
 }

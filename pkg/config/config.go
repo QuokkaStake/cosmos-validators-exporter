@@ -23,7 +23,8 @@ type LogConfig struct {
 }
 
 func (c *Config) Validate() error {
-	if err := c.TracingConfig.Validate(); err != nil {
+	err := c.TracingConfig.Validate()
+	if err != nil {
 		return fmt.Errorf("error in tracing config: %s", err)
 	}
 
@@ -32,7 +33,8 @@ func (c *Config) Validate() error {
 	}
 
 	for index, chain := range c.Chains {
-		if err := chain.Validate(); err != nil {
+		err := chain.Validate()
+		if err != nil {
 			return fmt.Errorf("error in chain %d: %s", index, err)
 		}
 	}
@@ -64,5 +66,6 @@ func GetConfig(path string, filesystem fs.FS) (*Config, error) {
 	}
 
 	defaults.MustSet(&configStruct)
+
 	return &configStruct, nil
 }

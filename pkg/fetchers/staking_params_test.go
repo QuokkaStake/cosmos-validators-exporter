@@ -83,6 +83,7 @@ func TestStakingParamsFetcherQueryDisabled(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestStakingParamsFetcherQueryError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -123,6 +124,7 @@ func TestStakingParamsFetcherQueryError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestStakingParamsFetcherNodeError(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -163,6 +165,7 @@ func TestStakingParamsFetcherNodeError(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestStakingParamsFetcherQuerySuccess(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(

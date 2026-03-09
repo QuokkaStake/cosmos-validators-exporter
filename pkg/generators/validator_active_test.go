@@ -31,6 +31,7 @@ func TestValidatorActiveGeneratorNoConsumerValidators(t *testing.T) {
 	chains := []*config.Chain{{Name: "chain"}}
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
+
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -43,6 +44,7 @@ func TestValidatorActiveGeneratorNoChainValidators(t *testing.T) {
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	state.Set(constants.FetcherNameConsumerValidators, fetchers.ConsumerValidatorsData{})
+
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -72,6 +74,7 @@ func TestValidatorActiveGeneratorNotFound(t *testing.T) {
 		},
 	})
 	state.Set(constants.FetcherNameConsumerValidators, fetchers.ConsumerValidatorsData{})
+
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 1)
@@ -110,6 +113,7 @@ func TestValidatorActiveGeneratorProvider(t *testing.T) {
 		},
 	})
 	state.Set(constants.FetcherNameConsumerValidators, fetchers.ConsumerValidatorsData{})
+
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 1)
@@ -167,6 +171,7 @@ func TestValidatorActiveGeneratorConsumer(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewValidatorActiveGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 1)

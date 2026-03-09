@@ -62,6 +62,7 @@ func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []pro
 						Str("chain", chain.Name).
 						Str("validator", validatorAddr.Address).
 						Msg("Error comparing two validators' bech32 addresses")
+
 					return false
 				}
 
@@ -75,6 +76,7 @@ func (g *ValidatorCommissionRateGenerator) Generate(state *statePkg.State) []pro
 					Str("chain", chain.Name).
 					Str("validator", validatorAddr.Address).
 					Msg("Could not find validator")
+
 				continue
 			} else {
 				commissionGauge.With(prometheus.Labels{

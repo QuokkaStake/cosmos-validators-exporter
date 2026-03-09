@@ -28,6 +28,7 @@ func ExecuteMain(configPath string) {
 
 func ExecuteValidateConfig(configPath string) {
 	filesystem := &OsFS{}
+
 	config, err := configPkg.GetConfig(configPath, filesystem)
 	if err != nil {
 		logger.GetDefaultLogger().Panic().Err(err).Msg("Could not load config!")
@@ -80,7 +81,8 @@ func main() {
 
 	rootCmd.AddCommand(validateConfigCmd)
 
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		logger.GetDefaultLogger().Panic().Err(err).Msg("Could not start application")
 	}
 }

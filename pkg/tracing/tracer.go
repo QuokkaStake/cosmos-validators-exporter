@@ -33,6 +33,7 @@ func getExporter(config configPkg.TracingConfig) tracesdk.SpanExporter {
 			context.Background(),
 			opts...,
 		)
+
 		return exporter
 	}
 

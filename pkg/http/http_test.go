@@ -34,6 +34,7 @@ func TestHttpClientErrorCreating(t *testing.T) {
 //nolint:paralleltest // disabled due to httpmock usage
 func TestHttpClientPredicateFail(t *testing.T) {
 	httpmock.Activate()
+
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder(
@@ -43,6 +44,7 @@ func TestHttpClientPredicateFail(t *testing.T) {
 			constants.HeaderBlockHeight: []string{"1"},
 		}),
 	)
+
 	logger := loggerPkg.GetNopLogger()
 	tracer := tracing.InitNoopTracer()
 	client := NewClient(logger, "chain", tracer)
@@ -73,11 +75,13 @@ func TestTransportReuse(t *testing.T) {
 	// Force GC and record baseline
 	runtime.GC()
 	time.Sleep(50 * time.Millisecond)
+
 	baselineGoroutines := runtime.NumGoroutine()
 
 	const numRequests = 200
-	for i := 0; i < numRequests; i++ {
+	for i := range numRequests {
 		var target map[string]string
+
 		_, _, err := client.Get(server.URL, &target, predicate, context.Background())
 		if err != nil {
 			t.Fatalf("request %d failed: %v", i, err)
@@ -113,8 +117,9 @@ func BenchmarkHTTPClientGet(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		var target map[string]string
+
 		_, _, _ = client.Get(server.URL, &target, predicate, context.Background())
 	}
 }

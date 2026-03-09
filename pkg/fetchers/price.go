@@ -54,8 +54,8 @@ func (q *PriceFetcher) Dependencies() []constants.FetcherName {
 
 func (q *PriceFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	queries := []*types.QueryInfo{}
 	denomsByPriceFetcher := map[constants.PriceFetcherName][]price_fetchers.ChainWithDenom{}
 
@@ -81,9 +81,11 @@ func (q *PriceFetcher) Fetch(
 		}
 	}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
-	var denomsPrices = map[constants.PriceFetcherName][]price_fetchers.PriceInfo{}
+	var (
+		wg           sync.WaitGroup
+		mutex        sync.Mutex
+		denomsPrices = map[constants.PriceFetcherName][]price_fetchers.PriceInfo{}
+	)
 
 	for priceFetcher, denoms := range denomsByPriceFetcher {
 		wg.Add(1)
@@ -94,6 +96,7 @@ func (q *PriceFetcher) Fetch(
 			priceFetcherDenoms, priceFetcherQuery := q.Fetchers[priceFetcher].FetchPrices(denoms, ctx)
 
 			mutex.Lock()
+
 			queries = append(queries, priceFetcherQuery)
 			denomsPrices[priceFetcher] = priceFetcherDenoms
 			mutex.Unlock()

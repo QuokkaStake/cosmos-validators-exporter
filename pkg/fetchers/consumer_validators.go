@@ -49,15 +49,15 @@ func (f *ConsumerValidatorsFetcher) Dependencies() []constants.FetcherName {
 
 func (f *ConsumerValidatorsFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	f.queryInfos = []*types.QueryInfo{}
 	f.allValidators = map[string]*types.ConsumerValidatorsResponse{}
 
 	for _, chain := range f.Chains {
 		f.wg.Add(len(chain.ConsumerChains))
 
-		rpc, _ := f.RPCs[chain.Name]
+		rpc := f.RPCs[chain.Name]
 
 		for _, consumerChain := range chain.ConsumerChains {
 			go f.processChain(ctx, rpc.RPC, consumerChain)
@@ -94,6 +94,7 @@ func (f *ConsumerValidatorsFetcher) processChain(
 			Err(err).
 			Str("chain", chain.Name).
 			Msg("Error querying consumer validators")
+
 		return
 	}
 

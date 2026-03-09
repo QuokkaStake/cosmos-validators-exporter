@@ -9,20 +9,20 @@ import (
 
 type State struct {
 	mutex sync.Mutex
-	data  map[constants.FetcherName]interface{}
+	data  map[constants.FetcherName]any
 }
 
 func NewState() *State {
 	return &State{
-		data: map[constants.FetcherName]interface{}{},
+		data: map[constants.FetcherName]any{},
 	}
 }
 
-func (s *State) GetData(fetcherNames []constants.FetcherName) []interface{} {
+func (s *State) GetData(fetcherNames []constants.FetcherName) []any {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	data := make([]interface{}, len(fetcherNames))
+	data := make([]any, len(fetcherNames))
 
 	for index, fetcherName := range fetcherNames {
 		data[index] = s.data[fetcherName]
@@ -31,18 +31,19 @@ func (s *State) GetData(fetcherNames []constants.FetcherName) []interface{} {
 	return data
 }
 
-func (s *State) Set(fetcherName constants.FetcherName, data interface{}) {
+func (s *State) Set(fetcherName constants.FetcherName, data any) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	s.data[fetcherName] = data
 }
 
-func (s *State) Get(fetcherName constants.FetcherName) (interface{}, bool) {
+func (s *State) Get(fetcherName constants.FetcherName) (any, bool) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	data, found := s.data[fetcherName]
+
 	return data, found
 }
 
@@ -64,7 +65,7 @@ func StateGet[T any](state *State, fetcherName constants.FetcherName) (T, bool) 
 	return Convert[T](dataRaw)
 }
 
-func Convert[T any](input interface{}) (T, bool) {
+func Convert[T any](input any) (T, bool) {
 	var zero T
 
 	if input == nil {

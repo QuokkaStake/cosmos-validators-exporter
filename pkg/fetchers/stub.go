@@ -18,8 +18,8 @@ func (f *StubFetcher1) Dependencies() []constants.FetcherName {
 
 func (f *StubFetcher1) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	return nil, []*types.QueryInfo{}
 }
 
@@ -35,7 +35,7 @@ func (f *StubFetcher2) Dependencies() []constants.FetcherName {
 
 func (f *StubFetcher2) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	return nil, []*types.QueryInfo{}
 }

@@ -31,6 +31,7 @@ func TestValidatorsInfoGeneratorNoConsumerValidators(t *testing.T) {
 
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
+
 	generator := NewValidatorsInfoGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -151,6 +152,7 @@ func TestValidatorsInfoGeneratorConsumer(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewValidatorsInfoGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Len(t, results, 2)

@@ -48,8 +48,10 @@ func (c *Controller) Fetch(ctx context.Context) (
 	queries := []*types.QueryInfo{}
 	fetchersStatus := FetchersStatuses{}
 
-	var mutex sync.Mutex
-	var wg sync.WaitGroup
+	var (
+		mutex sync.Mutex
+		wg    sync.WaitGroup
+	)
 
 	processFetcher := func(fetcher fetchersPkg.Fetcher) {
 		defer wg.Done()
@@ -64,6 +66,7 @@ func (c *Controller) Fetch(ctx context.Context) (
 
 		mutex.Lock()
 		data.Set(fetcher.Name(), fetcherData)
+
 		queries = append(queries, fetcherQueries...)
 		fetchersStatus[fetcher.Name()] = true
 		mutex.Unlock()
@@ -88,6 +91,7 @@ func (c *Controller) Fetch(ctx context.Context) (
 				c.Logger.Trace().
 					Str("name", string(fetcher.Name())).
 					Msg("Fetcher is already being processed or is processed, skipping.")
+
 				continue
 			}
 
@@ -95,6 +99,7 @@ func (c *Controller) Fetch(ctx context.Context) (
 				c.Logger.Trace().
 					Str("name", string(fetcher.Name())).
 					Msg("Fetcher's dependencies are not yet processed, skipping for now.")
+
 				continue
 			}
 

@@ -71,6 +71,7 @@ func (rpc *RPC) GetDelegationsCount(
 	)
 
 	var response *types.PaginationResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -106,6 +107,7 @@ func (rpc *RPC) GetUnbondsCount(
 	)
 
 	var response *types.PaginationResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -145,6 +147,7 @@ func (rpc *RPC) GetSingleDelegation(
 	)
 
 	var response types.SingleDelegationResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return &types.Amount{}, &info, err
@@ -156,6 +159,7 @@ func (rpc *RPC) GetSingleDelegation(
 	}
 
 	amount := response.DelegationResponse.Balance.ToAmount()
+
 	return &amount, &info, nil
 }
 
@@ -175,6 +179,7 @@ func (rpc *RPC) GetAllValidators(
 	url := rpc.ChainHost + "/cosmos/staking/v1beta1/validators?pagination.count_total=true&pagination.limit=10000"
 
 	var response *types.ValidatorsResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -205,6 +210,7 @@ func (rpc *RPC) GetConsumerValidators(
 	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_validators/" + consumerID
 
 	var response *types.ConsumerValidatorsResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -234,6 +240,7 @@ func (rpc *RPC) GetConsumerInfo(
 	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_chains/0" // "CONSUMER_PHASE_UNSPECIFIED"
 
 	var response *types.ConsumerInfoResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -269,6 +276,7 @@ func (rpc *RPC) GetValidatorCommission(
 	)
 
 	var response *types.CommissionResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
@@ -310,6 +318,7 @@ func (rpc *RPC) GetDelegatorRewards(
 	)
 
 	var response *types.RewardsResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
@@ -347,6 +356,7 @@ func (rpc *RPC) GetWalletBalance(
 	)
 
 	var response types.BalancesResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return []types.Amount{}, &info, err
@@ -389,6 +399,7 @@ func (rpc *RPC) GetConsumerAssignedKey(
 	)
 
 	var response *types.AssignedKeyResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -420,6 +431,7 @@ func (rpc *RPC) GetSigningInfo(
 	url := fmt.Sprintf("%s/cosmos/slashing/v1beta1/signing_infos/%s", rpc.ChainHost, valcons)
 
 	var response *types.SigningInfoResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -449,6 +461,7 @@ func (rpc *RPC) GetSlashingParams(
 	url := rpc.ChainHost + "/cosmos/slashing/v1beta1/params"
 
 	var response *types.SlashingParamsResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -478,6 +491,7 @@ func (rpc *RPC) GetStakingParams(
 	url := rpc.ChainHost + "/cosmos/staking/v1beta1/params"
 
 	var response *types.StakingParamsResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -507,6 +521,7 @@ func (rpc *RPC) GetNodeInfo(
 	url := rpc.ChainHost + "/cosmos/base/tendermint/v1beta1/node_info"
 
 	var response *types.NodeInfoResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -537,6 +552,7 @@ func (rpc *RPC) GetValidatorConsumerChains(
 	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_chains_per_validator/" + valcons
 
 	var response *types.ValidatorConsumerChains
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -568,6 +584,7 @@ func (rpc *RPC) GetConsumerCommission(
 	url := rpc.ChainHost + "/interchain_security/ccv/provider/consumer_commission_rate/" + consumerID + "/" + valcons
 
 	var response *types.ConsumerCommissionResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -595,6 +612,7 @@ func (rpc *RPC) GetInflation(ctx context.Context) (*types.InflationResponse, *ty
 	url := rpc.ChainHost + "/cosmos/mint/v1beta1/inflation"
 
 	var response *types.InflationResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -622,6 +640,7 @@ func (rpc *RPC) GetTotalSupply(ctx context.Context) ([]types.Amount, *types.Quer
 	url := rpc.ChainHost + "/cosmos/bank/v1beta1/supply?pagination.limit=10000&pagination.offset=0"
 
 	var response *types.SupplyResponse
+
 	info, err := rpc.Get(url, &response, childQuerierCtx)
 	if err != nil {
 		return nil, &info, err
@@ -639,10 +658,11 @@ func (rpc *RPC) GetTotalSupply(ctx context.Context) ([]types.Amount, *types.Quer
 
 func (rpc *RPC) Get(
 	url string,
-	target interface{},
+	target any,
 	ctx context.Context,
 ) (types.QueryInfo, error) {
 	rpc.Mutex.Lock()
+
 	previousHeight, found := rpc.LastHeight[url]
 	if !found {
 		previousHeight = 0
@@ -655,7 +675,6 @@ func (rpc *RPC) Get(
 		types.HTTPPredicateCheckHeightAfter(previousHeight),
 		ctx,
 	)
-
 	if err != nil {
 		return info, err
 	}

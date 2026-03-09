@@ -60,11 +60,12 @@ func (c *Coingecko) FetchPrices(
 	)
 
 	var response Response
-	queryInfo, _, err := c.Client.Get(url, &response, types.HTTPPredicateAlwaysPass(), childCtx)
 
+	queryInfo, _, err := c.Client.Get(url, &response, types.HTTPPredicateAlwaysPass(), childCtx)
 	if err != nil {
 		c.Logger.Error().Err(err).Msg("Could not get rate")
 		querierSpan.RecordError(err)
+
 		return nil, &queryInfo
 	}
 

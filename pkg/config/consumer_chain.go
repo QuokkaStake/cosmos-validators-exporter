@@ -47,7 +47,8 @@ func (c *ConsumerChain) Validate() error {
 	}
 
 	for index, denomInfo := range c.Denoms {
-		if err := denomInfo.Validate(); err != nil {
+		err := denomInfo.Validate()
+		if err != nil {
 			return fmt.Errorf("error in denom #%d: %s", index, err)
 		}
 	}

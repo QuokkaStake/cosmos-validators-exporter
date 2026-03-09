@@ -44,8 +44,8 @@ func (q *RewardsFetcher) Dependencies() []constants.FetcherName {
 
 func (q *RewardsFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	allRewards := map[string]map[string][]types.Amount{}
@@ -53,14 +53,17 @@ func (q *RewardsFetcher) Fetch(
 		allRewards[chain.Name] = map[string][]types.Amount{}
 	}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var (
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
+
 			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
 
@@ -75,6 +78,7 @@ func (q *RewardsFetcher) Fetch(
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error converting validator address")
+
 					return
 				}
 
@@ -93,6 +97,7 @@ func (q *RewardsFetcher) Fetch(
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying for validator self-delegation rewards")
+
 					return
 				}
 

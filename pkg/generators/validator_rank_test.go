@@ -31,6 +31,7 @@ func TestValidatorRankGeneratorNoChainValidators(t *testing.T) {
 	chains := []*config.Chain{{Name: "chain"}}
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
+
 	generator := NewValidatorRankGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -59,6 +60,7 @@ func TestValidatorRankGeneratorNotFound(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewValidatorRankGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -96,6 +98,7 @@ func TestValidatorRankGeneratorNotActive(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewValidatorRankGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -136,6 +139,7 @@ func TestValidatorRankGeneratorActive(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewValidatorRankGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)

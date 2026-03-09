@@ -48,8 +48,8 @@ func (f *ConsumerCommissionFetcher) Dependencies() []constants.FetcherName {
 }
 func (f *ConsumerCommissionFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	f.queryInfos = []*types.QueryInfo{}
 	f.data = map[string]map[string]*types.ConsumerCommissionResponse{}
 
@@ -65,10 +65,11 @@ func (f *ConsumerCommissionFetcher) Fetch(
 				continue
 			}
 
-			rpc, _ := f.RPCs[chain.Name]
+			rpc := f.RPCs[chain.Name]
 
 			for _, consumerChain := range chain.ConsumerChains {
 				f.wg.Add(1)
+
 				go f.processChain(ctx, rpc.RPC, consumerChain, validator)
 			}
 		}
@@ -105,6 +106,7 @@ func (f *ConsumerCommissionFetcher) processChain(
 			Err(err).
 			Str("chain", chain.Name).
 			Msg("Error querying consumer commission")
+
 		return
 	}
 

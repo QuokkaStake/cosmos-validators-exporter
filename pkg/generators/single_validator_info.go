@@ -88,6 +88,7 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 			g.Logger.Warn().
 				Str("chain", chain.Name).
 				Msg("Could not find validators list")
+
 			continue
 		}
 
@@ -100,6 +101,7 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 						Str("chain", chain.Name).
 						Str("validator", validatorAddr.Address).
 						Msg("Error comparing two validators' bech32 addresses")
+
 					return false
 				}
 
@@ -113,6 +115,7 @@ func (g *SingleValidatorInfoGenerator) Generate(state *statePkg.State) []prometh
 					Str("chain", chain.Name).
 					Str("validator", validatorAddr.Address).
 					Msg("Could not find validator")
+
 				continue
 			}
 
