@@ -49,15 +49,15 @@ func (q *SupplyFetcher) Dependencies() []constants.FetcherName {
 
 func (q *SupplyFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allSupplies = map[string][]types.Amount{}
 
 	for _, chain := range q.Chains {
 		q.wg.Add(1 + len(chain.ConsumerChains))
 
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		go q.processChain(
 			ctx,
@@ -106,6 +106,7 @@ func (q *SupplyFetcher) processChain(
 			Err(err).
 			Str("chain", chainName).
 			Msg("Error querying for chain supply")
+
 		return
 	}
 

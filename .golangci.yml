@@ -1,47 +1,66 @@
-linters-settings:
-  gocritic:
-    disabled-checks:
-      - ifElseChain
-  gosec:
-    excludes:
-      - G402
-      - G404
-  staticcheck:
-    checks:
-      - all
-      - '-SA1019'
-  revive:
-    rules:
-      - name: var-declaration
-        disabled: true
-
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
-    - funlen
-    - nlreturn
-    - wrapcheck
     - cyclop
-    - err113
-    - exhaustruct
-    - wsl
-    - lll
-    - dupl
-    - varnamelen
-    - gomoddirectives
-    - gocognit
-    - tagliatelle
-    - errorlint
-    - gofumpt
-    - noctx
-    - gosec
-    - stylecheck
-    - gosimple
-    - ireturn
-    - gci
-    - promlinter
-    - gocyclo
-    - maintidx
     - depguard
+    - dupl
+    - err113
+    - errorlint
+    - exhaustruct
+    - funlen
+    - gocognit
+    - gocyclo
+    - gomoddirectives
+    - gosec
+    - ireturn
+    - lll
+    - maintidx
     - mnd
+    - nlreturn
+    - noctx
+    - promlinter
+    - tagliatelle
     - testpackage
+    - varnamelen
+    - wrapcheck
+    - wsl
+    - staticcheck
+    - noinlineerr
+  settings:
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+    gosec:
+      excludes:
+        - G402
+        - G404
+    revive:
+      rules:
+        - name: var-declaration
+          disabled: true
+    staticcheck:
+      checks:
+        - all
+        - -SA1019
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

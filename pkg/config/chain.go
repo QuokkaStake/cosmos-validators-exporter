@@ -50,19 +50,22 @@ func (c *Chain) Validate() error {
 	}
 
 	for index, validator := range c.Validators {
-		if err := validator.Validate(); err != nil {
+		err := validator.Validate()
+		if err != nil {
 			return fmt.Errorf("error in validator #%d: %s", index, err)
 		}
 	}
 
 	for index, denomInfo := range c.Denoms {
-		if err := denomInfo.Validate(); err != nil {
+		err := denomInfo.Validate()
+		if err != nil {
 			return fmt.Errorf("error in denom #%d: %s", index, err)
 		}
 	}
 
 	for index, chain := range c.ConsumerChains {
-		if err := chain.Validate(); err != nil {
+		err := chain.Validate()
+		if err != nil {
 			return fmt.Errorf("error in consumer chain #%d: %s", index, err)
 		}
 	}

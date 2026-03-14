@@ -50,8 +50,8 @@ func (q *BalanceFetcher) Dependencies() []constants.FetcherName {
 
 func (q *BalanceFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allBalances = map[string]map[string][]types.Amount{}
 
@@ -63,7 +63,7 @@ func (q *BalanceFetcher) Fetch(
 	}
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			q.wg.Add(1 + len(chain.ConsumerChains))
@@ -119,6 +119,7 @@ func (q *BalanceFetcher) processChain(
 			Str("chain", chainName).
 			Str("address", validator).
 			Msg("Error converting validator address")
+
 		return
 	}
 
@@ -137,6 +138,7 @@ func (q *BalanceFetcher) processChain(
 			Str("chain", chainName).
 			Str("address", validator).
 			Msg("Error querying for validator wallet balance")
+
 		return
 	}
 

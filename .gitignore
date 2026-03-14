@@ -1,7 +1,0 @@
-main
-config*.toml
-!assets/config*.toml
-cosmos-validators-exporter
-.idea/
-dist/
-cover.out

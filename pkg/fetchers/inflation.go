@@ -44,22 +44,25 @@ func (q *InflationFetcher) Dependencies() []constants.FetcherName {
 }
 func (q *InflationFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	allInflation := map[string]math.LegacyDec{}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var (
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
 
 	for _, chain := range q.Chains {
 		wg.Add(1)
 
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		go func(rpc *tendermint.RPC, chain *config.Chain) {
 			defer wg.Done()
+
 			inflationResponse, query, err := rpc.GetInflation(ctx)
 
 			mutex.Lock()
@@ -74,6 +77,7 @@ func (q *InflationFetcher) Fetch(
 					Err(err).
 					Str("chain", chain.Name).
 					Msg("Error querying inflation")
+
 				return
 			}
 

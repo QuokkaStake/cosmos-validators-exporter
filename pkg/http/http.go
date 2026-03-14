@@ -46,7 +46,7 @@ func NewClient(logger *zerolog.Logger, chain string, tracer trace.Tracer) *Clien
 
 func (c *Client) Get(
 	url string,
-	target interface{},
+	target any,
 	predicate types.HTTPPredicate,
 	ctx context.Context,
 ) (types.QueryInfo, http.Header, error) {
@@ -73,15 +73,18 @@ func (c *Client) Get(
 
 	res, err := c.httpClient.Do(req)
 	queryInfo.Duration = time.Since(start)
+
 	if err != nil {
 		c.logger.Warn().Str("url", url).Err(err).Msg("Query failed")
 		return queryInfo, nil, err
 	}
+
 	defer res.Body.Close()
 
 	c.logger.Debug().Str("url", url).Dur("duration", time.Since(start)).Msg("Query is finished")
 
-	if predicateErr := predicate(res); predicateErr != nil {
+	predicateErr := predicate(res)
+	if predicateErr != nil {
 		return queryInfo, res.Header, predicateErr
 	}
 

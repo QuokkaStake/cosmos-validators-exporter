@@ -7,7 +7,7 @@ import (
 )
 
 type Fetcher interface {
-	Fetch(ctx context.Context, data ...interface{}) (interface{}, []*types.QueryInfo)
+	Fetch(ctx context.Context, data ...any) (any, []*types.QueryInfo)
 	Dependencies() []constants.FetcherName
 	Name() constants.FetcherName
 }

@@ -32,6 +32,7 @@ func TestActiveSetTokensGeneratorNoStakingParams(t *testing.T) {
 
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
+
 	generator := NewActiveSetTokensGenerator([]*config.Chain{})
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -44,6 +45,7 @@ func TestActiveSetTokensGeneratorNoChainValidators(t *testing.T) {
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameValidators, fetchers.ValidatorsData{})
 	state.Set(constants.FetcherNameStakingParams, fetchers.StakingParamsData{})
+
 	generator := NewActiveSetTokensGenerator(chains)
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -64,6 +66,7 @@ func TestActiveSetTokensGeneratorNoChainStakingParams(t *testing.T) {
 		},
 	})
 	state.Set(constants.FetcherNameStakingParams, fetchers.StakingParamsData{})
+
 	generator := NewActiveSetTokensGenerator(chains)
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -100,6 +103,7 @@ func TestActiveSetTokensGeneratorNotEnoughValidators(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewActiveSetTokensGenerator(chains)
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -139,6 +143,7 @@ func TestActiveSetTokensGeneratorEnoughValidators(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewActiveSetTokensGenerator(chains)
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)
@@ -178,6 +183,7 @@ func TestActiveSetTokensGeneratorDenomIgnored(t *testing.T) {
 			},
 		},
 	})
+
 	generator := NewActiveSetTokensGenerator(chains)
 	results := generator.Generate(state)
 	assert.NotEmpty(t, results)

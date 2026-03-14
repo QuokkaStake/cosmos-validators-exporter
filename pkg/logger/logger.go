@@ -31,5 +31,6 @@ func GetLogger(appConfig config.LogConfig) *zerolog.Logger {
 	}
 
 	zerolog.SetGlobalLevel(logLevel)
+
 	return &log
 }

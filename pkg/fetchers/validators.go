@@ -43,19 +43,22 @@ func (q *ValidatorsFetcher) Dependencies() []constants.FetcherName {
 
 func (f *ValidatorsFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	allValidators := map[string]*types.ValidatorsResponse{}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var (
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
 
 	for _, chain := range f.Chains {
-		rpc, _ := f.RPCs[chain.Name]
+		rpc := f.RPCs[chain.Name]
 
 		wg.Add(1)
+
 		go func(rpc *tendermint.RPC, chain *config.Chain) {
 			defer wg.Done()
 
@@ -73,6 +76,7 @@ func (f *ValidatorsFetcher) Fetch(
 					Err(err).
 					Str("chain", chain.Name).
 					Msg("Error querying all validators")
+
 				return
 			}
 

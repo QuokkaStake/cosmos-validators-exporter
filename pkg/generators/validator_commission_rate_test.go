@@ -31,6 +31,7 @@ func TestValidatorCommissionRateGeneratorNoConsumerCommissions(t *testing.T) {
 	chains := []*config.Chain{{Name: "chain"}}
 	state := statePkg.NewState()
 	state.Set(constants.FetcherNameConsumerCommission, fetchers.ConsumerCommissionData{})
+
 	generator := NewValidatorCommissionRateGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Empty(t, results)
@@ -57,6 +58,7 @@ func TestValidatorCommissionRateInvalidConsumer(t *testing.T) {
 		},
 	})
 	state.Set(constants.FetcherNameConsumerCommission, fetchers.ConsumerCommissionData{})
+
 	generator := NewValidatorCommissionRateGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 1)
@@ -114,6 +116,7 @@ func TestValidatorCommissionRateGeneratorSuccess(t *testing.T) {
 			"otherconsumer": {},
 		},
 	})
+
 	generator := NewValidatorCommissionRateGenerator(chains, loggerPkg.GetNopLogger())
 	results := generator.Generate(state)
 	assert.Len(t, results, 1)

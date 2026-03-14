@@ -42,26 +42,30 @@ func (q *UnbondsFetcher) Dependencies() []constants.FetcherName {
 }
 func (q *UnbondsFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	allUnbonds := map[string]map[string]uint64{}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var (
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
 
 	for _, chain := range q.Chains {
 		mutex.Lock()
 		allUnbonds[chain.Name] = map[string]uint64{}
 		mutex.Unlock()
 
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
+
 			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
+
 				unbondsResponse, query, err := rpc.GetUnbondsCount(validator, ctx)
 
 				mutex.Lock()
@@ -77,6 +81,7 @@ func (q *UnbondsFetcher) Fetch(
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator unbonding delegations count")
+
 					return
 				}
 

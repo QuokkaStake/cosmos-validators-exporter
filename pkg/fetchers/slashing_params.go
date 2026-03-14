@@ -49,13 +49,13 @@ func (q *SlashingParamsFetcher) Dependencies() []constants.FetcherName {
 
 func (q *SlashingParamsFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allParams = map[string]*types.SlashingParamsResponse{}
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		q.wg.Add(1 + len(chain.ConsumerChains))
 
@@ -97,6 +97,7 @@ func (q *SlashingParamsFetcher) processChain(
 			Err(err).
 			Str("chain", chainName).
 			Msg("Error querying slashing params")
+
 		return
 	}
 

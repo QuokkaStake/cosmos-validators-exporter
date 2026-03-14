@@ -49,8 +49,8 @@ func (q *ValidatorConsumersFetcher) Dependencies() []constants.FetcherName {
 
 func (q *ValidatorConsumersFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allValidatorsConsumers = map[string]map[string]map[string]bool{}
 
@@ -61,7 +61,7 @@ func (q *ValidatorConsumersFetcher) Fetch(
 
 		q.allValidatorsConsumers[chain.Name] = map[string]map[string]bool{}
 
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		q.wg.Add(len(chain.Validators))
 
@@ -110,6 +110,7 @@ func (q *ValidatorConsumersFetcher) processChain(
 			Err(err).
 			Str("chain", chainName).
 			Msg("Error querying node info")
+
 		return
 	}
 

@@ -48,14 +48,15 @@ func (f *ConsumerInfoFetcher) Dependencies() []constants.FetcherName {
 }
 func (f *ConsumerInfoFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	f.queryInfos = []*types.QueryInfo{}
 	f.allInfos = map[string]map[string]types.ConsumerChainInfo{}
 
 	f.wg.Add(len(f.Chains))
+
 	for _, chain := range f.Chains {
-		rpc, _ := f.RPCs[chain.Name]
+		rpc := f.RPCs[chain.Name]
 		go f.processChain(ctx, rpc.RPC, chain)
 	}
 
@@ -93,6 +94,7 @@ func (f *ConsumerInfoFetcher) processChain(
 			Err(err).
 			Str("chain", chain.Name).
 			Msg("Error querying consumer info")
+
 		return
 	}
 

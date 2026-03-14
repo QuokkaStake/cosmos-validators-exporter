@@ -50,8 +50,8 @@ func (q *SigningInfoFetcher) Dependencies() []constants.FetcherName {
 
 func (q *SigningInfoFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allSigningInfos = map[string]map[string]*types.SigningInfoResponse{}
 
@@ -63,7 +63,7 @@ func (q *SigningInfoFetcher) Fetch(
 	}
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			q.wg.Add(1 + len(rpc.Consumers))
@@ -118,6 +118,7 @@ func (q *SigningInfoFetcher) fetchAndSetSigningInfo(
 			Str("chain", chainName).
 			Str("address", valoper).
 			Msg("Error getting validator signing info")
+
 		return
 	}
 
@@ -173,6 +174,7 @@ func (q *SigningInfoFetcher) processConsumerChain(
 			Str("chain", chain.Name).
 			Str("address", validator.Address).
 			Msg("Error getting validator assigned key")
+
 		return
 	}
 
@@ -189,6 +191,7 @@ func (q *SigningInfoFetcher) processConsumerChain(
 			Str("chain", chain.Name).
 			Str("address", validator.Address).
 			Msg("Error converting valcons prefix")
+
 		return
 	}
 
@@ -200,6 +203,7 @@ func (q *SigningInfoFetcher) processConsumerChain(
 			Str("chain", chain.Name).
 			Str("address", validator.Address).
 			Msg("Error converting valoper prefix")
+
 		return
 	}
 

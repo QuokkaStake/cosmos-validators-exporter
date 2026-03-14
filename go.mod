@@ -1,8 +1,6 @@
 module main
 
-go 1.21.4
-
-toolchain go1.22.1
+go 1.25.8
 
 require (
 	cosmossdk.io/math v1.3.0

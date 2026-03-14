@@ -43,8 +43,8 @@ func (q *CommissionFetcher) Dependencies() []constants.FetcherName {
 
 func (q *CommissionFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	allCommissions := map[string]map[string][]types.Amount{}
@@ -53,16 +53,20 @@ func (q *CommissionFetcher) Fetch(
 		allCommissions[chain.Name] = map[string][]types.Amount{}
 	}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var (
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		for _, validator := range chain.Validators {
 			wg.Add(1)
+
 			go func(validator string, rpc *tendermint.RPC, chain *config.Chain) {
 				defer wg.Done()
+
 				commission, query, err := rpc.GetValidatorCommission(validator, ctx)
 
 				mutex.Lock()
@@ -78,6 +82,7 @@ func (q *CommissionFetcher) Fetch(
 						Str("chain", chain.Name).
 						Str("address", validator).
 						Msg("Error querying validator commission")
+
 					return
 				}
 

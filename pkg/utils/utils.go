@@ -37,11 +37,13 @@ func ChangeBech32Prefix(source, newPrefix string) (string, error) {
 
 func Filter[T any](slice []T, f func(T) bool) []T {
 	var n []T
+
 	for _, e := range slice {
 		if f(e) {
 			n = append(n, e)
 		}
 	}
+
 	return n
 }
 
@@ -51,6 +53,7 @@ func Map[T any, V any](slice []T, f func(T) V) []V {
 	for index, e := range slice {
 		n[index] = f(e)
 	}
+
 	return n
 }
 
@@ -60,6 +63,7 @@ func Find[T any](slice []T, predicate func(T) bool) (*T, bool) {
 			return &elt, true
 		}
 	}
+
 	return nil, false
 }
 
@@ -69,6 +73,7 @@ func FindIndex[T any](slice []T, predicate func(T) bool) (int, bool) {
 			return index, true
 		}
 	}
+
 	return 0, false
 }
 

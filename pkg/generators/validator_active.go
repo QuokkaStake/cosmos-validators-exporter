@@ -53,6 +53,7 @@ func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.
 			g.Logger.Warn().
 				Str("chain", chain.Name).
 				Msg("Could not find validators list")
+
 			continue
 		}
 
@@ -65,6 +66,7 @@ func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.
 						Str("chain", chain.Name).
 						Str("validator", validatorAddr.Address).
 						Msg("Error comparing two validators' bech32 addresses")
+
 					return false
 				}
 
@@ -78,6 +80,7 @@ func (g *ValidatorActiveGenerator) Generate(state *statePkg.State) []prometheus.
 					Str("chain", chain.Name).
 					Str("validator", validatorAddr.Address).
 					Msg("Could not find validator")
+
 				continue
 			}
 

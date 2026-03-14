@@ -43,17 +43,19 @@ func (q *StakingParamsFetcher) Dependencies() []constants.FetcherName {
 
 func (q *StakingParamsFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	var queryInfos []*types.QueryInfo
 
 	allParams := map[string]*types.StakingParamsResponse{}
 
-	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var (
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		wg.Add(1)
 
@@ -77,6 +79,7 @@ func (q *StakingParamsFetcher) Fetch(
 					Err(err).
 					Str("chain", chain.Name).
 					Msg("Error querying staking params")
+
 				return
 			}
 

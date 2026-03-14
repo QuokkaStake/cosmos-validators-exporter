@@ -49,13 +49,13 @@ func (q *NodeInfoFetcher) Dependencies() []constants.FetcherName {
 
 func (q *NodeInfoFetcher) Fetch(
 	ctx context.Context,
-	data ...interface{},
-) (interface{}, []*types.QueryInfo) {
+	data ...any,
+) (any, []*types.QueryInfo) {
 	q.queryInfos = []*types.QueryInfo{}
 	q.allNodeInfos = map[string]*types.NodeInfoResponse{}
 
 	for _, chain := range q.Chains {
-		rpc, _ := q.RPCs[chain.Name]
+		rpc := q.RPCs[chain.Name]
 
 		q.wg.Add(1 + len(chain.ConsumerChains))
 
@@ -90,6 +90,7 @@ func (q *NodeInfoFetcher) processChain(
 	rpc *tendermint.RPC,
 ) {
 	defer q.wg.Done()
+
 	nodeInfo, query, err := rpc.GetNodeInfo(ctx)
 
 	q.mutex.Lock()
@@ -104,6 +105,7 @@ func (q *NodeInfoFetcher) processChain(
 			Err(err).
 			Str("chain", chainName).
 			Msg("Error querying node info")
+
 		return
 	}
 

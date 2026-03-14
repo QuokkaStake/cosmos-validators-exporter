@@ -57,6 +57,7 @@ func NewApp(configPath string, filesystem fs.FS, version string) *App {
 	}
 
 	logger := loggerPkg.GetLogger(appConfig.LogConfig)
+
 	warnings := appConfig.DisplayWarnings()
 	for _, warning := range warnings {
 		entry := logger.Warn()
@@ -155,8 +156,10 @@ func (a *App) Start() {
 
 func (a *App) Stop() {
 	a.Logger.Info().Str("addr", a.Config.ListenAddress).Msg("Shutting down server...")
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
 	_ = a.Server.Shutdown(ctx)
 }
 
@@ -165,6 +168,7 @@ func (a *App) Handler(w http.ResponseWriter, r *http.Request) {
 
 	span := trace.SpanFromContext(r.Context())
 	span.SetAttributes(attribute.String("request-id", requestID))
+
 	rootSpanCtx := r.Context()
 
 	defer span.End()
